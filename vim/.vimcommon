@@ -1,0 +1,190 @@
+:imap jk <Esc>
+:imap kj <Esc>:
+
+autocmd BufRead .vimcommon set filetype=vim
+
+" Disable auto comment new line after commented line
+set formatoptions-=cro 
+
+set path+=**
+runtime! macros/matchit.vim
+
+set splitright splitbelow
+
+" Netrw Settings {{{
+let  g:netrw_liststyle       =  3
+let  g:netrt_browse_split    =  4
+let  g:netrw_special_syntax  =  1
+let  g:netrw_winsize         =  30
+let  g:netrw_altv            =  1
+let  g:netrw_preview         =  1
+let  g:netrw_sizestyle       =  'h'
+let  g:netrw_banner          =  0
+
+" show file in netrw
+command! Flex let @/=expand("%:t") | execute 'Lex' expand("%:h") | normal n
+
+" open file vertically to the right
+function! OpenToRight()
+  :normal v
+  let g:path=expand('%:p')
+  :q!
+  execute 'belowright vnew' g:path
+  :normal <C-l>
+endfunction
+
+function! OpenBelow()
+  :normal v
+  let g:path=expand('%:p')
+  :q!
+  execute 'belowright new' g:path
+  :normal <C-l>
+endfunction
+
+function! NetrwMappings()
+  " Hack fix to make ctrl-l work properly
+  noremap <buffer> <C-l> <C-w>l
+  noremap <buffer> V :call OpenToRight()<CR>
+  noremap <buffer> H :call OpenBelow()<CR>
+endfunction
+
+augroup netrw_mappings
+    autocmd!
+    autocmd filetype netrw call NetrwMappings()
+augroup END
+
+" }}}
+
+" With this you can enter ":Config" in normal mode to open the vimrc
+command! Config execute ":e $MYVIMRC"
+" Reloads vimrc after saving but keep cursor position
+if !exists('*ReloadVimrc')
+   fun! ReloadVimrc()
+       let save_cursor = getcurpos()
+       source $MYVIMRC
+       call setpos('.', save_cursor)
+   endfun
+endif
+autocmd! BufWritePost $MYVIMRC call ReloadVimrc()
+
+" rebinds semi-colon in normal mode.
+nnoremap ; :
+
+"  A yank command can be redone with ".".
+set cpoptions+=y
+
+" remap Leader
+let g:mapleader = "s"
+
+" Remaps for easyer access 
+" Change focus
+nnoremap <silent> <Leader>o <C-w>o
+nnoremap <silent> <Leader>h <C-w>h
+nnoremap <silent> <Leader>j <C-w>j
+nnoremap <silent> <Leader>k <C-w>k
+nnoremap <silent> <Leader>l <C-w>l
+
+" Move window
+nnoremap <silent> <Leader>mh <C-w>H
+nnoremap <silent> <Leader>mj <C-w>J
+nnoremap <silent> <Leader>mk <C-w>K
+nnoremap <silent> <Leader>ml <C-w>L
+
+let g:mapleader = ","
+nnoremap <silent> <Leader>o <C-w>o
+nnoremap <silent> <Leader>h <C-w>h
+nnoremap <silent> <Leader>j <C-w>j
+nnoremap <silent> <Leader>k <C-w>k
+nnoremap <silent> <Leader>l <C-w>l
+
+tnoremap <silent> ,, <C-\><C-n>
+tnoremap <silent> jk <C-w>:ChooseWin<CR>
+tnoremap <silent> <Leader>h <C-w>:wincmd h<CR>
+tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
+tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
+tnoremap <silent> <Leader>l <C-w>:wincmd l<CR>
+tnoremap <silent> <Leader>m <C-w>:wincmd w<CR> " Move to next window
+let i = 1
+while i <= 9
+  execute 'nnoremap <silent> <Leader>' . i . ' :' . i . 'wincmd w<CR>'
+  execute 'nnoremap <silent>s' . i . ' :' . i . 'wincmd w<CR>'
+  execute 'tnoremap <silent> <Leader>' . i . ' <C-w>:' .  i . 'wincmd w<CR>'
+  let i = i + 1
+endwhile
+tnoremap <Leader><Esc> <C-\><C-n>:bd!<CR>
+
+let g:mapleader = "\<Space>"
+
+" Use CTRL-S for saving, also in Insert mode
+" Sometime these two lines must be put in ~/.bashrc
+"stty -ixon
+"stty stop ''
+noremap <C-S> :w<CR>
+vnoremap <C-S> <C-C>:w<CR>
+inoremap <C-S> <C-O>:w<CR><ESC>
+
+set timeout ttimeoutlen=50
+" END
+nnoremap <A-j> :m+<CR>==
+nnoremap <A-k> :m-2<CR>==
+inoremap <A-j> <Esc>:m+<CR>==gi
+inoremap <A-k> <Esc>:m-2<CR>==gi
+vnoremap <A-j> :m'>+<CR>gv=gv
+vnoremap <A-k> :m-2<CR>gv=gv
+
+" by default easyclip will shadow The Add Mark key (m)
+nnoremap gm m
+
+set tabstop=2           " number of spaces a tab counts for
+set shiftwidth=2        " spaces for autoindents
+
+" Use persistent history
+function! EnsureDirExists (dir)
+  if !isdirectory(a:dir)
+    if exists("*mkdir")
+      call mkdir(a:dir,'p')
+      echo "Created directory: " . a:dir
+    else
+      echo "Please create directory: " . a:dir
+    endif
+  endif
+endfunction
+
+let myUndoDir = $HOME . "/.vim/undodir"
+call EnsureDirExists(myUndoDir)
+set undofile                " Save undos after file closes
+let &undodir=myUndoDir.'//'  " where to save undo histories
+set undolevels=1000         " How many undos
+set undoreload=10000        " number of lines to save for undo
+
+let mySwapDir = $HOME . "/.vim/swap"
+call EnsureDirExists(mySwapDir)
+let &directory = mySwapDir . '//'
+
+let myBackupDir = $HOME . "/.vim/backup"
+call EnsureDirExists(myBackupDir)
+let &backupdir = myBackupDir . '//'
+
+
+" color settings (if terminal/gui supports it)
+if &t_Co > 2 || has("gui_running")
+  syntax on          " enable colors
+  set hlsearch       " highlight search (very useful!)
+  set incsearch      " search incremently (search while typing)
+  nnoremap <silent> <CR> :noh<CR>
+endif
+
+" Keep search results at the center of screen
+nmap <silent> n nzz
+nmap <silent> N Nzz
+nmap <silent> * *zz
+nmap <silent> # #zz
+nmap <silent> g* g*zz
+nmap <silent> g# g#zz
+
+" paste mode toggle (needed when using autoindent/smartindent)
+map <F10> :set paste<CR>
+map <F11> :set nopaste<CR>
+imap <F10> <C-O>:set paste<CR>
+imap <F11> <nop>
+" vim: set sw=2 ts=2 et foldlevel=0 foldmethod=marker:
