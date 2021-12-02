@@ -249,6 +249,22 @@ elseif empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.vim/plugged')
+Plug 'junegunn/limelight.vim' " {{{
+" Hyperfocus-writing in Vim.
+" Number of preceding/following paragraphs to include (default: 0)
+let g:limelight_paragraph_span = 0
+" Color name (:help cterm-colors) or ANSI code
+" Default: 0.5
+let g:limelight_default_coefficient = 0.7
+let g:limelight_conceal_ctermfg = 'gray'
+let g:limelight_conceal_ctermfg = 240
+" Color name (:help gui-colors) or RGB color
+let g:limelight_conceal_guifg = 'DarkGray'
+let g:limelight_conceal_guifg = '#777777'
+" Highlighting priority (default: 10)
+"   Set it to -1 not to overrule hlsearch
+let g:limelight_priority = -1
+"}}}
 Plug 'gioele/vim-autoswap' " {{{
 " Please Vim, stop with these swap file messages. Just switch to the correct window!
 " Linux users: you must install wmctrl to be able to automatically switch to the Vim window with the open file.
