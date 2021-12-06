@@ -12,7 +12,7 @@ fi
 export CODAC_ROOT=/opt/codac-6.3
 export ZSH="/home/codac-dev/.oh-my-zsh"
 # source /opt/rh/devtoolset-6/enable-custom
-export PATH="/home/codac-dev/.local/bin:/usr/bin/ccache:${PATH}"
+# export PATH="/home/codac-dev/.local/bin:/usr/bin/ccache:${PATH}"
 # export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/rh/httpd24/root/lib64" already in .bashrc
 export EPICS_PVA_ADDR_LIST=10.0.2.255 
 export EPICS_CA_ADDR_LIST=10.0.2.255 
