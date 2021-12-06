@@ -67,8 +67,9 @@ if !exists('*ReloadVimrc')
 endif
 autocmd! BufWritePost $MYVIMRC call ReloadVimrc()
 
-" rebinds semi-colon in normal mode.
+" rebinds semi-colon in normal and visual mode.
 nnoremap ; :
+xnoremap ; :
 
 "  A yank command can be redone with ".".
 set cpoptions+=y
