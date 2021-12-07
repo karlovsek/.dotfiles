@@ -37,6 +37,8 @@ alias ls='exa --icons --color=always --group-directories-first' # my preferred l
 alias la='exa --icons -la --color=always --group-directories-first'  # all files and dirs
 alias ll='exa --icons -l --color=always --group-directories-first'  # long format
 # alias lt='exa -T --color=always --group-directories-first' # tree listing
+#
+alias lg='lazygit'
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
