@@ -291,7 +291,6 @@ nnoremap m d
 xnoremap m d
 
 nnoremap mm dd
-nnoremap M D
 " }}} // Cutlass
 Plug 'svermeulen/vim-yoink'
 " Yoink will automatically maintain a history of yanks that you can choose between when pasting. {{{
