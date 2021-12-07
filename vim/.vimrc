@@ -249,6 +249,7 @@ elseif empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.vim/plugged')
+Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/limelight.vim' " {{{
 " Hyperfocus-writing in Vim.
 " Number of preceding/following paragraphs to include (default: 0)
