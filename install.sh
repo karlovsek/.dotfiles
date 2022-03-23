@@ -9,7 +9,8 @@ nix-env -iA \
 	nixpkgs.zsh \
 	nixpkgs.antibody \
 	nixpkgs.git \
-	nixpkgs.neovim \
+	nixpkgs.vim \
+  nixpkgs.autojump \
 	nixpkgs.tmux \
 	nixpkgs.stow \
 	nixpkgs.yarn \

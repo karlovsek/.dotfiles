@@ -105,6 +105,7 @@ plugins=(
   git
   dirhistory
   fasd
+  autojump
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 
@@ -143,15 +144,19 @@ export LANG=en_US.UTF-8
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[ -f ~/.nix-profile/share/fzf/key-bindings.zsh ] && source ~/.nix-profile/share/fzf/key-bindings.zsh
+[ -f ~/.nix-profile/share/fzf/completion.zsh ] && source ~/.nix-profile/share/fzf/completion.zsh
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/bit bit
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/bit bit
-
-source ~/.config/broot/launcher/bash/br
 
 # broot
-alias bs='br --sizes'
+if [ -f ~/.config/broot/launcher/bash/br ]; then
+  source ~/.config/broot/launcher/bash/br
+  alias bs='br --sizes'
+fi
+
 export FZF_DEFAULT_COMMAND='ag -g ""'
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
