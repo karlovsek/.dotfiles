@@ -10,7 +10,8 @@ fi
 
 # Path to your oh-my-zsh installation.
 export CODAC_ROOT=/opt/codac-6.3
-export ZSH="~/.oh-my-zsh"
+export ZSH=~/.oh-my-zsh
+
 # source /opt/rh/devtoolset-6/enable-custom
 # export PATH="/home/codac-dev/.local/bin:/usr/bin/ccache:${PATH}"
 # export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/rh/httpd24/root/lib64" already in .bashrc
