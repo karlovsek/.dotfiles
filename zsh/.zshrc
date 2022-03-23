@@ -10,7 +10,7 @@ fi
 
 # Path to your oh-my-zsh installation.
 export CODAC_ROOT=/opt/codac-6.3
-export ZSH="/home/codac-dev/.oh-my-zsh"
+export ZSH="~/.oh-my-zsh"
 # source /opt/rh/devtoolset-6/enable-custom
 # export PATH="/home/codac-dev/.local/bin:/usr/bin/ccache:${PATH}"
 # export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/rh/httpd24/root/lib64" already in .bashrc
@@ -75,7 +75,7 @@ DISABLE_LS_COLORS="true"
 # ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
@@ -112,7 +112,7 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 # help for exa and fd
-compdef _gnu_generic exa fd
+compdef _gnu_generic exa fd tldr
 # Edit line in vim with ctrl-x-e
 bindkey '^x^e' edit-command-line
 bindkey '\ee' edit-command-line
@@ -147,7 +147,7 @@ complete -o nospace -C /usr/local/bin/bit bit
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/bit bit
 
-source /home/codac-dev/.config/broot/launcher/bash/br
+source ~/.config/broot/launcher/bash/br
 
 # broot
 alias bs='br --sizes'
@@ -157,4 +157,4 @@ export FZF_DEFAULT_COMMAND='ag -g ""'
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Created by `userpath` on 2020-12-16 07:36:51
-export PATH="$PATH:/home/codac-dev/.local/bin"
+export PATH="$PATH:~/.local/bin:$HOME/.cargo/bin"
