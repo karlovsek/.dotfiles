@@ -322,7 +322,7 @@ set runtimepath+=~/.vim/plugged/awesome-vim-colorschemes
 " }}}
 Plug 'chrisbra/Colorizer'
 " LSP testing 
-Plug 'neoclide/coc.nvim', {'branch': 'release'} " {{{
+" Plug 'neoclide/coc.nvim', {'branch': 'release'} " {{{
 " Always show the signcolumn, otherwise it would shift the text each time
 " diagnostics appear/become resolved.
 set signcolumn=yes
@@ -379,7 +379,7 @@ function! s:show_documentation()
 endfunction
 
 " Highlight the symbol and its references when holding the cursor.
-autocmd CursorHold * silent call CocActionAsync('highlight')
+" autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " Symbol renaming.
 nmap <leader>rn <Plug>(coc-rename)
