@@ -10,7 +10,7 @@ nix-env -iA \
 	nixpkgs.antibody \
 	nixpkgs.git \
 	nixpkgs.vim \
-  nixpkgs.autojump \
+  nixpkgs.fasd \
 	nixpkgs.tmux \
 	nixpkgs.stow \
 	nixpkgs.yarn \
