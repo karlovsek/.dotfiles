@@ -105,7 +105,6 @@ plugins=(
   git
   dirhistory
   fasd
-  autojump
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 
