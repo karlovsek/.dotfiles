@@ -106,7 +106,8 @@ tnoremap <silent> <Leader>h <C-w>:wincmd h<CR>
 tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
 tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
 tnoremap <silent> <Leader>l <C-w>:wincmd l<CR>
-tnoremap <silent> <Leader>m <C-w>:wincmd w<CR> " Move to next window
+" Move to next window
+tnoremap <silent> <Leader>m <C-w>:wincmd w<CR> 
 let i = 1
 while i <= 9
   execute 'nnoremap <silent> <Leader>' . i . ' :' . i . 'wincmd w<CR>'
