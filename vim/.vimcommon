@@ -100,22 +100,28 @@ nnoremap <silent> <Leader>j <C-w>j
 nnoremap <silent> <Leader>k <C-w>k
 nnoremap <silent> <Leader>l <C-w>l
 
-tnoremap <silent> ,, <C-\><C-n>
-tnoremap <silent> jk <C-w>:ChooseWin<CR>
-tnoremap <silent> <Leader>h <C-w>:wincmd h<CR>
-tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
-tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
-tnoremap <silent> <Leader>l <C-w>:wincmd l<CR>
-" Move to next window
-tnoremap <silent> <Leader>m <C-w>:wincmd w<CR> 
+if has('terminal')
+  tnoremap <silent> ,, <C-\><C-n>
+  tnoremap <silent> jk <C-w>:ChooseWin<CR>
+  tnoremap <silent> <Leader>h <C-w>:wincmd h<CR>
+  tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
+  tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
+  tnoremap <silent> <Leader>l <C-w>:wincmd l<CR>
+  " Move to next window
+  tnoremap <silent> <Leader>m <C-w>:wincmd w<CR> 
+  " close terminal
+  tnoremap <Leader><Esc> <C-\><C-n>:bd!<CR>
+end
+
 let i = 1
 while i <= 9
   execute 'nnoremap <silent> <Leader>' . i . ' :' . i . 'wincmd w<CR>'
   execute 'nnoremap <silent>s' . i . ' :' . i . 'wincmd w<CR>'
-  execute 'tnoremap <silent> <Leader>' . i . ' <C-w>:' .  i . 'wincmd w<CR>'
+  if has('terminal')
+    execute 'tnoremap <silent> <Leader>' . i . ' <C-w>:' .  i . 'wincmd w<CR>'
+  end
   let i = i + 1
 endwhile
-tnoremap <Leader><Esc> <C-\><C-n>:bd!<CR>
 
 let g:mapleader = "\<Space>"
 
