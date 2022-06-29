@@ -39,15 +39,19 @@ augroup OnlyInActiveWindow
   autocmd WinLeave * set norelativenumber
 augroup END
 
-let &t_SI.="\e[5 q" "SI = INSERT mode
-let &t_SR.="\e[3 q" "SR = REPLACE mode
+if v:version > 704 || v:version == 704 && has('patch687')
+  let &t_SI.="\e[5 q" "SI = INSERT mode
+  let &t_SR.="\e[3 q" "SR = REPLACE mode
+end
 let &t_EI.="\e[2 q" "EI = NORMAL mode (ELSE)
 
 " ====== Fix for <M-j|k> moving lines =======  {{{
 if $GNOME_SHELL_SESSION_MODE != "" || $SSH_CLIENT != ""
   " echom "In GNOME shell or ssh" . $SSH_CLIENT
-  let &t_TI = ""
-  let &t_TE = ""
+  if v:version > 704 || v:version == 704 && has('patch687')
+    let &t_TI = ""
+    let &t_TE = ""
+  end
 
   " MOVE LINE/BLOCK
   " Workaround for Alt to work in Gnome terminal :(
