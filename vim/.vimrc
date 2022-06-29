@@ -329,7 +329,9 @@ Plug 'chrisbra/Colorizer'
 " Plug 'neoclide/coc.nvim', {'branch': 'release'} " {{{
 " Always show the signcolumn, otherwise it would shift the text each time
 " diagnostics appear/become resolved.
-set signcolumn=yes
+if v:version >= 800
+  set signcolumn=yes
+end
 
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
@@ -422,7 +424,9 @@ let g:cmake_compile_commands_link = '.'
 Plug 'dbeniamine/cheat.sh-vim'
 Plug 'tpope/vim-obsession'
 Plug 'fedorenchik/qt-support.vim'
-Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() } }
+if v:version >= 800
+  Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() } }
+end
 Plug 'itchyny/lightline.vim'
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim' " {{{
