@@ -15,7 +15,8 @@
 #set -ga terminal-overrides "*:kUP3=\e[1;9A,*:kDN3=\e[1;9B,*:kRIT3=\e[1;9C,*:kLFT3=\e[1;9D"
 
 #change default shell
-set-option -g default-shell ~/.nix-profile/bin/zsh
+# set-option -g default-shell ~/.nix-profile/bin/zsh
+set-option -g default-shell /usr/local/bin/zsh
 # -- windows & pane creation ---------------------------------------------------
 
 # Plugins
