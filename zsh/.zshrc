@@ -30,16 +30,23 @@ export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
+if (( $+commands[exa] ))
+then
+  # Changing "ls" to "exa"
+  # Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
+  # Uncomment DISABLE_LS_COLORS="true"
+  alias ls='exa --icons --color=always --group-directories-first' # my preferred listing
+  alias la='exa --icons -la --color=always --group-directories-first'  # all files and dirs
+  alias ll='exa --icons -l --color=always --group-directories-first'  # long format
+  # alias lt='exa -T --color=always --group-directories-first' # tree listing
+fi
 
-# Changing "ls" to "exa"
-# Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
-# Uncomment DISABLE_LS_COLORS="true"
-alias ls='exa --icons --color=always --group-directories-first' # my preferred listing
-alias la='exa --icons -la --color=always --group-directories-first'  # all files and dirs
-alias ll='exa --icons -l --color=always --group-directories-first'  # long format
-# alias lt='exa -T --color=always --group-directories-first' # tree listing
-#
-alias lg='lazygit'
+if (( $+commands[lazygit] ))
+then
+  alias lg='lazygit'
+else
+  alias lg='echo lazygit not installed'
+fi
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -144,10 +151,13 @@ export LANG=en_US.UTF-8
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C /usr/local/bin/bit bit
-autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C /usr/local/bin/bit bit
+if (( $+commands[bit] ))
+then
+  autoload -U +X bashcompinit && bashcompinit
+  complete -o nospace -C /usr/local/bin/bit bit
+  autoload -U +X bashcompinit && bashcompinit
+  complete -o nospace -C /usr/local/bin/bit bit
+fi
 
 # broot
 if [ -f ~/.config/broot/launcher/bash/br ]; then
@@ -155,7 +165,10 @@ if [ -f ~/.config/broot/launcher/bash/br ]; then
   alias bs='br --sizes'
 fi
 
-export FZF_DEFAULT_COMMAND='ag -g ""'
+if (( $+commands[ag] ))
+then
+  export FZF_DEFAULT_COMMAND='ag -g ""'
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
