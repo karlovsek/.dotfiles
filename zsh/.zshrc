@@ -110,7 +110,7 @@ plugins=(
   fzf-tab # Must be the first one
   zsh-autosuggestions
   zsh-syntax-highlighting
-  git
+  # git
   dirhistory
   fasd
   fzf
