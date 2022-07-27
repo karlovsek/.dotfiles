@@ -176,3 +176,7 @@ fi
 
 # Created by `userpath` on 2020-12-16 07:36:51
 export PATH="$PATH:~/.local/bin:$HOME/.cargo/bin"
+
+# stop pasted text being highlighted
+zle_highlight+=('paste:none')
+
