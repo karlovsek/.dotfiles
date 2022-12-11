@@ -10,7 +10,7 @@ nix-env -iA \
 	nixpkgs.antibody \
 	nixpkgs.git \
 	nixpkgs.vim \
-  nixpkgs.fasd \
+  	nixpkgs.fasd \
 	nixpkgs.tmux \
 	nixpkgs.stow \
 	nixpkgs.yarn \
@@ -19,11 +19,12 @@ nix-env -iA \
 	nixpkgs.bat \
 	nixpkgs.gnumake \
 	nixpkgs.gcc \
-	nixpkgs.direnv
+	nixpkgs.direnv\
+	nixpkgs.lazygit
 
 # stow dotfiles
 stow git
-stow nvim
+stow vim
 stow tmux
 stow zsh
 
@@ -36,8 +37,8 @@ sudo chsh -s $(which zsh) $USER
 # bundle zsh plugins 
 antibody bundle < ~/.zsh_plugins.txt > ~/.zsh_plugins.sh
 
-# install neovim plugins
-nvim --headless +PlugInstall +qall
-
-# Use kitty terminal on MacOS
-[ `uname -s` = 'Darwin' ] && stow kitty
+# install ZSH plugins
+git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
