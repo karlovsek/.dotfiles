@@ -1,26 +1,8 @@
 # install nix
-curl -L https://nixos.org/nix/install | sh
-
-# source nix
-. ~/.nix-profile/etc/profile.d/nix.sh
-
-# install packages
-nix-env -iA \
-	nixpkgs.zsh \
-	nixpkgs.antibody \
-	nixpkgs.git \
-	nixpkgs.vim \
-  	nixpkgs.fasd \
-	nixpkgs.tmux \
-	nixpkgs.stow \
-	nixpkgs.yarn \
-	nixpkgs.fzf \
-	nixpkgs.ripgrep \
-	nixpkgs.bat \
-	nixpkgs.gnumake \
-	nixpkgs.gcc \
-	nixpkgs.direnv\
-	nixpkgs.lazygit
+git clone https://github.com/karlovsek/Linux-TUI-essential-install.git TUI
+cd TUI
+. install.sh
+cd ..
 
 # stow dotfiles
 stow git
@@ -31,13 +13,15 @@ stow zsh
 # add zsh as a login shell
 command -v zsh | sudo tee -a /etc/shells
 
-# use zsh as default shell
-sudo chsh -s $(which zsh) $USER
+echo "Do you want to set ZSH as default shell? [y/N]"
+read response
+# Check the value of the response variable and proceed accordingly
+if [ "$response" = "y" ]; then
+  echo "use zsh as default shell"
+  sudo chsh -s $(which zsh) $USER
+fi
 
-# bundle zsh plugins 
-antibody bundle < ~/.zsh_plugins.txt > ~/.zsh_plugins.sh
-
-# install ZSH plugins
+echo "Installing ZSH plugins..."
 git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
