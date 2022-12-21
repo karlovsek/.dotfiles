@@ -1,8 +1,14 @@
 # install nix
-git clone https://github.com/karlovsek/Linux-TUI-essential-install.git TUI
-cd TUI
-. install.sh
-cd ..
+echo "Do you want to install TUIs? [y/N]"
+read response
+# Check the value of the response variable and proceed accordingly
+if [ "$response" = "y" ]; then
+  echo "Empowering your shell"
+  git clone https://github.com/karlovsek/Linux-TUI-essential-install.git TUI
+  cd TUI
+  . install.sh
+  cd ..
+fi
 
 # stow dotfiles
 stow git
