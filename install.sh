@@ -6,7 +6,7 @@ if [ "$response" = "y" ]; then
   echo "Empowering your shell"
   git clone https://github.com/karlovsek/Linux-TUI-essential-install.git TUI
   cd TUI
-  . install.sh
+  chmod +x install.sh && ./install.sh
   cd ..
 fi
 
