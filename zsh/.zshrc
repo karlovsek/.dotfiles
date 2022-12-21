@@ -5,18 +5,8 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
-
 # Path to your oh-my-zsh installation.
-export CODAC_ROOT=/opt/codac-6.3
 export ZSH=~/.oh-my-zsh
-
-# source /opt/rh/devtoolset-6/enable-custom
-# export PATH="/home/codac-dev/.local/bin:/usr/bin/ccache:${PATH}"
-# export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/rh/httpd24/root/lib64" already in .bashrc
-export EPICS_PVA_ADDR_LIST=10.0.2.255 
-export EPICS_CA_ADDR_LIST=10.0.2.255 
 
 ulimit -c unlimited 
 
@@ -177,7 +167,7 @@ fi
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Created by `userpath` on 2020-12-16 07:36:51
-export PATH="$PATH:~/.local/bin:$HOME/.cargo/bin"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
 
 # stop pasted text being highlighted
 zle_highlight+=('paste:none')
