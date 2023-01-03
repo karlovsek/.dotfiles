@@ -20,7 +20,12 @@ set-option -g default-shell /usr/local/bin/zsh
 # -- windows & pane creation ---------------------------------------------------
 
 # Plugins
-# run-shell ~/.tmux/tmux-picker/tmux-picker.tmux
+# git clone https://github.com/tmux-plugins/tmux-resurrect ~/.tmux/plugins/tmux-resurrect
+# The default key bindings are:
+# prefix + Ctrl-s - save
+# prefix + Ctrl-r - restore
+run-shell ~/.tmux/plugins/tmux-resurrect/resurrect.tmux
+
 
 #sane window split defaults
 bind | split-window -h
