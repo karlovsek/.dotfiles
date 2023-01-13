@@ -1,3 +1,4 @@
+stty -ixon # Allows to use Ctrl+S 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -11,7 +12,8 @@ export ZSH=~/.oh-my-zsh
 ulimit -c unlimited 
 
 # set Vim as pager
-export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
+export MANPAGER="vim -c 'set ft=man ts=8 nomod nolist nonu nornu noma | AnsiEsc' -"
+#export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
 # export PAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
 
 # Set name of the theme to load --- if set to "random", it will
