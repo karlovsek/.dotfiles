@@ -253,6 +253,7 @@ elseif empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.vim/plugged')
+Plug 'vim-scripts/AnsiEsc.vim'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/limelight.vim' " {{{
 " Hyperfocus-writing in Vim.
