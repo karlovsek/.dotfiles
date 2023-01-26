@@ -181,8 +181,12 @@ if &t_Co > 2 || has("gui_running")
   syntax on          " enable colors
   set hlsearch       " highlight search (very useful!)
   set incsearch      " search incremently (search while typing)
-  nnoremap <silent> <CR> :noh<CR>
+  nnoremap <silent> <CR> :noh<CR> " disable highlight search 
 endif
+
+" In the quickfix window, <CR> is used to jump to the error under the
+" cursor, so undefine the mapping there.
+autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 
 " Keep search results at the center of screen
 nmap <silent> n nzz
