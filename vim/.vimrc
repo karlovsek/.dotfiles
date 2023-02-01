@@ -254,6 +254,7 @@ endif
 
 call plug#begin('~/.vim/plugged')
 Plug 'vim-scripts/AnsiEsc.vim'
+Plug 'Exafunction/codeium.vim'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/limelight.vim' " {{{
 " Hyperfocus-writing in Vim.
