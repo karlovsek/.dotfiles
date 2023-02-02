@@ -253,6 +253,7 @@ elseif empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.vim/plugged')
+Plug 'mkitt/tabline.vim'
 Plug 'vim-scripts/AnsiEsc.vim'
 Plug 'Exafunction/codeium.vim'
 Plug 'jiangmiao/auto-pairs'
