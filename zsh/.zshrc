@@ -148,6 +148,14 @@ export LANG=en_US.UTF-8
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+if (( $+commands[fd] && $+commands[fzf-tmux] ))
+then
+  alias vv='fd --type f --hidden --exclude .git | fzf-tmux -p --reverse | xargs -o "$EDITOR"'
+else
+  alias vv='echo "fd or fzf-tmux is missing!"'
+fi
+
+
 if (( $+commands[bit] ))
 then
   autoload -U +X bashcompinit && bashcompinit
