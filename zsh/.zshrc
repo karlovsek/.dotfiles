@@ -155,7 +155,7 @@ export LANG=en_US.UTF-8
 
 if (( $+commands[fd] && $+commands[fzf-tmux] ))
 then
-  alias vv='fd --type f --hidden --exclude .git | fzf-tmux -p --reverse | xargs -o "$EDITOR"'
+  alias vv='fd --type f --hidden --exclude .git | fzf-tmux -p --reverse | xargs --no-run-if-empty -o "$EDITOR"'
 else
   alias vv='echo "fd or fzf-tmux is missing!"'
 fi
