@@ -16,6 +16,9 @@ au BufEnter * set formatoptions-=r formatoptions-=c formatoptions-=o
 " vnoremap <leader>P .pu +
 " vnoremap <leader>p "_dP
 
+" print current file's directory
+nnoremap <leader>d :echo expand('%:p:h')<CR>
+
 " Switch between tabs
 nmap <leader>1 1gt
 nmap <leader>2 2gt
