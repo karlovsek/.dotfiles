@@ -1,6 +1,8 @@
 [[ -o interactive ]] && stty -ixon # Allows to use Ctrl+S
 # For bash add [ "$PS1" ] && stty -ixon
 
+if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile.d/nix.sh; fi
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
