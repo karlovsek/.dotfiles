@@ -11,7 +11,6 @@ if [ "$response" = "y" ]; then
 fi
 
 # stow dotfiles
-stow git
 stow vim
 stow tmux
 stow zsh
