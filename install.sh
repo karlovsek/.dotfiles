@@ -10,10 +10,6 @@ if [ "$response" = "y" ]; then
   cd ..
 fi
 
-# stow dotfiles
-stow vim
-stow tmux
-stow zsh
 
 # add zsh as a login shell
 command -v zsh | sudo tee -a /etc/shells
@@ -27,7 +23,14 @@ if [ "$response" = "y" ]; then
 fi
 
 echo "Installing ZSH plugins..."
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+
+mv ~/.zshrc ~/.zshrc-pre-install
+# stow dotfiles
+stow vim
+stow tmux
+stow zsh
