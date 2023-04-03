@@ -189,7 +189,12 @@ fi
 # Created by `userpath` on 2020-12-16 07:36:51
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
 
-export DISPLAY=localhost:0.0
+if [[ ! -z $(uname -a | grep "microsoft-standard-WSL2") ]]
+then
+  export DISPLAY=:0
+else
+  export DISPLAY=localhost:0.0
+fi
 
 # stop pasted text being highlighted
 zle_highlight+=('paste:none')
