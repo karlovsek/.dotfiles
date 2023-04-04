@@ -396,7 +396,7 @@ Plug 'chrisbra/Colorizer'
 " xmap <M-l>  <Plug>(coc-format)
 " nmap <M-l>  <Plug>(coc-format)
 " " }}}
-Plug 'jackguo380/vim-lsp-cxx-highlight'
+" Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'ap/vim-css-color'
 " must be after colorscheme execution
 Plug 'machakann/vim-highlightedyank'
