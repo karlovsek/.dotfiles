@@ -20,8 +20,11 @@ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 ~/.fzf/install
 
 echo "Copying .dofiles"
-ln -s vim/.vimcommon ~/.vimcommon
-ln -s vim/.vimrc ~/.vimrc
+ln -s $(pwd)/vim/.vimcommon ~/.vimcommon
+ln -s $(pwd)/vim/.vimrc ~/.vimrc
 
-ln -s zsh/.zshrc ~/.zshrc
-ln -s zsh/.pk10k.zsh ~/.pk10k.zsh
+mv ~/.zshrc ~/.zshrc-orig
+mv ~/.pk10k.zsh ~/.pk10k.zsh-orig
+
+ln -s $(pwd)/zsh/.zshrc ~/.zshrc
+ln -s $(pwd)/zsh/.pk10k.zsh ~/.pk10k.zsh
