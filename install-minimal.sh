@@ -15,9 +15,23 @@ git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-m
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
-echo "Insalling fzf"
-git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-~/.fzf/install
+if which fzf >/dev/null; then
+    echo "fzf exists"
+else
+  echo "Installing fzf"
+  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+  ~/.fzf/install
+fi
+
+if which lazygit >/dev/null; then
+    echo "lazygit exists"
+else
+  echo "Installing lazygit"
+  wget https://github.com/jesseduffield/lazygit/releases/download/v0.37.0/lazygit_0.37.0_Linux_x86_64.tar.gz
+  tar -xf lazygit_0.37.0_Linux_x86_64.tar.gz
+  mv lazygit ~/.local/bin
+fi
+
 
 echo "Copying .dofiles"
 ln -s $(pwd)/vim/.vimcommon ~/.vimcommon
