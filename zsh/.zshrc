@@ -50,6 +50,22 @@ then
   export EDITOR=vim.gtk3
 fi
 
+
+if (( $+commands[aichat] )); then
+  eval_aichat() {
+    aichat_reply=$(aichat -r shell $@)
+    echo -n "Evaluate command:\n$aichat_reply\n[Y/n] "
+    read response 
+    echo
+    if [[ "$response" != [nN] ]]; then
+      echo "Executing: $aichat_reply"
+      eval $aichat_reply
+    fi
+  }
+  alias ai="aichat -r shell"
+  alias aie=eval_aichat
+fi
+
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
 
 # Set list of themes to pick from when loading at random
@@ -200,3 +216,7 @@ fi
 # stop pasted text being highlighted
 zle_highlight+=('paste:none')
 
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
