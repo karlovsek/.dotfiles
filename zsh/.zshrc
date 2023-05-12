@@ -48,6 +48,8 @@ if (( $+commands[vim.gtk3] ))
 then
   alias vim='vim.gtk3'
   export EDITOR=vim.gtk3
+else
+  export EDITOR=vim
 fi
 
 
@@ -138,7 +140,6 @@ plugins=(
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 
-export EDITOR=vim
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
