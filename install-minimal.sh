@@ -33,13 +33,4 @@ else
   mv lazygit ~/.local/bin/
 fi
 
-
-echo "Copying .dofiles"
-ln -s $(pwd)/vim/.vimcommon ~/.vimcommon
-ln -s $(pwd)/vim/.vimrc ~/.vimrc
-
-mv ~/.zshrc ~/.zshrc-orig
-mv ~/.pk10k.zsh ~/.pk10k.zsh-orig
-
-ln -s $(pwd)/zsh/.zshrc ~/.zshrc
-ln -s $(pwd)/zsh/.pk10k.zsh ~/.pk10k.zsh
+echo "Installation completed!"
