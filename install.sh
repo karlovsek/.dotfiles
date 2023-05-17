@@ -29,8 +29,23 @@ git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-m
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
-mv ~/.zshrc ~/.zshrc-pre-install
+
 # stow dotfiles
-stow vim
-stow tmux
-stow zsh
+#stow vim
+#stow tmux
+#stow zsh
+
+# make symlinks and other stuff to apply settings
+# vim
+ln -s $(pwd)/vim/.vimcommon ~/.vimcommon
+ln -s $(pwd)/vim/.vimrc ~/.vimrc
+
+# zsh
+mv ~/.zshrc ~/.zshrc-orig
+mv ~/.pk10k.zsh ~/.pk10k.zsh-orig
+ln -s $(pwd)/zsh/.zshrc ~/.zshrc
+ln -s $(pwd)/zsh/.pk10k.zsh ~/.pk10k.zsh
+
+# tmux
+ln -s $(pwd)/tmux/.tmux.conf ~/.tmux.conf
+ln -s $(pwd)/tmux/.tmux.conf.local ~/.tmux.conf.local
