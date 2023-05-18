@@ -16,7 +16,8 @@ export ZSH=~/.oh-my-zsh
 ulimit -c unlimited 
 
 # set Vim as pager
-export MANPAGER="vim -c 'set ft=man ts=8 nomod nolist nonu nornu noma | AnsiEsc' -"
+# removes underline %s/\e\[4m//g | silent %s/\e\[24m//g
+export MANPAGER="vim -c 'set ft=man ts=8 nomod nolist nonu nornu | silent %s/\e\[4m//g | silent %s/\e\[24m//g  | AnsiEsc' -c 'normal M' -"
 #export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
 # export PAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
 
