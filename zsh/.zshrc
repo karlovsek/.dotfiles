@@ -18,7 +18,7 @@ ulimit -c unlimited
 # set Vim as pager
 # removes underline %s/\e\[4m//g | silent %s/\e\[24m//g
 # --not-a-term suppresses "Vim: Reading from stdin..."
-export MANPAGER="vim -c 'set ft=man ts=8 nomod nolist nonu nornu buftype=nofile noswapfile nobackup | silent %s/\e\[4m//g | silent %s/\e\[24m//g | silent %s/\e\[22m//g | AnsiEsc' -c 'normal gg' --not-a-term -"
+export MANPAGER="vim +MANPAGER -c 'set nomod nolist nonu nornu buftype=nofile noswapfile nobackup' --not-a-term -"
 #export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
 # export PAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
 
