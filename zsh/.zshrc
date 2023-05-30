@@ -129,18 +129,25 @@ COMPLETION_WAITING_DOTS="true"
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
+# 
+# git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+# git clone https://github.com/jeffreytse/zsh-vi-mode $ZSH_CUSTOM/plugins/zsh-vi-mode
+# git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+# git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
+# git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
   fzf-tab # Must be the first one
   history-substring-search
-  zsh-autosuggestions
+  zsh-autosuggestions 
   zsh-syntax-highlighting
-  # git
   dirhistory
   fasd
   fzf
+  zsh-vi-mode
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
+ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 
 source $ZSH/oh-my-zsh.sh
 
