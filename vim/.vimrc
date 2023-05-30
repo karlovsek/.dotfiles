@@ -494,7 +494,7 @@ Plug 'mhinz/vim-startify' " {{{
   let g:startify_change_to_dir = 1
 " }}}
 Plug 'tpope/vim-commentary'
-Plug 'mhinz/vim-signify'
+" Plug 'mhinz/vim-signify'
 Plug 'airblade/vim-gitgutter' " {{{
   set updatetime=500
   let g:gitgutter_preview_win_floating = 1
