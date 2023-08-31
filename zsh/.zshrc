@@ -70,6 +70,10 @@ if (( $+commands[aichat] )); then
   alias aie=eval_aichat
 fi
 
+if (( $+commands[zellij] )); then
+  alias zja='zellij a $(zellij ls | fzf -0 -1)'
+fi
+
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
 
 # Set list of themes to pick from when loading at random
@@ -144,7 +148,7 @@ plugins=(
   dirhistory
   fasd
   fzf
-  zsh-vi-mode
+  # zsh-vi-mode
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
