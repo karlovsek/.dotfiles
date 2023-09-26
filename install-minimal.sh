@@ -9,6 +9,8 @@ fi
 
 # install oh my zsh
 echo "Insalling oh my zsh and plugins ..."
+echo "After installation press Ctrl-C, to exit ZSH and to continue the installation. Now press ENTER to continue!"
+read foo
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
@@ -34,3 +36,8 @@ else
 fi
 
 echo "Installation completed!"
+echo "add symlinks:"
+echo "ln -s ~/.dotfiles/zsh/.zshrc ~/.zshrc"
+echo "ln -s ~/.dotfiles/zsh/.p10k.zsh ~/.p10k.zsh"
+echo  ""
+echo "Now you can run ZSH!"
