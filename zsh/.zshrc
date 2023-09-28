@@ -50,10 +50,13 @@ if (( $+commands[vim.gtk3] ))
 then
   alias vim='vim.gtk3'
   export EDITOR=vim.gtk3
+elif (( $+commands[vimx] ))
+then
+  alias vim='vimx'
+  export EDITOR=vimx
 else
   export EDITOR=vim
 fi
-
 
 if (( $+commands[aichat] )); then
   eval_aichat() {
