@@ -33,6 +33,9 @@ nmap <leader>9 9gt
 " Select all text
 noremap vA ggVG
 
+" Allow saving of files as sudo when I forgot to start vim using sudo.
+cmap w!! w !sudo tee > /dev/null %
+
 "Mode Settings
 augroup OnlyInActiveWindow
   autocmd!
