@@ -24,6 +24,8 @@ else
   wget https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
   unzip -p fasd.zip clvv-fasd-4822024/fasd > ~/.local/bin/fasd
   chmod +x ~/.local/bin/fasd
+  #clean
+  rm fasd.zip
 fi
 
 if which lazygit >/dev/null; then
@@ -34,6 +36,7 @@ else
   tar -xf lazygit_0.37.0_Linux_x86_64.tar.gz
   mkdir -p ~/.local/bin
   mv lazygit ~/.local/bin/
+  rm lazygit_0.37.0_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
 echo -ne "\nCreate Vim symlinks? (Y/n): "
