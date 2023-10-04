@@ -1,3 +1,6 @@
+# Quick install command
+`https://github.com/karlovsek/.dotfiles.git && sh .dotfiles/install.sh`
+
 # .dotfiles
 
 1. Clone this repository
