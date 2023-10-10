@@ -443,6 +443,7 @@ Plug 'junegunn/fzf.vim' " {{{
   nnoremap <silent> <leader>l   :Lines<CR>
   nnoremap <silent> <leader>c   :Commits<CR>
   nnoremap <leader>a   :Ag 
+  nnoremap <leader>r   :Rg 
   nmap <silent> cc :Commands!<CR>
 " }}}
 Plug 'scrooloose/nerdtree' " {{{
