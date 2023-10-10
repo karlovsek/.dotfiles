@@ -5,8 +5,22 @@ echo "SCRIPT_DIR=${SCRIPT_DIR}"
 if which zsh >/dev/null; then
     echo "ZSH exists"
 else
-  echo "ZSH does not exists, installing it ..."
+  echo "ZSH does not exist, installing it ..."
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)"
+fi
+
+if which rg >/dev/null; then
+    echo "RG exists"
+else
+    echo "RG does not exist, installing it ..."
+    mkdir -p ~/.local/bin
+    
+    wget https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
+    tar -xvf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
+    mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg ~/.local/bin
+
+    #clean 
+    rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 fi
 
 if which fzf >/dev/null; then
