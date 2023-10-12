@@ -215,6 +215,7 @@ fi
 if (( $+commands[ag] ))
 then
   export FZF_DEFAULT_COMMAND='ag -g ""'
+  alias ag="ag -f" # follow symlinks
 fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
