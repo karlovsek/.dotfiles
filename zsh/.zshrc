@@ -28,57 +28,6 @@ export MANPAGER="vim +MANPAGER -c 'set nomod nolist nonu nornu buftype=nofile no
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
-if (( $+commands[exa] ))
-then
-  # Changing "ls" to "exa"
-  # Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
-  # Uncomment DISABLE_LS_COLORS="true"
-  alias ls='exa --icons --color=always --group-directories-first' # my preferred listing
-  alias la='exa --icons -la --color=always --group-directories-first'  # all files and dirs
-  alias ll='exa --icons -l --color=always --group-directories-first'  # long format
-  # alias lt='exa -T --color=always --group-directories-first' # tree listing
-fi
-
-if (( $+commands[lazygit] ))
-then
-  alias lg='lazygit'
-else
-  alias lg='echo lazygit not installed'
-fi
-
-if (( $+commands[vim.gtk3] ))
-then
-  alias vim='vim.gtk3'
-  export EDITOR=vim.gtk3
-elif (( $+commands[vimx] ))
-then
-  alias vim='vimx'
-  export EDITOR=vimx
-else
-  export EDITOR=vim
-fi
-
-if (( $+commands[aichat] )); then
-  eval_aichat() {
-    aichat_reply=$(aichat -r shell $@)
-    echo -n "Evaluate command:\n$aichat_reply\n[Y/n] "
-    read response 
-    echo
-    if [[ "$response" != [nN] ]]; then
-      echo "Executing: $aichat_reply"
-      eval $aichat_reply
-    fi
-  }
-  alias ai="aichat -r shell"
-  alias aie=eval_aichat
-fi
-
-if (( $+commands[zellij] )); then
-  alias zja='zellij a $(zellij ls | fzf -0 -1)'
-fi
-
-alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
-
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
 # a theme from this variable instead of looking in ~/.oh-my-zsh/themes/
@@ -188,6 +137,62 @@ export LANG=en_US.UTF-8
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+
+if (( $+commands[aichat] )); then
+  eval_aichat() {
+    aichat_reply=$(aichat -r shell $@)
+    echo -n "Evaluate command:\n$aichat_reply\n[Y/n] "
+    read response 
+    echo
+    if [[ "$response" != [nN] ]]; then
+      echo "Executing: $aichat_reply"
+      eval $aichat_reply
+    fi
+  }
+  alias ai="aichat -r shell"
+  alias aie=eval_aichat
+fi
+
+if (( $+commands[exa] ))
+then
+  # Changing "ls" to "exa"
+  # Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
+  # Uncomment DISABLE_LS_COLORS="true"
+  alias ls='exa --icons --color=always --group-directories-first' # my preferred listing
+  alias la='exa --icons -la --color=always --group-directories-first'  # all files and dirs
+  alias ll='exa --icons -l --color=always --group-directories-first'  # long format
+  # alias lt='exa -T --color=always --group-directories-first' # tree listing
+fi
+
+if (( $+commands[lazygit] ))
+then
+  alias lg='lazygit'
+else
+  alias lg='echo lazygit not installed'
+fi
+
+if (( $+commands[vim.gtk3] ))
+then
+  alias vim='vim.gtk3'
+  export EDITOR=vim.gtk3
+elif (( $+commands[vimx] ))
+then
+  alias vim='vimx'
+  export EDITOR=vimx
+else
+  export EDITOR=vim
+fi
+
+if (( $+commands[fd] ))
+then
+  alias fd="fd --follow"
+fi
+
+if (( $+commands[zellij] )); then
+  alias zja='zellij a $(zellij ls | fzf -0 -1)'
+fi
+
+alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
 
 if (( $+commands[fd] && $+commands[fzf-tmux] ))
 then
