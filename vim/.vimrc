@@ -196,7 +196,7 @@ if &t_Co > 2 || has("gui_running")
 endif
 
 " paste mode toggle (needed when using autoindent/smartindent)
-set pastetoggle=<F12>
+set pastetoggle=<F10>
 
 " Use of the filetype plugins, auto completion and indentation support
 filetype plugin indent on
