@@ -31,6 +31,19 @@ else
   ~/.fzf/install
 fi
 
+if which htop >/dev/null; then
+    echo "htop exists"
+else
+    echo "Installing htop"
+    wget https://github.com/htop-dev/htop/releases/download/3.2.2/htop-3.2.2.tar.xz
+    tar -xvf htop-3.2.2.tar.xz
+    cd htop-3.2.2
+    ./autogen.sh && ./configure --prefix=$HOME/.local/bin && make && make install
+    #clean
+    cd ..
+    rm -fr htop-3.2.2 htop-3.2.2.tar.xz
+fi
+
 if which fasd >/dev/null; then
     echo "fasd exists"
 else
