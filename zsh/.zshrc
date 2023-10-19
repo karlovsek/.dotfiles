@@ -188,6 +188,11 @@ then
   alias fd="fd --follow"
 fi
 
+if (( $+commands[fd] && $+commands[fzf] ))
+then
+  export FZF_DEFAULT_COMMAND='fd --follow --type f'
+fi
+
 if (( $+commands[zellij] )); then
   alias zja='zellij a $(zellij ls | fzf -0 -1)'
 fi
@@ -219,7 +224,6 @@ fi
 
 if (( $+commands[ag] ))
 then
-  export FZF_DEFAULT_COMMAND='ag -g ""'
   alias ag="ag -f" # follow symlinks
 fi
 
