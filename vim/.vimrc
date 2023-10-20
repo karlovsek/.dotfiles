@@ -255,6 +255,8 @@ elseif empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.vim/plugged')
+Plug 'liuchengxu/vim-which-key'
+nnoremap <silent> <leader> :WhichKey '<Space>'<CR>
 Plug 'mkitt/tabline.vim'
 Plug 'vim-scripts/AnsiEsc.vim'
 Plug 'Exafunction/codeium.vim'
