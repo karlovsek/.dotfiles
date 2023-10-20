@@ -2,6 +2,17 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 
+if which nvim >/dev/null; then
+  echo "NeoVim exists"
+else
+  echo "NeoVim does not exist, installing it ..."
+  wget https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
+  tar -xvf nvim-linux64.tar.gz --strip-components=1 -C ~/.local
+
+  # clean
+  rm nvim-linux64.tar.gz
+fi
+
 if which zsh >/dev/null; then
     echo "ZSH exists"
 else
@@ -81,8 +92,20 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
     echo -e "\tSymlinks created!"
 else
   echo "You can create Vim symlinks as:"
-  echo "ln -s ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc && ln -s ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommo"
+  echo "ln -s ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc && ln -s ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon"
 fi
+
+echo -ne "\nCreate NeoVim symlinks? (Y/n): "
+read answer
+answer=$(tr "[A-Z]" "[a-z]" <<< "$answer") 
+if [[ "$answer" == "y" || -z "$answer" ]]; then
+    ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim
+    echo -e "\tSymlinks created!"
+else
+  echo "You can create NeoVim symlinks as:"
+  echo "ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
+fi
+
 
 # install oh my ZSH
 RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
