@@ -100,10 +100,9 @@ nnoremap <silent> <Leader>j <C-w>j
 nnoremap <silent> <Leader>k <C-w>k
 nnoremap <silent> <Leader>l <C-w>l
 
-if has('terminal')
+if has('terminal') || has('nvim')
   tnoremap <silent> ,, <C-\><C-n>
   tnoremap <silent> <Space><Esc> <C-\><C-n>
-  tnoremap <silent> jk <C-w>:ChooseWin<CR>
   tnoremap <silent> <Leader>h <C-w>:wincmd h<CR>
   tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
   tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
