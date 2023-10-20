@@ -15,12 +15,13 @@ export ZSH=~/.oh-my-zsh
 
 ulimit -c unlimited 
 
-# set Vim as pager
-# removes underline %s/\e\[4m//g | silent %s/\e\[24m//g
-# --not-a-term suppresses "Vim: Reading from stdin..."
-export MANPAGER="vim +MANPAGER -c 'set nomod nolist nonu nornu buftype=nofile noswapfile nobackup' --not-a-term -"
-#export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
-# export PAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nonu noma' -\""
+# set Vim/NeoVim as pager
+
+if (( $+commands[nvim] )); then
+  export MANPAGER='nvim +Man!'
+else
+  export MANPAGER="vim +MANPAGER -c 'set nomod nolist nonu nornu buftype=nofile noswapfile nobackup' --not-a-term -"
+fi
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -181,6 +182,11 @@ then
   export EDITOR=vimx
 else
   export EDITOR=vim
+fi
+
+if (( $+commands[nvim] ))
+then
+  export EDITOR=nvim
 fi
 
 if (( $+commands[fd] ))
