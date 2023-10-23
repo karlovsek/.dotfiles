@@ -73,6 +73,14 @@ nnoremap ;; :wq<cr>
 xnoremap ; :
 inoremap ;;; <Esc>:wq<cr>
 
+" Keep search results at the center of screen
+nmap <silent> n nzz
+nmap <silent> N Nzz
+nmap <silent> * *zz
+nmap <silent> # #zz
+nmap <silent> g* g*zz
+nmap <silent> g# g#zz
+
 "  A yank command can be redone with ".".
 set cpoptions+=y
 
@@ -188,12 +196,5 @@ endif
 " cursor, so undefine the mapping there.
 autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 
-" Keep search results at the center of screen
-nmap <silent> n nzz
-nmap <silent> N Nzz
-nmap <silent> * *zz
-nmap <silent> # #zz
-nmap <silent> g* g*zz
-nmap <silent> g# g#zz
 
 " vim: set sw=2 ts=2 et foldlevel=0 foldmethod=marker:
