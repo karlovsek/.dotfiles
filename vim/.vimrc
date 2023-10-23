@@ -444,7 +444,7 @@ Plug 'junegunn/fzf.vim' " {{{
   nnoremap <silent> <leader>L   :BLines<CR>
   nnoremap <silent> <leader>l   :Lines<CR>
   nnoremap <silent> <leader>c   :Commits<CR>
-  nnoremap <leader>a :Rag -f " follows symlinks
+  nnoremap <leader>a :Rag -f 
   command! -bang -nargs=+ -complete=dir Rag call fzf#vim#ag_raw(<q-args>, fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}), <bang>0)
   nnoremap <leader>r   :Rg 
   nmap <silent> cc :Commands!<CR>
