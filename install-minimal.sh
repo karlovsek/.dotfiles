@@ -103,6 +103,7 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
 	echo -e "\tSymlinks created!"
 else
 	echo "You can create NeoVim symlinks as:"
+	mkdir -p $HOME/.config
 	echo "ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
