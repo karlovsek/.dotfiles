@@ -107,6 +107,22 @@ else
 	echo "ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
+if which zellij >/dev/null; then
+	echo "zellij exists"
+
+	echo -ne "\nCreate Zellij symlinks? (Y/n): "
+	read answer
+	answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
+	if [[ "$answer" == "y" || -z "$answer" ]]; then
+		ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij
+		echo -e "\tSymlinks created!"
+	else
+		echo "You can create Zellij symlinks as:"
+		mkdir -p $HOME/.config
+		echo "ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
+	fi
+fi
+
 # install oh my ZSH
 RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
