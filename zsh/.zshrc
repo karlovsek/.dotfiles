@@ -200,7 +200,8 @@ then
 fi
 
 if (( $+commands[zellij] )); then
-  alias zja='zellij a $(zellij ls | fzf -0 -1)'
+  alias zla='zellij a $(zellij ls 2> /dev/null | fzf -0 -1)'
+  eval "$(zellij setup --generate-completion zsh | grep "^function")"
 fi
 
 if (( $+commands[zsh] && $+commands[zellij] ))
