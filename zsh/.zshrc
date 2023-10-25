@@ -203,6 +203,11 @@ if (( $+commands[zellij] )); then
   alias zja='zellij a $(zellij ls | fzf -0 -1)'
 fi
 
+if (( $+commands[zsh] && $+commands[zellij] ))
+then
+  alias zellij="SHELL=zsh zellij"
+fi
+
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
 
 if (( $+commands[fd] && $+commands[fzf-tmux] ))
