@@ -249,7 +249,7 @@ if [[ ! -z $(uname -a | grep "microsoft-standard-WSL2") ]]
 then
   export DISPLAY=:0
 else
-  export DISPLAY=localhost:0.0
+  # export DISPLAY=localhost:0.0
 fi
 
 # stop pasted text being highlighted
