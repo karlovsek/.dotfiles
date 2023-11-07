@@ -112,8 +112,15 @@ keybinds clear-defaults=true {
 	}
 	session {
 		bind "Ctrl x" { SwitchToMode "Normal"; }
-		//bind "Ctrl x" { SwitchToMode "Scroll"; }
-		bind "d" { Detach; }
+    bind "Ctrl s" { SwitchToMode "Scroll"; }
+    bind "d" { Detach; }
+    bind "w" {
+        LaunchOrFocusPlugin "zellij:session-manager" {
+            floating true
+            move_to_focused_tab true
+        };
+        SwitchToMode "Normal"
+    }
 	}
 	tmux {
 		bind "[" { SwitchToMode "Scroll"; }
