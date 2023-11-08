@@ -239,6 +239,11 @@ then
   alias ag="ag -f" # follow symlinks
 fi
 
+if (( $+commands[atuin] ))
+then
+  eval "$(atuin init zsh --disable-up-arrow)"
+fi
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
