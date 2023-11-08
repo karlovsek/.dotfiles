@@ -19,23 +19,6 @@ au BufEnter * set formatoptions-=r formatoptions-=c formatoptions-=o
 " print current file's directory
 nnoremap <leader>d :echo expand('%:p:h')<CR>
 
-" Switch between tabs
-nmap <leader>1 1gt
-nmap <leader>2 2gt
-nmap <leader>3 3gt
-nmap <leader>4 4gt
-nmap <leader>5 5gt
-nmap <leader>6 6gt
-nmap <leader>7 7gt
-nmap <leader>8 8gt
-nmap <leader>9 9gt
-
-" Select all text
-noremap vA ggVG
-
-" Allow saving of files as sudo when I forgot to start vim using sudo.
-cmap w!! w !sudo tee > /dev/null %
-
 "Mode Settings
 augroup OnlyInActiveWindow
   autocmd!
