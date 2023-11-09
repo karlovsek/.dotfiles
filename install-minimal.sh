@@ -26,6 +26,19 @@ else
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)"
 fi
 
+if which fd 2>/dev/null; then
+	echo -e "${GREEN}fd exists ($(fd --version)) ${NC}"
+else
+	echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
+	version="8.7.1"
+	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/v${version}/fd-v${version}-x86_64-unknown-linux-musl.tar.gz
+	tar zxf fd-v${version}-x86_64-unknown-linux-musl.tar.gz
+	mv fd-v${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
+
+	#clean
+	rm -fr fd-v${version}-x86_64-unknown-linux-musl*
+fi
+
 if which rg 2>/dev/null; then
 	echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
