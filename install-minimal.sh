@@ -6,8 +6,8 @@ if which nvim >/dev/null; then
 	echo "NeoVim exists"
 else
 	echo "NeoVim does not exist, installing it ..."
-	wget https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
-	tar -xvf nvim-linux64.tar.gz --strip-components=1 -C ~/.local
+	wget -q --show-progress https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
+	tar -xf nvim-linux64.tar.gz --strip-components=1 -C ~/.local
 
 	# clean
 	rm nvim-linux64.tar.gz
@@ -26,8 +26,8 @@ else
 	echo "RG does not exist, installing it ..."
 	mkdir -p ~/.local/bin
 
-	wget https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
-	tar -xvf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
+	wget -q --show-progress https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
+	tar -xf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 	mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg ~/.local/bin
 
 	#clean
@@ -46,20 +46,21 @@ if which htop >/dev/null; then
 	echo "htop exists"
 else
 	echo "Installing htop"
-	wget https://github.com/htop-dev/htop/releases/download/3.2.2/htop-3.2.2.tar.xz
-	tar -xvf htop-3.2.2.tar.xz
-	cd htop-3.2.2
-	./autogen.sh && ./configure --prefix=$HOME/.local/bin && make && make install
+	version="3.2.2"
+	wget -q --show-progress https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
+	tar -xf htop-${version}.tar.xz
+	cd htop-${version}
+	./autogen.sh > /dev/null && ./configure --prefix=$HOME/.local/bin > /dev/null && make > /dev/null && make install
 	#clean
 	cd ..
-	rm -fr htop-3.2.2 htop-3.2.2.tar.xz
+	rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
 if which fasd >/dev/null; then
 	echo "fasd exists"
 else
 	echo "Installing fasd"
-	wget https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
+	wget -q --show-progress https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
 	unzip -p fasd.zip clvv-fasd-4822024/fasd >~/.local/bin/fasd
 	chmod +x ~/.local/bin/fasd
 	#clean
@@ -70,11 +71,12 @@ if which lazygit >/dev/null; then
 	echo "lazygit exists"
 else
 	echo "Installing lazygit"
-	wget https://github.com/jesseduffield/lazygit/releases/download/v0.40.2/lazygit_0.40.2_Linux_x86_64.tar.gz
-	tar -xf lazygit_0.37.0_Linux_x86_64.tar.gz
+	version="0.40.2"
+	wget -q --show-progress https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
+	tar -xf lazygit_${version}_Linux_x86_64.tar.gz
 	mkdir -p ~/.local/bin
 	mv lazygit ~/.local/bin/
-	rm lazygit_0.37.0_Linux_x86_64.tar.gz LICENSE README.md
+	rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
 echo -ne "\nCreate Vim symlinks? (Y/n): "
