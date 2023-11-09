@@ -1,9 +1,15 @@
 #!/bin/bash
+
+RED='\033[0;31m'
+YELLOW='\e[0;33m'
+GREEN='\e[0;32m'
+NC='\033[0m' # No Color
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 
 if which nvim >/dev/null; then
-	echo "NeoVim exists"
+	echo -e "${GREEN}NeoVim exists ${NC}"
 else
 	echo "NeoVim does not exist, installing it ..."
 	wget -q --show-progress https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
@@ -14,16 +20,16 @@ else
 fi
 
 if which zsh >/dev/null; then
-	echo "ZSH exists"
+	echo -e "${GREEN}ZSH exists ${NC}"
 else
-	echo "ZSH does not exist, installing it ..."
+	echo -e "${YELLOW}ZSH does not exist, installing it ... ${NC}"
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)"
 fi
 
 if which rg >/dev/null; then
-	echo "RG exists"
+	echo -e "${GREEN}RG exists ${NC}"
 else
-	echo "RG does not exist, installing it ..."
+	echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
 	mkdir -p ~/.local/bin
 
 	wget -q --show-progress https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
@@ -35,22 +41,22 @@ else
 fi
 
 if which fzf >/dev/null; then
-	echo "fzf exists"
+	echo -e "${GREEN} fzf exists ${NC}"
 else
-	echo "Installing fzf"
+	echo -e "${YELLOW}Installing fzf ${NC}"
 	git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 	~/.fzf/install
 fi
 
 if which htop >/dev/null; then
-	echo "htop exists"
+	echo -e "${GREEN}htop exists ${NC}"
 else
-	echo "Installing htop"
+	echo -e "Installing htop${NC}"
 	version="3.2.2"
 	wget -q --show-progress https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
 	tar -xf htop-${version}.tar.xz
 	cd htop-${version}
-	./autogen.sh > /dev/null && ./configure --prefix=$HOME/.local/bin > /dev/null && make > /dev/null && make install
+	./autogen.sh > /dev/null && ./configure --prefix=$HOME/.local > /dev/null && make > /dev/null && make install
 	#clean
 	cd ..
 	rm -fr htop-${version} htop-${version}.tar.xz
