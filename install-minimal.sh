@@ -8,7 +8,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 
-if which nvim >/dev/null; then
+if which nvim 2>/dev/null; then
 	echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
 	echo "NeoVim does not exist, installing it ..."
@@ -19,14 +19,14 @@ else
 	rm nvim-linux64.tar.gz
 fi
 
-if which zsh >/dev/null; then
+if which zsh 2>/dev/null; then
 	echo -e "${GREEN}ZSH exists ($(zsh --version)) ${NC}"
 else
 	echo -e "${YELLOW}ZSH does not exist, installing it ... ${NC}"
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)"
 fi
 
-if which rg >/dev/null; then
+if which rg 2>/dev/null; then
 	echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
 	echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
@@ -40,15 +40,15 @@ else
 	rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 fi
 
-if which fzf >/dev/null; then
+if which fzf 2>/dev/null; then
 	echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
 else
 	echo -e "${YELLOW}Installing fzf ${NC}"
-	git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+	git clone -q --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 	~/.fzf/install
 fi
 
-if which htop >/dev/null; then
+if which htop 2>/dev/null; then
 	echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
 else
 	echo -e "Installing htop${NC}"
@@ -62,7 +62,7 @@ else
 	rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
-if which fasd >/dev/null; then
+if which fasd 2>/dev/null; then
 	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
 else
 	echo "Installing fasd"
@@ -73,7 +73,7 @@ else
 	rm fasd.zip
 fi
 
-if which lazygit >/dev/null; then
+if which lazygit 2>/dev/null; then
 	echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
 	echo "Installing lazygit"
@@ -97,7 +97,7 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
 	fi
 	ln -s ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc
 	ln -s ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon
-	echo -e "\tSymlinks created!"
+	echo -e "\t${GREEN}Symlinks created! ${NC}"
 else
 	echo "You can create Vim symlinks as:"
 	echo "ln -s ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc && ln -s ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon"
@@ -107,15 +107,15 @@ echo -ne "\nCreate NeoVim symlinks? (Y/n): "
 read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 if [[ "$answer" == "y" || -z "$answer" ]]; then
+	mkdir -p $HOME/.config
 	ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim
-	echo -e "\tSymlinks created!"
+	echo -e "\t${GREEN}Symlinks created! ${NC}"
 else
 	echo "You can create NeoVim symlinks as:"
-	mkdir -p $HOME/.config
 	echo "ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
-if which zellij >/dev/null; then
+if which zellij 2>/dev/null; then
 	echo -e "${GREEN}zellij exists ${NC}"
 	
 	echo -ne "Create Zellij symlinks? (Y/n): "
@@ -123,7 +123,7 @@ if which zellij >/dev/null; then
 	answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 	if [[ "$answer" == "y" || -z "$answer" ]]; then
 		ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij
-		echo -e "\tSymlinks created!"
+		echo -e "\t${GREEN}Symlinks created! ${NC}"
 	else
 		echo "You can create Zellij symlinks as:"
 		mkdir -p $HOME/.config
@@ -135,6 +135,7 @@ fi
 if [ -d "$HOME/.oh-my-zsh" ]; then
   echo -e "${YELLOW}$HOME/.oh-my-zsh does exist. Skipping installing oh-my-zsh ${NC}"
 else
+	echo -e "Installing oh-my-zsh ${NC}"
 	RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
