@@ -185,18 +185,22 @@ function! EnsureDirExists (dir)
   endif
 endfunction
 
-let myUndoDir = $HOME . "/.vim/undodir"
+let root_dir = $HOME . "/.vim"
+if has('nvim')
+  let root_dir = $HOME . "/.nvim"
+end
+let myUndoDir = root_dir . "/undodir"
 call EnsureDirExists(myUndoDir)
 set undofile                " Save undos after file closes
 let &undodir=myUndoDir.'//'  " where to save undo histories
 set undolevels=1000         " How many undos
 set undoreload=10000        " number of lines to save for undo
 
-let mySwapDir = $HOME . "/.vim/swap"
+let mySwapDir = root_dir . "/swap"
 call EnsureDirExists(mySwapDir)
 let &directory = mySwapDir . '//'
 
-let myBackupDir = $HOME . "/.vim/backup"
+let myBackupDir = root_dir . "/backup"
 call EnsureDirExists(myBackupDir)
 let &backupdir = myBackupDir . '//'
 
