@@ -200,7 +200,7 @@ then
 fi
 
 if (( $+commands[zellij] )); then
-  alias zla="pwd=\$(echo \${PWD##*\$HOME} | sed 's/\\//\\\\\\\\/g' | tail -c100) && zellij a -c \$((zellij ls -n 2> /dev/null; echo \"\${\${pwd:-~}} \t >> pwd <<\") | fzf -0 -1 --tac| awk '{print \$1}')"
+  alias zla="pwd=\$(echo \${PWD##*\$HOME} | sed 's/^\\///g' | sed 's/\\//\\\\\\\\/g' | tail -c100) && zellij a -c \$((zellij ls -n 2> /dev/null; echo \"\${\${pwd:-~}} \t >> pwd <<\") | fzf -0 -1 --tac| awk '{print \$1}')"
   eval "$(zellij setup --generate-completion zsh | grep "^function")"
 fi
 
