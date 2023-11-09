@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 echo "SCRIPT_DIR=${SCRIPT_DIR}"
 
 if which nvim >/dev/null; then
-	echo -e "${GREEN}NeoVim exists ${NC}"
+	echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
 	echo "NeoVim does not exist, installing it ..."
 	wget -q --show-progress https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
@@ -20,14 +20,14 @@ else
 fi
 
 if which zsh >/dev/null; then
-	echo -e "${GREEN}ZSH exists ${NC}"
+	echo -e "${GREEN}ZSH exists ($(zsh --version)) ${NC}"
 else
 	echo -e "${YELLOW}ZSH does not exist, installing it ... ${NC}"
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)"
 fi
 
 if which rg >/dev/null; then
-	echo -e "${GREEN}RG exists ${NC}"
+	echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
 	echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
 	mkdir -p ~/.local/bin
@@ -41,7 +41,7 @@ else
 fi
 
 if which fzf >/dev/null; then
-	echo -e "${GREEN} fzf exists ${NC}"
+	echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
 else
 	echo -e "${YELLOW}Installing fzf ${NC}"
 	git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
@@ -49,21 +49,21 @@ else
 fi
 
 if which htop >/dev/null; then
-	echo -e "${GREEN}htop exists ${NC}"
+	echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
 else
 	echo -e "Installing htop${NC}"
 	version="3.2.2"
 	wget -q --show-progress https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
 	tar -xf htop-${version}.tar.xz
 	cd htop-${version}
-	./autogen.sh > /dev/null && ./configure --prefix=$HOME/.local > /dev/null && make > /dev/null && make install
+	./autogen.sh > /dev/null && ./configure --prefix=$HOME/.local > /dev/null && make > /dev/null && make install > /dev/null
 	#clean
 	cd ..
 	rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
 if which fasd >/dev/null; then
-	echo "fasd exists"
+	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
 else
 	echo "Installing fasd"
 	wget -q --show-progress https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
@@ -74,7 +74,7 @@ else
 fi
 
 if which lazygit >/dev/null; then
-	echo "lazygit exists"
+	echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
 	echo "Installing lazygit"
 	version="0.40.2"
@@ -116,9 +116,9 @@ else
 fi
 
 if which zellij >/dev/null; then
-	echo "zellij exists"
-
-	echo -ne "\nCreate Zellij symlinks? (Y/n): "
+	echo -e "${GREEN}zellij exists ${NC}"
+	
+	echo -ne "Create Zellij symlinks? (Y/n): "
 	read answer
 	answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 	if [[ "$answer" == "y" || -z "$answer" ]]; then
@@ -132,13 +132,30 @@ if which zellij >/dev/null; then
 fi
 
 # install oh my ZSH
-RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+if [ -d "$HOME/.oh-my-zsh" ]; then
+  echo -e "${YELLOW}$HOME/.oh-my-zsh does exist. Skipping installing oh-my-zsh ${NC}"
+else
+	RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
 
 # install oh my ZSH plugins, must be after installing oh-my-zsh
-git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+install_zsh_plugin () {
+	url=$1
+	install_path=$2
+	plugin_name=$(basename $2)
+
+	if [ ! -d "$2" ]; then	
+		echo -e "${GREEN}Installing $plugin_name ${NC}"
+		git clone -q --depth=1 $1 $2
+	else 
+		echo -e "${YELLOW}${plugin_name} already installed${NC}"
+	fi
+} 
+
+install_zsh_plugin https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
+install_zsh_plugin https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+install_zsh_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+install_zsh_plugin --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
 echo -ne "\nCreate zshrc and p10k symlinks? (Y/n): "
 read answer
