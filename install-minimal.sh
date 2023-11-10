@@ -30,8 +30,10 @@ if which fd 2>/dev/null; then
 	echo -e "${GREEN}fd exists ($(fd --version)) ${NC}"
 else
 	echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
-	version="8.7.1"
-	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/v${version}/fd-v${version}-x86_64-unknown-linux-musl.tar.gz
+	# get the latest version of fd from github
+	version=$(curl --silent "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
 	tar zxf fd-v${version}-x86_64-unknown-linux-musl.tar.gz
 	mv fd-v${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
 
@@ -64,12 +66,14 @@ fi
 if which htop 2>/dev/null; then
 	echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
 else
-	echo -e "Installing htop${NC}"
-	version="3.2.2"
+	# get the latest version of htop from github
+	version=$(curl --silent "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+	echo -e "${YELLOW}Installing htop ${version} ${NC}"
+
 	wget -q --show-progress https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
 	tar -xf htop-${version}.tar.xz
 	cd htop-${version}
-	./autogen.sh > /dev/null && ./configure --prefix=$HOME/.local > /dev/null && make > /dev/null && make install > /dev/null
+	./autogen.sh >/dev/null && ./configure --prefix=$HOME/.local >/dev/null && make >/dev/null && make install >/dev/null
 	#clean
 	cd ..
 	rm -fr htop-${version} htop-${version}.tar.xz
@@ -89,8 +93,11 @@ fi
 if which lazygit 2>/dev/null; then
 	echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
-	echo "Installing lazygit"
-	version="0.40.2"
+	# get the latest version of lazygit from github
+	version=$(curl --silent "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+	echo -e "${YELLOW}Installing lazygit ${version} ${NC}"
+
 	wget -q --show-progress https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
 	tar -xf lazygit_${version}_Linux_x86_64.tar.gz
 	mkdir -p ~/.local/bin
@@ -130,7 +137,7 @@ fi
 
 if which zellij 2>/dev/null; then
 	echo -e "${GREEN}zellij exists ${NC}"
-	
+
 	echo -ne "Create Zellij symlinks? (Y/n): "
 	read answer
 	answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
@@ -146,25 +153,25 @@ fi
 
 # install oh my ZSH
 if [ -d "$HOME/.oh-my-zsh" ]; then
-  echo -e "${YELLOW}$HOME/.oh-my-zsh does exist. Skipping installing oh-my-zsh ${NC}"
+	echo -e "${YELLOW}$HOME/.oh-my-zsh does exist. Skipping installing oh-my-zsh ${NC}"
 else
 	echo -e "Installing oh-my-zsh ${NC}"
 	RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
 # install oh my ZSH plugins, must be after installing oh-my-zsh
-install_zsh_plugin () {
+install_zsh_plugin() {
 	url=$1
 	install_path=$2
 	plugin_name=$(basename $2)
 
-	if [ ! -d "$2" ]; then	
+	if [ ! -d "$2" ]; then
 		echo -e "${GREEN}Installing $plugin_name ${NC}"
 		git clone -q --depth=1 $1 $2
-	else 
+	else
 		echo -e "${YELLOW}${plugin_name} already installed${NC}"
 	fi
-} 
+}
 
 install_zsh_plugin https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
 install_zsh_plugin https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
