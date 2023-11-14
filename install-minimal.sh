@@ -105,6 +105,21 @@ else
 	rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
+if which zellij 2>/dev/null; then
+	echo -e "${GREEN}zellij exists ($(zellij --version | awk '{print $2}')) ${NC}"
+else
+	# get the latest version of lazygit from github
+	version=$(curl --silent "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+	echo -e "${YELLOW}Installing zellij ${version} ${NC}"
+
+	wget -q --show-progress https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
+	tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
+	mkdir -p ~/.local/bin
+	mv zellij ~/.local/bin/
+	rm zellij-x86_64-unknown-linux-musl.tar.gz
+fi
+
 echo -ne "\nCreate Vim symlinks? (Y/n): "
 read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
