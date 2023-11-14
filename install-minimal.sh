@@ -157,11 +157,11 @@ if which zellij 2>/dev/null; then
 	read answer
 	answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 	if [[ "$answer" == "y" || -z "$answer" ]]; then
+		mkdir -p $HOME/.config
 		ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij
 		echo -e "\t${GREEN}Symlinks created! ${NC}"
 	else
 		echo "You can create Zellij symlinks as:"
-		mkdir -p $HOME/.config
 		echo "ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
 	fi
 fi
