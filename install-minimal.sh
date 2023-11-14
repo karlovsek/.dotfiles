@@ -38,7 +38,7 @@ else
 	mv fd-v${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
 
 	#clean
-	rm -fr fd-v${version}-x86_64-unknown-linux-musl*
+	rm -fr fd-v${version}-x86_64-unknown-linux-musl.tar.gz
 fi
 
 if which rg 2>/dev/null; then
