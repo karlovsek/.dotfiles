@@ -34,11 +34,11 @@ else
 	version=$(curl --silent "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
 	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
-	tar zxf fd-v${version}-x86_64-unknown-linux-musl.tar.gz
-	mv fd-v${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
+	tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
+	mv fd-${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
 
 	#clean
-	rm -fr fd-v${version}-x86_64-unknown-linux-musl.tar.gz
+	rm -fr fd-${version}-x86_64-unknown-linux-musl.tar.gz
 fi
 
 if which rg 2>/dev/null; then
