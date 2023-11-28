@@ -38,7 +38,7 @@ else
 	mv fd-${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
 
 	#clean
-	rm -fr fd-${version}-x86_64-unknown-linux-musl.tar.gz
+	rm -fr fd-${version}-x86_64-unknown-linux-musl
 fi
 
 if which rg 2>/dev/null; then
@@ -113,11 +113,13 @@ else
 
 	echo -e "${YELLOW}Installing zellij ${version} ${NC}"
 
-	wget -q --show-progress https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
-	tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-	mkdir -p ~/.local/bin
-	mv zellij ~/.local/bin/
-	rm zellij-x86_64-unknown-linux-musl.tar.gz
+  mkdir zellij_tmp && cd zellij_tmp
+	  wget -q --show-progress https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
+	  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
+	  mkdir -p ~/.local/bin
+	  mv zellij ~/.local/bin/
+    cd ..
+	rm -fr zellij_tmp
 fi
 
 echo -ne "\nCreate Vim symlinks? (Y/n): "
