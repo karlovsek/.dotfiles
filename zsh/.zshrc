@@ -218,8 +218,6 @@ else
   alias vv='echo "fd or fzf-tmux is missing!"'
 fi
 
-alias eh="file=`mktemp`.sh && tmux capture-pane -pS - > $file && $EDITOR '+ normal G $' $file"
-
 if (( $+commands[bit] ))
 then
   autoload -U +X bashcompinit && bashcompinit
@@ -247,8 +245,13 @@ fi
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Created by `userpath` on 2020-12-16 07:36:51
+
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
+
+# Generate autocompletin
+for prog in `ls $HOME/.local/bin/`;do
+  compdef _gnu_generic $prog
+done
 
 if [[ ! -z $(uname -a | grep "microsoft-standard-WSL2") ]]
 then
@@ -260,7 +263,3 @@ fi
 # stop pasted text being highlighted
 zle_highlight+=('paste:none')
 
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
