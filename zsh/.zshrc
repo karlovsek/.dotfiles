@@ -199,6 +199,8 @@ then
   export FZF_DEFAULT_COMMAND='fd --follow --type f'
 fi
 
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 if (( $+commands[zellij] )); then
   alias zla="pwd=\$(echo \${PWD##*\$HOME} | sed 's/^\\///g' | sed 's/\\//\\\\\\\\/g' | tail -c100) && zellij a -c \$((zellij ls -n 2> /dev/null; echo \"\${\${pwd:-~}} \t >> pwd <<\") | fzf -0 -1 --tac| awk '{print \$1}')"
   eval "$(zellij setup --generate-completion zsh | grep "^function")"
@@ -211,12 +213,6 @@ fi
 
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
 
-if (( $+commands[fd] && $+commands[fzf-tmux] ))
-then
-  alias vv='fd --type f --hidden --exclude .git | fzf-tmux -p --reverse | xargs --no-run-if-empty -o "$EDITOR"'
-else
-  alias vv='echo "fd or fzf-tmux is missing!"'
-fi
 
 if (( $+commands[bit] ))
 then
