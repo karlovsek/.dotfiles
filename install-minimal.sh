@@ -29,7 +29,7 @@ if which zsh 2>/dev/null; then
 	echo -e "${GREEN}ZSH exists ($(zsh --version)) ${NC}"
 else
 	echo -e "${YELLOW}ZSH does not exist, installing it ... ${NC}"
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install)"
+	bash <(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install) -d $INSTALL_DIR -e yes
 fi
 
 if which fd 2>/dev/null; then
@@ -64,8 +64,8 @@ if which fzf 2>/dev/null; then
 	echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
 else
 	echo -e "${YELLOW}Installing fzf ${NC}"
-	git clone -q --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-	~/.fzf/install
+	git clone -q --depth 1 https://github.com/junegunn/fzf.git $INSTALL_DIR/fzf
+	$INSTALL_DIR/fzf/install --key-bindings --completion --update-rc
 fi
 
 if which htop 2>/dev/null; then
@@ -219,4 +219,5 @@ else
 fi
 
 echo "Installation completed!"
-zsh # run ZSH
+# run ZSH and configure p10k
+zsh -c "source ~/.zshrc && p10k configure && zsh"
