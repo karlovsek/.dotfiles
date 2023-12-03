@@ -4,7 +4,7 @@
 
 ## Minimal
 Requirements:
-* git wget curl build-essential
+* git zip wget curl build-essential autoconf
 
 `git clone https://github.com/karlovsek/.dotfiles.git && bash .dotfiles/install-minimal.sh`
 
