@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 
-if which nvim 2>/dev/null; then
+if which nvim >/dev/null; then
 	echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
 	echo "NeoVim does not exist, installing it ..."
@@ -26,14 +26,14 @@ else
 	rm nvim-linux64.tar.gz
 fi
 
-if which zsh 2>/dev/null; then
+if which zsh >/dev/null; then
 	echo -e "${GREEN}ZSH exists ($(zsh --version)) ${NC}"
 else
 	echo -e "${YELLOW}ZSH does not exist, installing it ... ${NC}"
 	bash <(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install) -d $INSTALL_DIR -e yes
 fi
 
-if which fd 2>/dev/null; then
+if which fd >/dev/null; then
 	echo -e "${GREEN}fd exists ($(fd --version)) ${NC}"
 else
 	echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
@@ -48,7 +48,7 @@ else
 	rm -fr fd-${version}-x86_64-unknown-linux-musl*
 fi
 
-if which rg 2>/dev/null; then
+if which rg >/dev/null; then
 	echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
 	echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
@@ -61,7 +61,7 @@ else
 	rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 fi
 
-if which fzf 2>/dev/null; then
+if which fzf >/dev/null; then
 	echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
 else
 	echo -e "${YELLOW}Installing fzf ${NC}"
@@ -69,7 +69,7 @@ else
 	$INSTALL_DIR/fzf/install --key-bindings --completion --update-rc
 fi
 
-if which htop 2>/dev/null; then
+if which htop >/dev/null; then
 	echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
 else
 	# get the latest version of htop from github
@@ -85,7 +85,7 @@ else
 	rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
-if which fasd 2>/dev/null; then
+if which fasd >/dev/null; then
 	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
 else
 	echo "Installing fasd"
@@ -96,7 +96,7 @@ else
 	rm fasd.zip
 fi
 
-if which lazygit 2>/dev/null; then
+if which lazygit >/dev/null; then
 	echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
 	# get the latest version of lazygit from github
@@ -110,7 +110,7 @@ else
 	rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
-if which zellij 2>/dev/null; then
+if which zellij >/dev/null; then
 	echo -e "${GREEN}zellij exists ($(zellij --version | awk '{print $2}')) ${NC}"
 else
 	# get the latest version of lazygit from github
@@ -211,7 +211,7 @@ fi
 ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc
 cp ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh 
 
-echo -e "${GREEN}Installation completed! ${NC}"
-read -p "Press Enter to run zsh and \`p10k configure\`"
+echo -e "\n${GREEN}Installation completed! ${NC}"
+read -p "Press Enter to run zsh!"
 # run ZSH and configure p10k
-zsh -c "source ~/.zshrc; p10k configure; zsh"
+zsh -c "source ~/.zshrc &&  echo -e '\n${YELLOW}To configure p10k run: p10k configure' ; zsh ${NC}"
