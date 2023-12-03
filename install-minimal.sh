@@ -200,24 +200,17 @@ install_zsh_plugin https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM
 install_zsh_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 install_zsh_plugin https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
-echo -ne "\nCreate zshrc and p10k symlinks? (Y/n): "
-read answer
-answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
-if [[ "$answer" == "y" || -z "$answer" ]]; then
-	if [ -f ~/.zshrc ]; then
-		mv ~/.zshrc ~/.zshrc_orig
-	fi
-	if [ -f ~/..p10k.zsh ]; then
-		mv ~/.p10k.zsh ~/.p10k.zsh_orig
-	fi
-	ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc
-	ln -sf ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh
-	echo -e "\tSymlinks created!"
-else
-	echo "You can create ZSH symlinks as:"
-	echo "ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc &&  ln -sf ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh"
-fi
 
-echo "Installation completed!"
+if [ -f ~/.zshrc ]; then
+	mv ~/.zshrc ~/.zshrc_orig
+fi
+if [ -f ~/.p10k.zsh ]; then
+	mv ~/.p10k.zsh ~/.p10k.zsh_orig
+fi
+ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc
+cp ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh 
+
+echo -e "${GREEN}Installation completed! ${NC}"
+read -p "Press Enter to run zsh and configure p10k"
 # run ZSH and configure p10k
-zsh -c "source ~/.zshrc && p10k configure && zsh"
+zsh -c "source ~/.zshrc && p10k configure || zsh"
