@@ -214,4 +214,4 @@ cp ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh
 echo -e "\n${GREEN}Installation completed! ${NC}"
 read -p "Press Enter to run zsh!"
 # run ZSH and configure p10k
-zsh -c "source ~/.zshrc &&  echo -e '\n${YELLOW}To configure p10k run: p10k configure' ; zsh ${NC}"
+zsh -c "source ~/.zshrc &&  echo -e \"\n\e[0;33mTo configure p10k run: p10k configure \033[0m\" ; zsh"
