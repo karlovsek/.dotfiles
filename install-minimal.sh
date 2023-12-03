@@ -1,19 +1,25 @@
 #!/bin/bash
 
+INSTALL_DIR="$HOME/.local"
+
+read -p "Press Enter to intall all programs into $INSTALL_DIR"
+
+mkdir -p $INSTALL_DIR/bin
+
 RED='\033[0;31m'
 YELLOW='\e[0;33m'
 GREEN='\e[0;32m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-echo "SCRIPT_DIR=${SCRIPT_DIR}"
+
 
 if which nvim 2>/dev/null; then
 	echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
 	echo "NeoVim does not exist, installing it ..."
 	wget -q --show-progress https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
-	tar -xf nvim-linux64.tar.gz --strip-components=1 -C ~/.local
+	tar -xf nvim-linux64.tar.gz --strip-components=1 -C $INSTALL_DIR
 
 	# clean
 	rm nvim-linux64.tar.gz
@@ -35,21 +41,20 @@ else
 
 	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
 	tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
-	mv fd-${version}-x86_64-unknown-linux-musl/fd ~/.local/bin
+	mv fd-${version}-x86_64-unknown-linux-musl/fd $INSTALL_DIR/bin
 
 	#clean
-	rm -fr fd-${version}-x86_64-unknown-linux-musl
+	rm -fr fd-${version}-x86_64-unknown-linux-musl*
 fi
 
 if which rg 2>/dev/null; then
 	echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
 	echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
-	mkdir -p ~/.local/bin
 
 	wget -q --show-progress https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 	tar -xf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
-	mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg ~/.local/bin
+	mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg $INSTALL_DIR/bin
 
 	#clean
 	rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
@@ -73,7 +78,7 @@ else
 	wget -q --show-progress https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
 	tar -xf htop-${version}.tar.xz
 	cd htop-${version}
-	./autogen.sh >/dev/null && ./configure --prefix=$HOME/.local >/dev/null && make >/dev/null && make install >/dev/null
+	./autogen.sh >/dev/null && ./configure --prefix=$INSTALL_DIR >/dev/null && make >/dev/null && make install >/dev/null
 	#clean
 	cd ..
 	rm -fr htop-${version} htop-${version}.tar.xz
@@ -84,8 +89,8 @@ if which fasd 2>/dev/null; then
 else
 	echo "Installing fasd"
 	wget -q --show-progress https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
-	unzip -p fasd.zip clvv-fasd-4822024/fasd >~/.local/bin/fasd
-	chmod +x ~/.local/bin/fasd
+	unzip -p fasd.zip clvv-fasd-4822024/fasd > $INSTALL_DIR/bin/fasd
+	chmod +x $INSTALL_DIR/bin/fasd
 	#clean
 	rm fasd.zip
 fi
@@ -100,8 +105,7 @@ else
 
 	wget -q --show-progress https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
 	tar -xf lazygit_${version}_Linux_x86_64.tar.gz
-	mkdir -p ~/.local/bin
-	mv lazygit ~/.local/bin/
+	mv lazygit $INSTALL_DIR/bin/
 	rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
@@ -116,8 +120,7 @@ else
   mkdir zellij_tmp && cd zellij_tmp
 	  wget -q --show-progress https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
 	  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-	  mkdir -p ~/.local/bin
-	  mv zellij ~/.local/bin/
+	  mv zellij $INSTALL_DIR/bin/
     cd ..
 	rm -fr zellij_tmp
 fi
@@ -132,12 +135,12 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
 	if [ -f ~/.vimcommon ]; then
 		mv ~/.vimcommon ~/.vimcommon_orig
 	fi
-	ln -s ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc
-	ln -s ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon
+	ln -sf ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc
+	ln -sf ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon
 	echo -e "\t${GREEN}Symlinks created! ${NC}"
 else
 	echo "You can create Vim symlinks as:"
-	echo "ln -s ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc && ln -s ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon"
+	echo "ln -sf ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc && ln -sf ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon"
 fi
 
 echo -ne "\nCreate NeoVim symlinks? (Y/n): "
@@ -145,11 +148,11 @@ read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 if [[ "$answer" == "y" || -z "$answer" ]]; then
 	mkdir -p $HOME/.config
-	ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim
+	ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim
 	echo -e "\t${GREEN}Symlinks created! ${NC}"
 else
 	echo "You can create NeoVim symlinks as:"
-	echo "ln -s ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
+	echo "ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
 if which zellij 2>/dev/null; then
@@ -160,11 +163,11 @@ if which zellij 2>/dev/null; then
 	answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 	if [[ "$answer" == "y" || -z "$answer" ]]; then
 		mkdir -p $HOME/.config
-		ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij
+		ln -sf ${SCRIPT_DIR}/zellij $HOME/.config/zellij
 		echo -e "\t${GREEN}Symlinks created! ${NC}"
 	else
 		echo "You can create Zellij symlinks as:"
-		echo "ln -s ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
+		echo "ln -sf ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
 	fi
 fi
 
@@ -173,7 +176,9 @@ if [ -d "$HOME/.oh-my-zsh" ]; then
 	echo -e "${YELLOW}$HOME/.oh-my-zsh does exist. Skipping installing oh-my-zsh ${NC}"
 else
 	echo -e "Installing oh-my-zsh ${NC}"
-	RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+	#   CHSH       - 'no' means the installer will not change the default shell (default: yes)
+	#   RUNZSH     - 'no' means the installer will not run zsh after the install (default: yes)
+	RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
 # install oh my ZSH plugins, must be after installing oh-my-zsh
@@ -205,12 +210,12 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
 	if [ -f ~/..p10k.zsh ]; then
 		mv ~/.p10k.zsh ~/.p10k.zsh_orig
 	fi
-	ln -s ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc
-	ln -s ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh
+	ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc
+	ln -sf ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh
 	echo -e "\tSymlinks created!"
 else
 	echo "You can create ZSH symlinks as:"
-	echo "ln -s ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc &&  ln -s ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh"
+	echo "ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc &&  ln -sf ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh"
 fi
 
 echo "Installation completed!"

@@ -1,6 +1,11 @@
 # Quick install command
 `git clone https://github.com/karlovsek/.dotfiles.git && bash .dotfiles/install.sh`
 
+
+## Minimal
+Requirements:
+* git wget curl build-essential
+
 `git clone https://github.com/karlovsek/.dotfiles.git && bash .dotfiles/install-minimal.sh`
 
 # .dotfiles
