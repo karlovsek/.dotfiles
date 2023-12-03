@@ -2,7 +2,8 @@
 
 INSTALL_DIR="$HOME/.local"
 
-read -p "Press Enter to intall all programs into $INSTALL_DIR"
+echo -e "\e[0;33m\nPress Enter to intall all programs into $INSTALL_DIR \033[0m"
+read -p ""
 
 mkdir -p $INSTALL_DIR/bin
 
