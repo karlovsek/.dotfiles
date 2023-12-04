@@ -109,8 +109,7 @@ ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
-# help for exa and fd
-compdef _gnu_generic exa fd tldr
+
 # Edit line in vim with ctrl-x-e
 bindkey '^x^e' edit-command-line
 bindkey '\ee' edit-command-line
@@ -156,6 +155,8 @@ fi
 
 if (( $+commands[exa] ))
 then
+  compdef _gnu_generic exa
+
   # Changing "ls" to "exa"
   # Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
   # Uncomment DISABLE_LS_COLORS="true"
@@ -167,6 +168,7 @@ fi
 
 if (( $+commands[lazygit] ))
 then
+  compdef _gnu_generic lazygit
   alias lg='lazygit'
 else
   alias lg='echo lazygit not installed'
@@ -196,19 +198,17 @@ fi
 
 if (( $+commands[fd] && $+commands[fzf] ))
 then
+  compdef _gnu_generic fd fzf
   export FZF_DEFAULT_COMMAND='fd --follow --type f'
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 if (( $+commands[zellij] )); then
+  compdef _gnu_generic zellij
   alias zla="pwd=\$(echo \${PWD##*\$HOME} | sed 's/^\\///g' | sed 's/\\//\\\\\\\\/g' | tail -c100) && zellij a -c \$((zellij ls -n 2> /dev/null; echo \"\${\${pwd:-~}} \t >> pwd <<\") | fzf -0 -1 --tac| awk '{print \$1}')"
   eval "$(zellij setup --generate-completion zsh | grep "^function")"
-fi
-
-if (( $+commands[zsh] && $+commands[zellij] ))
-then
-  alias zellij="SHELL=zsh zellij"
+  alias ze="SHELL=zsh zellij"
 fi
 
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
@@ -230,7 +230,14 @@ fi
 
 if (( $+commands[ag] ))
 then
+  compdef _gnu_generic ag
   alias ag="ag -f" # follow symlinks
+fi
+
+if (( $+commands[rg] ))
+then
+  compdef _gnu_generic rg
+  alias rg="rg --follow" # follow symlinks
 fi
 
 if (( $+commands[atuin] ))
@@ -244,10 +251,6 @@ fi
 
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
 
-# Generate autocompletin
-for prog in `ls $HOME/.local/bin/`;do
-  compdef _gnu_generic $prog
-done
 
 if [[ ! -z $(uname -a | grep "microsoft-standard-WSL2") ]]
 then
