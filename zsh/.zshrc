@@ -13,6 +13,8 @@ fi
 # Path to your oh-my-zsh installation.
 export ZSH=~/.oh-my-zsh
 
+export FZF_BASE=$(which fzf | sed 's|/bin/fzf||')
+
 ulimit -c unlimited 
 
 # set Vim/NeoVim as pager
