@@ -5,7 +5,17 @@ INSTALL_DIR="$HOME/.local"
 echo -e "\e[0;33m\nPress Enter to intall all programs into $INSTALL_DIR \033[0m"
 read -p ""
 
-mkdir -p $INSTALL_DIR/bin
+INSTALL_BIN_DIR=$INSTALL_DIR/bin
+mkdir -p $INSTALL_BIN_DIR
+
+echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
+
+export PATH=$PATH:$INSTALL_BIN_DIR
+
+cat << EOF >> $HOME/.bashrc
+
+export PATH=$PATH:$INSTALL_BIN_DIR
+EOF
 
 RED='\033[0;31m'
 YELLOW='\e[0;33m'
@@ -42,7 +52,7 @@ else
 
 	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
 	tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
-	mv fd-${version}-x86_64-unknown-linux-musl/fd $INSTALL_DIR/bin
+	mv fd-${version}-x86_64-unknown-linux-musl/fd $INSTALL_BIN_DIR
 
 	#clean
 	rm -fr fd-${version}-x86_64-unknown-linux-musl*
@@ -55,7 +65,7 @@ else
 
 	wget -q --show-progress https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 	tar -xf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
-	mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg $INSTALL_DIR/bin
+	mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
 
 	#clean
 	rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
@@ -90,8 +100,8 @@ if which fasd >/dev/null; then
 else
 	echo "Installing fasd"
 	wget -q --show-progress https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
-	unzip -p fasd.zip clvv-fasd-4822024/fasd > $INSTALL_DIR/bin/fasd
-	chmod +x $INSTALL_DIR/bin/fasd
+	unzip -p fasd.zip clvv-fasd-4822024/fasd > $INSTALL_BIN_DIR/fasd
+	chmod +x $INSTALL_BIN_DIR/fasd
 	#clean
 	rm fasd.zip
 fi
@@ -106,7 +116,7 @@ else
 
 	wget -q --show-progress https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
 	tar -xf lazygit_${version}_Linux_x86_64.tar.gz
-	mv lazygit $INSTALL_DIR/bin/
+	mv lazygit $INSTALL_BIN_DIR/
 	rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
@@ -121,7 +131,7 @@ else
   mkdir zellij_tmp && cd zellij_tmp
 	  wget -q --show-progress https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
 	  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-	  mv zellij $INSTALL_DIR/bin/
+	  mv zellij $INSTALL_BIN_DIR/
     cd ..
 	rm -fr zellij_tmp
 fi
@@ -213,5 +223,6 @@ cp ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh
 
 echo -e "\n${GREEN}Installation completed! ${NC}"
 read -p "Press Enter to run zsh!"
+source $HOME/.bashrc
 # run ZSH and configure p10k
 zsh -c "source ~/.zshrc &&  echo -e \"\n\e[0;33mTo configure p10k run: p10k configure \033[0m\" ; zsh"
