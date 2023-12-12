@@ -13,8 +13,9 @@ echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
 export PATH=$PATH:$INSTALL_BIN_DIR
 
 cat << EOF >> $HOME/.bashrc
-
-export PATH=$PATH:$INSTALL_BIN_DIR
+if [[ ! "\$PATH" == *${INSTALL_BIN_DIR}* ]]; then
+  PATH="\${PATH:+\${PATH}:}${INSTALL_BIN_DIR}"
+fi
 EOF
 
 RED='\033[0;31m'
