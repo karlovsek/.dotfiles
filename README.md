@@ -1,5 +1,5 @@
 # Quick install command
-`git clone https://github.com/karlovsek/.dotfiles.git && bash .dotfiles/install.sh`
+`git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install.sh`
 
 
 ## Minimal
