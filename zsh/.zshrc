@@ -13,7 +13,7 @@ fi
 # Path to your oh-my-zsh installation.
 export ZSH=~/.oh-my-zsh
 
-export FZF_BASE=/home/karlos/.local/fzf
+export FZF_BASE=$HOME/.local/fzf
 
 ulimit -c unlimited 
 
