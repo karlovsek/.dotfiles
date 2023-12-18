@@ -17,7 +17,15 @@ fi
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-export FZF_BASE=$HOME/.local/fzf
+if [ -n "${commands[fzf-share]}" ]; then
+# For nix
+  source "$(fzf-share)/key-bindings.zsh"
+  source "$(fzf-share)/completion.zsh"
+  FZF_BASE=$(fzf-share)
+else
+  export FZF_BASE=$HOME/.local/fzf
+fi
+
 #
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
