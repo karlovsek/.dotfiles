@@ -1,6 +1,10 @@
 [[ -o interactive ]] && stty -ixon # Allows to use Ctrl+S
 # For bash add [ "$PS1" ] && stty -ixon
 
+if [[ ! "$PATH" == *$HOME/.local/bin* ]]; then
+  PATH="${PATH:+${PATH}:}$HOME/.local/bin"
+fi
+
 if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile.d/nix.sh; fi
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
