@@ -25,7 +25,6 @@ NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-
 if which nvim >/dev/null; then
 	echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
@@ -141,18 +140,18 @@ echo -ne "\nCreate Vim symlinks? (Y/n): "
 read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 if [[ "$answer" == "y" || -z "$answer" ]]; then
-	if [ -f ~/.vimrc ]; then
-		mv ~/.vimrc ~/.vimrc_orig
+	if [ -f $HOME/.vimrc ]; then
+		mv $HOME/.vimrc $HOME/.vimrc_orig
 	fi
-	if [ -f ~/.vimcommon ]; then
-		mv ~/.vimcommon ~/.vimcommon_orig
+	if [ -f $HOME/.vimcommon ]; then
+		mv $HOME/.vimcommon $HOME/.vimcommon_orig
 	fi
-	ln -sf ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc
-	ln -sf ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon
+	ln -sf ${SCRIPT_DIR}/vim/.vimrc $HOME/.vimrc
+	ln -sf ${SCRIPT_DIR}/vim/.vimcommon $HOME/.vimcommon
 	echo -e "\t${GREEN}Symlinks created! ${NC}"
 else
 	echo "You can create Vim symlinks as:"
-	echo "ln -sf ${SCRIPT_DIR}/vim/.vimrc ~/.vimrc && ln -sf ${SCRIPT_DIR}/vim/.vimcommon ~/.vimcommon"
+	echo "ln -sf ${SCRIPT_DIR}/vim/.vimrc $HOME/.vimrc && ln -sf ${SCRIPT_DIR}/vim/.vimcommon $HOME/.vimcommon"
 fi
 
 echo -ne "\nCreate NeoVim symlinks? (Y/n): "
@@ -207,23 +206,22 @@ install_zsh_plugin() {
 	fi
 }
 
-install_zsh_plugin https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
-install_zsh_plugin https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-install_zsh_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+install_zsh_plugin https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/fzf-tab
+install_zsh_plugin https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+install_zsh_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 install_zsh_plugin https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
-
-if [ -f ~/.zshrc ]; then
-	mv ~/.zshrc ~/.zshrc_orig
+if [ -f $HOME/.zshrc ]; then
+	mv $HOME/.zshrc $HOME/.zshrc_orig
 fi
-if [ -f ~/.p10k.zsh ]; then
-	mv ~/.p10k.zsh ~/.p10k.zsh_orig
+if [ -f $HOME/.p10k.zsh ]; then
+	mv $HOME/.p10k.zsh $HOME/.p10k.zsh_orig
 fi
-ln -sf ${SCRIPT_DIR}/zsh/.zshrc ~/.zshrc
-cp ${SCRIPT_DIR}/zsh/.p10k.zsh ~/.p10k.zsh 
+ln -sf ${SCRIPT_DIR}/zsh/.zshrc $HOME/.zshrc
+cp ${SCRIPT_DIR}/zsh/.p10k.zsh $HOME/.p10k.zsh
 
 echo -e "\n${GREEN}Installation completed! ${NC}"
 read -p "Press Enter to run zsh!"
 source $HOME/.bashrc
 # run ZSH and configure p10k
-zsh -c "source ~/.zshrc &&  echo -e \"\n\e[0;33mTo configure p10k run: p10k configure \033[0m\" ; zsh"
+zsh -c "source $HOME/.zshrc &&  echo -e \"\n\e[0;33mTo configure p10k run: p10k configure \033[0m\" ; zsh"
