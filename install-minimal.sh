@@ -99,11 +99,12 @@ if which fasd >/dev/null; then
 	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
 else
 	echo "Installing fasd"
-	curl -OL https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
-	unzip -p fasd.zip clvv-fasd-4822024/fasd > $INSTALL_BIN_DIR/fasd
+	zip_file="fasd.zip"
+	curl -L https://github.com/clvv/fasd/zipball/1.0.1 -o $zip_file
+	unzip -p $zip_file clvv-fasd-4822024/fasd > $INSTALL_BIN_DIR/fasd
 	chmod +x $INSTALL_BIN_DIR/fasd
 	#clean
-	rm fasd.zip
+	rm $zip_file
 fi
 
 if which lazygit >/dev/null; then
