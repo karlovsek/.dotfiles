@@ -4,7 +4,7 @@
 
 ## Minimal
 Requirements:
-* git zip wget curl build-essential 
+* git zip curl build-essential 
 * libncurses5-dev libncursesw5-dev autoconf # for htop
 
 `git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install-minimal.sh`

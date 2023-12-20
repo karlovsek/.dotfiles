@@ -29,7 +29,7 @@ if which nvim >/dev/null; then
 	echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
 	echo "NeoVim does not exist, installing it ..."
-	wget -q --show-progress https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
+	curl -OL https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
 	tar -xf nvim-linux64.tar.gz --strip-components=1 -C $INSTALL_DIR
 
 	# clean
@@ -50,7 +50,7 @@ else
 	# get the latest version of fd from github
 	version=$(curl --silent "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
-	wget -q --show-progress https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
+	curl -OL https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
 	tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
 	mv fd-${version}-x86_64-unknown-linux-musl/fd $INSTALL_BIN_DIR
 
@@ -63,7 +63,7 @@ if which rg >/dev/null; then
 else
 	echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
 
-	wget -q --show-progress https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
+	curl -OL https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 	tar -xf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 	mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
 
@@ -86,7 +86,7 @@ else
 	version=$(curl --silent "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 	echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
-	wget -q --show-progress https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
+	curl -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
 	tar -xf htop-${version}.tar.xz
 	cd htop-${version}
 	./autogen.sh >/dev/null && ./configure --prefix=$INSTALL_DIR >/dev/null && make >/dev/null && make install >/dev/null
@@ -99,7 +99,7 @@ if which fasd >/dev/null; then
 	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
 else
 	echo "Installing fasd"
-	wget -q --show-progress https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
+	curl -OL https://github.com/clvv/fasd/zipball/1.0.1 -O fasd.zip
 	unzip -p fasd.zip clvv-fasd-4822024/fasd > $INSTALL_BIN_DIR/fasd
 	chmod +x $INSTALL_BIN_DIR/fasd
 	#clean
@@ -114,7 +114,7 @@ else
 
 	echo -e "${YELLOW}Installing lazygit ${version} ${NC}"
 
-	wget -q --show-progress https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
+	curl -OL https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
 	tar -xf lazygit_${version}_Linux_x86_64.tar.gz
 	mv lazygit $INSTALL_BIN_DIR/
 	rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
@@ -129,7 +129,7 @@ else
 	echo -e "${YELLOW}Installing zellij ${version} ${NC}"
 
   mkdir zellij_tmp && cd zellij_tmp
-	  wget -q --show-progress https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
+	  curl -OL https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
 	  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
 	  mv zellij $INSTALL_BIN_DIR/
     cd ..
