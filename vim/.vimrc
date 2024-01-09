@@ -240,6 +240,11 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'liuchengxu/vim-which-key'
 nnoremap <silent> <leader> :WhichKey '<Space>'<CR>
+Plug 'ojroques/vim-oscyank', {'branch': 'main'} " {{{
+nmap <leader>o <Plug>OSCYankOperator
+nmap <leader>oo <leader>o_ " will copy the current line.
+vmap <leader>o <Plug>OSCYankVisual
+"}}}
 Plug 'mkitt/tabline.vim'
 Plug 'vim-scripts/AnsiEsc.vim'
 Plug 'Exafunction/codeium.vim'
