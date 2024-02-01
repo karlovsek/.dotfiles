@@ -4,8 +4,9 @@
 
 ## Minimal
 Requirements:
-* git zip curl build-essential 
-* libncurses5-dev libncursesw5-dev autoconf # for htop
+* git zip curl 
+* build-essential # For NeoVim-treesiter, htop 
+* libncurses5-dev libncursesw5-dev autoconf # For htop
 
 `git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install-minimal.sh`
 
