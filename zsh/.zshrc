@@ -1,6 +1,8 @@
 [[ -o interactive ]] && stty -ixon # Allows to use Ctrl+S
 # For bash add [ "$PS1" ] && stty -ixon
 
+export TERM=xterm-256color # enables all colors in the terminal 
+
 if [[ ! "$PATH" == *$HOME/.local/bin* ]]; then
   PATH="${PATH:+${PATH}:}$HOME/.local/bin"
 fi
