@@ -107,6 +107,21 @@ else
 	rm $zip_file
 fi
 
+if which exa >/dev/null; then
+	echo -e "${GREEN}exa exists ($(exa --version | grep -o "^v.* ")) ${NC}"
+else
+	echo -e "${YELLOW}exa does not exist, installing it ... ${NC}"
+	# get the latest version of fd from github
+	version=$(curl --silent "https://api.github.com/repos/ogham/exa/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+	curl -OL https://github.com/ogham/exa/releases/download/${version}/exa-linux-x86_64-${version}.zip
+  unzip -p exa-linux-x86_64-${version}.zip bin/exa > $INSTALL_BIN_DIR/exa
+  chmod +x $INSTALL_BIN_DIR/exa
+
+	#clean
+	rm -fr exa-linux-x86_64-*
+fi
+
 if which lazygit >/dev/null; then
 	echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
