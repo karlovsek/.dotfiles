@@ -107,6 +107,22 @@ else
 	rm $zip_file
 fi
 
+if which bat >/dev/null; then
+	echo -e "${GREEN}bat exists ($(bat --version | grep -o " .* ")) ${NC}"
+else
+	echo -e "${YELLOW}bat does not exist, installing it ... ${NC}"
+	# get the latest version of fd from github
+	version=$(curl --silent "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+	curl -OL https://github.com/sharkdp/bat/releases/download/${version}/bat-${version}-x86_64-unknown-linux-gnu.tar.gz
+  tar -xf bat-${version}-x86_64-unknown-linux-gnu.tar.gz
+  mv bat-${version}-x86_64-unknown-linux-gnu/bat $INSTALL_BIN_DIR/bat
+  chmod +x $INSTALL_BIN_DIR/bat
+
+	#clean
+	rm -fr bat-${version}-x86_64-unknown-linux-gnu*
+fi
+
 if which exa >/dev/null; then
 	echo -e "${GREEN}exa exists ($(exa --version | grep -o "^v.* ")) ${NC}"
 else
