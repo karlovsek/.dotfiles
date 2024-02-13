@@ -123,19 +123,20 @@ else
 	rm -fr bat-${version}-x86_64-unknown-linux-gnu*
 fi
 
-if which exa >/dev/null; then
-	echo -e "${GREEN}exa exists ($(exa --version | grep -o "^v.* ")) ${NC}"
+if which eza >/dev/null; then
+	echo -e "${GREEN}eza exists ($(eza --version | grep -o "^v.* ")) ${NC}"
 else
-	echo -e "${YELLOW}exa does not exist, installing it ... ${NC}"
+	echo -e "${YELLOW}eza does not exist, installing it ... ${NC}"
 	# get the latest version of fd from github
-	version=$(curl --silent "https://api.github.com/repos/ogham/exa/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+	version=$(curl --silent "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
-	curl -OL https://github.com/ogham/exa/releases/download/${version}/exa-linux-x86_64-${version}.zip
-  unzip -p exa-linux-x86_64-${version}.zip bin/exa > $INSTALL_BIN_DIR/exa
-  chmod +x $INSTALL_BIN_DIR/exa
+	curl -OL https://github.com/eza-community/eza/releases/download/${version}/eza_x86_64-unknown-linux-gnu.zip
+  unzip eza_x86_64-unknown-linux-gnu.zip
+  mv eza $INSTALL_BIN_DIR/eza
+  chmod +x $INSTALL_BIN_DIR/eza
 
 	#clean
-	rm -fr exa-linux-x86_64-*
+	rm -fr eza_x86_64-unknown-linux-gnu.zip
 fi
 
 if which lazygit >/dev/null; then
