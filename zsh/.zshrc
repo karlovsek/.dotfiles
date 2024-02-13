@@ -183,17 +183,17 @@ if (( $+commands[aichat] )); then
   alias aie=eval_aichat
 fi
 
-if (( $+commands[exa] ))
+if (( $+commands[eza] ))
 then
-  compdef _gnu_generic exa
+  compdef _gnu_generic eza
 
-  # Changing "ls" to "exa"
+  # Changing "ls" to "eza"
   # Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
   # Uncomment DISABLE_LS_COLORS="true"
-  alias ls='exa --icons --color=always --group-directories-first' # my preferred listing
-  alias la='exa --icons -la --color=always --group-directories-first'  # all files and dirs
-  alias ll='exa --icons -l --color=always --group-directories-first'  # long format
-  # alias lt='exa -T --color=always --group-directories-first' # tree listing
+  alias ls='eza --icons --color=always --group-directories-first' # my preferred listing
+  alias la='eza --icons -la --color=always --group-directories-first'  # all files and dirs
+  alias ll='eza --icons -l --color=always --group-directories-first'  # long format
+  alias lt='eza -T --color=always --group-directories-first' # tree listing
 fi
 
 if (( $+commands[lazygit] ))
