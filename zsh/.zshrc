@@ -267,7 +267,7 @@ fi
 if (( $+commands[rg] ))
 then
   compdef _gnu_generic rg
-  alias rg="rg --follow" # follow symlinks
+  alias rg="rg --smart-case --follow" # follow symlinks
 fi
 
 if (( $+commands[atuin] ))
