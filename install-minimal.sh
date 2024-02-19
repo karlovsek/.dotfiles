@@ -199,6 +199,18 @@ else
 	echo "ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
+
+echo -ne "\nCreate Git config symlinks? (Y/n): "
+read answer
+answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
+if [[ "$answer" == "y" || -z "$answer" ]]; then
+	if [ -f $HOME/.gitconfig ]; then
+    mv $HOME/.gitconfig $HOME/.gitconfig_orig
+	fi
+	ln -sf ${SCRIPT_DIR}/git/.gitconfig $HOME/.gitconfig
+	echo -e "\t${GREEN}Symlinks created! ${NC}"
+fi
+
 if which zellij 2>/dev/null; then
 	echo -e "${GREEN}zellij exists ${NC}"
 

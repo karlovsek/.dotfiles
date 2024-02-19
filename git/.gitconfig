@@ -1,0 +1,15 @@
+[user]
+	email = peter.karlovsek@gmail.com
+	name = Peter Karlovsek
+[core]
+  autocrlf = false
+[push]
+	autoSetupRemote = true
+  default = current
+[merge]
+	conflictstyle = zdiff3
+[diff]
+	algorithm = histogram
+[rebase]
+	autosquash = true
+	autostash = true
