@@ -1,34 +1,15 @@
 [user]
-	email = 43514900+karlovsek@users.noreply.github.com
-	name = karlovsek
+	email = peter.karlovsek@gmail.com
+	name = Peter Karlovsek
 [core]
   autocrlf = false
-[column]
-    ui = auto
-[branch]
-    sort = -committerdate
-[tag]
-    sort = version:refname
-[init]
-    defaultBranch = main
-[pull]
-    rebase = true    
 [push]
-    autoSetupRemote = true
-    default = current
-    followTags = true
-[fetch]
-    prune = true
-    pruneTags = true
-    all = true
+	autoSetupRemote = true
+  default = current
 [merge]
-    # conflictstyle = zdiff3
+	conflictstyle = zdiff3
 [diff]
-    algorithm = histogram
-    colorMoved = plain
-    mnemonicPrefix = true
-    renames = true
+	algorithm = histogram
 [rebase]
-    autoSquash = true
-    autoStash = true
-    updateRefs = true
+	autosquash = true
+	autostash = true
