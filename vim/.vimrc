@@ -107,6 +107,8 @@ if !empty($CONEMUBUILD)
   set bs=indent,eol,start
   colorscheme wombat256mod
 else
+  set t_Co=256
+  set termguicolors
   " colorscheme gruvbox
   " colorscheme colorsbox-stbright
 endif
