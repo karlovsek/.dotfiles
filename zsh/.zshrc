@@ -128,7 +128,7 @@ plugins=(
   history-substring-search
   zsh-autosuggestions 
   zsh-syntax-highlighting
-  dirhistory
+  # dirhistory # replaced by custom dirhistory
   fasd
   fzf
   # zsh-vi-mode
@@ -137,6 +137,7 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 
 source $ZSH/oh-my-zsh.sh
+source plugins/dirhistory/dirhistory.plugin.zsh
 
 # User configuration
 
