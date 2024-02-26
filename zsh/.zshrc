@@ -137,7 +137,7 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 
 source $ZSH/oh-my-zsh.sh
-source plugins/dirhistory/dirhistory.plugin.zsh
+source ~/.dotfiles/zsh/plugins/dirhistory/dirhistory.plugin.zsh
 
 # User configuration
 
