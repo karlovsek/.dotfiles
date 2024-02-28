@@ -12,7 +12,7 @@ echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
 
 export PATH=$PATH:$INSTALL_BIN_DIR
 
-cat << EOF >> $HOME/.bashrc
+cat <<EOF >>$HOME/.bashrc
 if [[ ! "\$PATH" == *${INSTALL_BIN_DIR}* ]]; then
   PATH="\${PATH:+\${PATH}:}${INSTALL_BIN_DIR}"
 fi
@@ -86,7 +86,7 @@ else
 	version=$(curl --silent "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 	echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
-	curl -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
+	curl --silent -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
 	tar -xf htop-${version}.tar.xz
 	cd htop-${version}
 	./autogen.sh >/dev/null && ./configure --prefix=$INSTALL_DIR >/dev/null && make >/dev/null && make install >/dev/null
@@ -95,13 +95,31 @@ else
 	rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
+if which bfs >/dev/null; then
+	echo -e "${GREEN}bfs exists ($(bfs --version | grep "bfs ")) ${NC}"
+else
+	# get the latest version of htop from github
+	version=$(curl --silent "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+	echo -e "${YELLOW}Installing bfs ${version} ${NC}"
+
+	curl --silent -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
+	unzip -q ${version}.zip
+	cd bfs-${version}
+	make USE_ACL= USE_ATTR= USE_LIBCAP= USE_LIBURING= USE_ONIGURUMA= release -j$(nproc) >/dev/null
+	make PREFIX=$HOME/.local install >/dev/null
+
+	#clean
+	cd ..
+	rm -fr bfs-${version} ${version}.zip
+fi
+
 if which fasd >/dev/null; then
 	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
 else
 	echo "Installing fasd"
 	zip_file="fasd.zip"
-	curl -L https://github.com/clvv/fasd/zipball/1.0.1 -o $zip_file
-	unzip -p $zip_file clvv-fasd-4822024/fasd > $INSTALL_BIN_DIR/fasd
+	curl --silent -L https://github.com/clvv/fasd/zipball/1.0.1 -o $zip_file
+	unzip -p $zip_file clvv-fasd-4822024/fasd >$INSTALL_BIN_DIR/fasd
 	chmod +x $INSTALL_BIN_DIR/fasd
 	#clean
 	rm $zip_file
@@ -115,9 +133,9 @@ else
 	version=$(curl --silent "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
 	curl -OL https://github.com/sharkdp/bat/releases/download/${version}/bat-${version}-x86_64-unknown-linux-gnu.tar.gz
-  tar -xf bat-${version}-x86_64-unknown-linux-gnu.tar.gz
-  mv bat-${version}-x86_64-unknown-linux-gnu/bat $INSTALL_BIN_DIR/bat
-  chmod +x $INSTALL_BIN_DIR/bat
+	tar -xf bat-${version}-x86_64-unknown-linux-gnu.tar.gz
+	mv bat-${version}-x86_64-unknown-linux-gnu/bat $INSTALL_BIN_DIR/bat
+	chmod +x $INSTALL_BIN_DIR/bat
 
 	#clean
 	rm -fr bat-${version}-x86_64-unknown-linux-gnu*
@@ -131,9 +149,9 @@ else
 	version=$(curl --silent "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
 	curl -OL https://github.com/eza-community/eza/releases/download/${version}/eza_x86_64-unknown-linux-gnu.zip
-  unzip eza_x86_64-unknown-linux-gnu.zip
-  mv eza $INSTALL_BIN_DIR/eza
-  chmod +x $INSTALL_BIN_DIR/eza
+	unzip eza_x86_64-unknown-linux-gnu.zip
+	mv eza $INSTALL_BIN_DIR/eza
+	chmod +x $INSTALL_BIN_DIR/eza
 
 	#clean
 	rm -fr eza_x86_64-unknown-linux-gnu.zip
@@ -161,11 +179,11 @@ else
 
 	echo -e "${YELLOW}Installing zellij ${version} ${NC}"
 
-  mkdir zellij_tmp && cd zellij_tmp
-	  curl -OL https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
-	  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-	  mv zellij $INSTALL_BIN_DIR/
-    cd ..
+	mkdir zellij_tmp && cd zellij_tmp
+	curl -OL https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
+	tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
+	mv zellij $INSTALL_BIN_DIR/
+	cd ..
 	rm -fr zellij_tmp
 fi
 
@@ -199,13 +217,12 @@ else
 	echo "ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
-
 echo -ne "\nCreate Git config symlinks? (Y/n): "
 read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 if [[ "$answer" == "y" || -z "$answer" ]]; then
 	if [ -f $HOME/.gitconfig ]; then
-    mv $HOME/.gitconfig $HOME/.gitconfig_orig
+		mv $HOME/.gitconfig $HOME/.gitconfig_orig
 	fi
 	ln -sf ${SCRIPT_DIR}/git/.gitconfig $HOME/.gitconfig
 	echo -e "\t${GREEN}Symlinks created! ${NC}"
