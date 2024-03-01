@@ -121,6 +121,7 @@ COMPLETION_WAITING_DOTS="true"
 # git clone https://github.com/jeffreytse/zsh-vi-mode $ZSH_CUSTOM/plugins/zsh-vi-mode
 # git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 # git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
+# git clone https://github.com/jeffreytse/zsh-vi-mode ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-vi-mode
 # git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
@@ -131,7 +132,7 @@ plugins=(
   # dirhistory # replaced by custom dirhistory
   fasd
   fzf
-  # zsh-vi-mode
+  zsh-vi-mode
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
