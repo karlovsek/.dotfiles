@@ -1,6 +1,6 @@
 :imap jk <Esc>
-:imap kj <Esc>:
-:nmap kj <Esc>:
+:imap jj <Esc>:w<CR>:q<CR>
+:imap <C-k> <Esc>:
 
 autocmd BufRead .vimcommon set filetype=vim
 
