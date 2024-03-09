@@ -26,3 +26,5 @@ require("telescope").setup({
     },
   },
 })
+
+require("neoscroll").setup()
