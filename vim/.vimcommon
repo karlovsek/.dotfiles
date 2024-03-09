@@ -123,8 +123,7 @@ if has('terminal') || has('nvim')
   tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
   tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
   tnoremap <silent> <Leader>l <C-w>:wincmd l<CR>
-  " Move to next window
-  tnoremap <silent> <Leader>m <C-w>:wincmd w<CR> 
+
   " close terminal
   tnoremap <Leader><Esc> <C-\><C-n>:bd!<CR>
 end
