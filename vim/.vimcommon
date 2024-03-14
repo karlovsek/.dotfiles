@@ -85,9 +85,6 @@ if !exists('*ReloadVimrc')
 endif
 autocmd! BufWritePost $MYVIMRC call ReloadVimrc()
 
-" rebinds semi-colon in insertion mode
-inoremap ;;; <Esc>:wq<cr>
-
 " Keep search results at the center of screen
 nmap <silent> n nzz
 nmap <silent> N Nzz
