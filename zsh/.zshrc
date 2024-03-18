@@ -28,6 +28,7 @@ else
   export FZF_BASE=$HOME/.local/fzf
 fi
 
+
 #
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
@@ -132,7 +133,7 @@ plugins=(
   # dirhistory # replaced by custom dirhistory
   fasd
   fzf
-  zsh-vi-mode
+  # zsh-vi-mode
 )
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern line)
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
