@@ -131,7 +131,6 @@ plugins=(
   zsh-autosuggestions 
   zsh-syntax-highlighting
   # dirhistory # replaced by custom dirhistory
-  fasd
   fzf
   # zsh-vi-mode
 )
@@ -236,6 +235,12 @@ then
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+if (( $+commands[zoxide] ))
+then
+  eval "$(zoxide init --cmd j zsh)"
+  compdef _gnu_generic zoxide
+fi
 
 if (( $+commands[zellij] )); then
   compdef _gnu_generic zellij
