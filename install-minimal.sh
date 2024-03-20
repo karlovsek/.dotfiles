@@ -113,16 +113,11 @@ else
 	rm -fr bfs-${version} ${version}.zip
 fi
 
-if which fasd >/dev/null; then
-	echo -e "${GREEN}fasd exists ($(fasd --version)) ${NC}"
+if which zoxide >/dev/null; then
+	echo -e "${GREEN}zoxide exists ($(zoxide --version)) ${NC}"
 else
-	echo "Installing fasd"
-	zip_file="fasd.zip"
-	curl --silent -L https://github.com/clvv/fasd/zipball/1.0.1 -o $zip_file
-	unzip -p $zip_file clvv-fasd-4822024/fasd >$INSTALL_BIN_DIR/fasd
-	chmod +x $INSTALL_BIN_DIR/fasd
-	#clean
-	rm $zip_file
+	echo "Installing zoxide"
+	curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
 fi
 
 if which bat >/dev/null; then
