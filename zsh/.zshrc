@@ -244,9 +244,8 @@ fi
 
 if (( $+commands[zellij] )); then
   compdef _gnu_generic zellij
-  alias zla="pwd=\$(echo \${PWD##*\$HOME} | sed 's/^\\///g' | sed 's/\\//\\\\\\\\/g' | tail -c100) && zellij a -c \$((zellij ls -n 2> /dev/null; echo \"\${\${pwd:-~}} \t >> pwd <<\") | fzf -0 -1 --tac| awk '{print \$1}')"
-  eval "$(zellij setup --generate-completion zsh | grep "^function")"
-  alias ze="SHELL=zsh zellij"
+  alias zla="zellij -l welcome"
+  eval "$(zellij setup --generate-completion zsh)" 2> /dev/null
 fi
 
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
