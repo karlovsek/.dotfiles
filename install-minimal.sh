@@ -25,7 +25,7 @@ NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-if which nvim >/dev/null; then
+if which nvim >/dev/null 2>&1; then
   echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
   echo "NeoVim does not exist, installing it ..."
@@ -36,14 +36,14 @@ else
   rm nvim-linux64.tar.gz
 fi
 
-if which zsh >/dev/null; then
+if which zsh >/dev/null 2>&1; then
   echo -e "${GREEN}ZSH exists ($(zsh --version)) ${NC}"
 else
   echo -e "${YELLOW}ZSH does not exist, installing it ... ${NC}"
   bash <(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install) -d $INSTALL_DIR -e yes
 fi
 
-if which fd >/dev/null; then
+if which fd >/dev/null 2>&1; then
   echo -e "${GREEN}fd exists ($(fd --version)) ${NC}"
 else
   echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
@@ -58,7 +58,7 @@ else
   rm -fr fd-${version}-x86_64-unknown-linux-musl*
 fi
 
-if which rg >/dev/null; then
+if which rg >/dev/null 2>&1; then
   echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
   echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
@@ -71,7 +71,7 @@ else
   rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 fi
 
-if which fzf >/dev/null; then
+if which fzf >/dev/null 2>&1; then
   echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
 else
   echo -e "${YELLOW}Installing fzf ${NC}"
@@ -79,7 +79,7 @@ else
   $INSTALL_DIR/fzf/install --key-bindings --completion --update-rc
 fi
 
-if which htop >/dev/null; then
+if which htop >/dev/null 2>&1; then
   echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
 else
   # get the latest version of htop from github
@@ -95,7 +95,7 @@ else
   rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
-if which bfs >/dev/null; then
+if which bfs >/dev/null 2>&1; then
   echo -e "${GREEN}bfs exists ($(bfs --version | grep "bfs ")) ${NC}"
 else
   # get the latest version of htop from github
@@ -113,14 +113,14 @@ else
   rm -fr bfs-${version} ${version}.zip
 fi
 
-if which zoxide >/dev/null; then
+if which zoxide >/dev/null 2>&1; then
   echo -e "${GREEN}zoxide exists ($(zoxide --version)) ${NC}"
 else
   echo "Installing zoxide"
   curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
 fi
 
-if which bat >/dev/null; then
+if which bat >/dev/null 2>&1; then
   echo -e "${GREEN}bat exists ($(bat --version | grep -o " .* ")) ${NC}"
 else
   echo -e "${YELLOW}bat does not exist, installing it ... ${NC}"
@@ -136,7 +136,7 @@ else
   rm -fr bat-${version}-x86_64-unknown-linux-gnu*
 fi
 
-if which eza >/dev/null; then
+if which eza >/dev/null 2>&1; then
   echo -e "${GREEN}eza exists ($(eza --version | grep -o "^v.* ")) ${NC}"
 else
   echo -e "${YELLOW}eza does not exist, installing it ... ${NC}"
@@ -152,7 +152,7 @@ else
   rm -fr eza_x86_64-unknown-linux-gnu.zip
 fi
 
-if which lazygit >/dev/null; then
+if which lazygit >/dev/null 2>&1; then
   echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
   # get the latest version of lazygit from github
@@ -166,7 +166,7 @@ else
   rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
-if which zellij >/dev/null; then
+if which zellij >/dev/null 2>&1; then
   echo -e "${GREEN}zellij exists ($(zellij --version | awk '{print $2}')) ${NC}"
 else
   # get the latest version of lazygit from github
@@ -223,7 +223,7 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   echo -e "\t${GREEN}Symlinks created! ${NC}"
 fi
 
-if which zellij 2>/dev/null; then
+if which zellij 2>/dev/null 2>&1; then
   echo -e "${GREEN}zellij exists ${NC}"
 
   echo -ne "Create Zellij symlinks? (Y/n): "
