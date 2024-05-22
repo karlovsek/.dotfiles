@@ -28,8 +28,3 @@ require("telescope").setup({
 })
 
 require("neoscroll").setup()
-
--- LazyVim equivalent for Baleia setup
-local baleia = require("baleia").setup({})
-
-vim.cmd('command! BaleiaColorize lua baleia.once(vim.fn.bufnr("%"))')
