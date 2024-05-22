@@ -29,7 +29,7 @@ if which nvim >/dev/null 2>&1; then
   echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
   echo "NeoVim does not exist, installing it ..."
-  curl -OL https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
+  curl -OL https://github.com/neovim/neovim-releases/releases/download/stable/nvim-linux64.tar.gz
   tar -xf nvim-linux64.tar.gz --strip-components=1 -C $INSTALL_DIR
 
   # clean
