@@ -105,8 +105,9 @@ else
   curl --silent -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
   unzip -q ${version}.zip
   cd bfs-${version}
-  make USE_ACL= USE_ATTR= USE_LIBCAP= USE_LIBURING= USE_ONIGURUMA= release -j$(nproc) >/dev/null
-  make PREFIX=$HOME/.local install >/dev/null
+  ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
+  make -j$(nproc) >/dev/null
+  make install
 
   #clean
   cd ..
