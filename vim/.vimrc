@@ -1,4 +1,10 @@
-source ~/.vimcommon
+" reset to vim-defaults
+if &compatible          " only if not set before:
+  set nocompatible      " use vim-defaults instead of vi-defaults (easier, more user friendly)
+endif
+
+let path = expand('<sfile>:p:h')
+exec 'source' path . '/.vimcommon'
 
 set ttymouse=sgr
 
@@ -114,11 +120,6 @@ else
 endif
 
 set encoding=utf-8
-
-" reset to vim-defaults
-if &compatible          " only if not set before:
-  set nocompatible      " use vim-defaults instead of vi-defaults (easier, more user friendly)
-endif
 
 " display settings
 set background=dark     " enable for dark terminals
