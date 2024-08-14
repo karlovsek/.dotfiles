@@ -115,14 +115,14 @@ nnoremap <silent> <Leader>ml <C-w>L
 
 if has('terminal') || has('nvim')
   tnoremap <silent> ,, <C-\><C-n>
-  tnoremap <silent> <Space><Esc> <C-\><C-n>
-  tnoremap <silent> <Leader>h <C-w>:wincmd h<CR>
-  tnoremap <silent> <Leader>j <C-w>:wincmd j<CR>
-  tnoremap <silent> <Leader>k <C-w>:wincmd k<CR>
-  tnoremap <silent> <Leader>l <C-w>:wincmd l<CR>
+  tnoremap <silent> <Esc><Esc> <C-\><C-n>
+  tnoremap <silent> <Esc>h <<C-\><C-n>C-w>h<CR>
+  tnoremap <silent> <Esc>j <C-\><C-n><C-w>j<CR>
+  tnoremap <silent> <Esc>k <C-\><C-n><C-w>k<CR>
+  tnoremap <silent> <Esc>l <C-\><C-n><C-w>l<CR>
 
   " close terminal
-  tnoremap <Leader><Esc> <C-\><C-n>:bd!<CR>
+  tnoremap <Esc>x <C-\><C-n>:bd!<CR>
 end
 
 let i = 1
