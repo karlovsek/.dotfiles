@@ -7,7 +7,7 @@
 	autoSetupRemote = true
   default = current
 [merge]
-	conflictstyle = zdiff3
+	# conflictstyle = zdiff3
 [diff]
 	algorithm = histogram
 [rebase]
