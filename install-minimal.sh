@@ -8,15 +8,19 @@ read -p ""
 INSTALL_BIN_DIR=$INSTALL_DIR/bin
 mkdir -p $INSTALL_BIN_DIR
 
-echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
-
 export PATH=$PATH:$INSTALL_BIN_DIR
 
-cat <<EOF >>$HOME/.bashrc
+if ! grep -q -e "\$PATH\" == .*${INSTALL_BIN_DIR}" "$HOME/.bashrc"; then
+  echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
+
+  cat <<EOF >>"$HOME/.bashrc"
+
 if [[ ! "\$PATH" == *${INSTALL_BIN_DIR}* ]]; then
   PATH="\${PATH:+\${PATH}:}${INSTALL_BIN_DIR}"
 fi
+
 EOF
+fi
 
 RED='\033[0;31m'
 YELLOW='\e[0;33m'
