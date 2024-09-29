@@ -221,6 +221,7 @@ fi
 if (( $+commands[nvim] ))
 then
   export EDITOR=nvim
+  alias vi='nvim'
 fi
 
 if (( $+commands[fd] ))
