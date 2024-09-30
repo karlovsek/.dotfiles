@@ -44,3 +44,76 @@ require("lazy").setup({
     },
   },
 })
+
+local cmp_action = require("lsp-zero").cmp_action()
+local cmp = require("cmp")
+local cmp_select = { behavior = cmp.SelectBehavior.Select }
+local cmp_next = {
+  c = function(fallback)
+    if cmp.visible() then
+      cmp.select_next_item()
+    else
+      fallback()
+    end
+  end,
+}
+
+local cmp_prev = {
+  c = function(fallback)
+    if cmp.visible() then
+      cmp.select_prev_item()
+    else
+      fallback()
+    end
+  end,
+}
+
+local cmp_up_down = {
+  ["<C-Space>"] = { c = cmp.mapping.confirm({ select = true }) },
+  ["<C-j>"] = cmp_next,
+  ["<Down>"] = cmp_next,
+  ["<C-k>"] = cmp_prev,
+  ["<Up>"] = cmp_prev,
+}
+
+-- `/` cmdline setup.
+cmp.setup.cmdline("/", {
+  mapping = cmp.mapping.preset.cmdline(cmp_up_down),
+  sources = {
+    { name = "buffer" },
+  },
+})
+
+-- `:` cmdline setup.
+-- add shortcut so that <CR> will select the first option
+cmp.setup.cmdline(":", {
+  mapping = cmp.mapping.preset.cmdline(cmp_up_down),
+  sources = cmp.config.sources({
+    { name = "path" },
+  }, {
+    {
+      name = "cmdline",
+      option = {
+        ignore_cmds = { "Man", "!" },
+      },
+    },
+  }),
+})
+
+cmp.setup({
+  sources = {
+    { name = "nvim_lsp" },
+    { name = "buffer", keyword_length = 3 },
+    { name = "path" },
+  },
+  mapping = cmp.mapping.preset.insert({
+    ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
+    ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
+    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    ["<C-Space>"] = cmp.mapping.complete(),
+    ["<C-f>"] = cmp_action.luasnip_jump_forward(),
+    ["<C-b>"] = cmp_action.luasnip_jump_backward(),
+    -- ["<Tab>"] = cmp_action.luasnip_supertab(),
+    ["<S-Tab>"] = cmp_action.luasnip_shift_supertab(),
+  }),
+})
