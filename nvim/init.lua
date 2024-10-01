@@ -15,7 +15,7 @@ require("catppuccin").setup({
     shade = "dark",
     percentage = 0.15, -- percentage of the shade to apply to the inactive window
   },
-  no_italic = false, -- Force no italic
+  no_italic = true, -- Force no italic
   no_bold = false, -- Force no bold
   no_underline = false, -- Force no underline
   styles = { -- Handles the styles of general hi groups (see `:h highlight-args`):
@@ -31,7 +31,7 @@ require("catppuccin").setup({
     properties = {},
     types = {},
     operators = {},
-    -- miscs = {}, -- Uncomment to turn off hard-coded styles
+    miscs = {}, -- Uncomment to turn off hard-coded styles
   },
   color_overrides = {},
   custom_highlights = {},
