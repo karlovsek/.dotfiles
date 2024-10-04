@@ -1,3 +1,3 @@
 return {
-  { "cdelledonne/vim-cmake" },
+  -- { "cdelledonne/vim-cmake" },
 }
