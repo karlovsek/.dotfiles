@@ -70,6 +70,7 @@ local cmp_prev = {
 
 local cmp_up_down = {
   ["<C-Space>"] = { c = cmp.mapping.confirm({ select = true }) },
+  ["<C-l>"] = { c = cmp.mapping.confirm({ select = true }) },
   ["<C-j>"] = cmp_next,
   ["<Down>"] = cmp_next,
   ["<C-k>"] = cmp_prev,
