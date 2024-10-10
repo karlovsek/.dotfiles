@@ -4,7 +4,16 @@
 --
 -- vim.api.nvim_set_keymap("i", "jk", "<Esc>", { noremap = true })
 
+local keymap = vim.keymap
+local opts = { noremap = true, silent = true }
+
+keymap.set("n", "n", "nzz", opts)
+keymap.set("n", "N", "Nzz", opts)
+keymap.set("n", "*", "*zz", opts)
+keymap.set("n", "#", "#zz", opts)
+keymap.set("n", "g*", "g*zz", opts)
+keymap.set("n", "g#", "g#zz", opts)
+
 vim.keymap.set("n", "<leader>o", require("osc52").copy_operator, { expr = true })
 vim.keymap.set("n", "<leader>oo", "<leader>c_", { remap = true })
 vim.keymap.set("v", "<leader>o", require("osc52").copy_visual)
-
