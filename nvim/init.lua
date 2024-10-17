@@ -51,8 +51,8 @@ require("catppuccin").setup({
 })
 vim.cmd.colorscheme("catppuccin")
 
-vim.cmd("set runtimepath^=~/.vim runtimepath+=~/.vim/after")
-vim.o.packpath = vim.o.runtimepath
+-- vim.cmd("set runtimepath^=~/.vim runtimepath+=~/.vim/after")
+-- vim.o.packpath = vim.o.runtimepath
 
 require("telescope").setup({
   defaults = {
