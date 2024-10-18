@@ -3,7 +3,7 @@ return {
   "akinsho/toggleterm.nvim",
   config = function()
     require("toggleterm").setup({
-      open_mapping = [[<leader>t]],
+      -- open_mapping = [[<leader>t]],
       insert_mappings = false,
       shade_terminals = false,
       -- add --login so ~/.zprofile is loaded
@@ -18,6 +18,7 @@ return {
   end,
   lazy = false,
   keys = {
+    { "<leader>t", "<Cmd>ToggleTerm<CR>", "ToggleTerm" },
     { "<leader><leader>t", "<Cmd>1ToggleTerm<Cr>", desc = "Terminal mini" },
     {
       "<leader>T",
