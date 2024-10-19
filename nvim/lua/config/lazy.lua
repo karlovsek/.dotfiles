@@ -120,3 +120,31 @@ cmp.setup({
     ["<S-Tab>"] = cmp_action.luasnip_shift_supertab(),
   }),
 })
+
+-- Create an augroup
+local group = vim.api.nvim_create_augroup("OnlyInActiveWindow", { clear = true })
+
+-- Define the autocommands
+vim.api.nvim_create_autocmd({ "VimEnter", "WinEnter", "BufWinEnter" }, {
+  group = group,
+  pattern = "*",
+  command = "setlocal cursorline",
+})
+
+vim.api.nvim_create_autocmd("WinLeave", {
+  group = group,
+  pattern = "*",
+  command = "setlocal nocursorline",
+})
+
+vim.api.nvim_create_autocmd("WinEnter", {
+  group = group,
+  pattern = "*",
+  command = "set relativenumber",
+})
+
+vim.api.nvim_create_autocmd("WinLeave", {
+  group = group,
+  pattern = "*",
+  command = "set norelativenumber",
+})
