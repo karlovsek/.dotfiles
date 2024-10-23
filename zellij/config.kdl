@@ -28,14 +28,14 @@ keybinds clear-defaults=true {
 		bind "p" { SwitchFocus; SwitchToMode "Normal"; }
 		bind "n" { NewPane; SwitchToMode "Normal"; }
 		bind "d" { NewPane "Down"; SwitchToMode "Normal"; }
-		//bind "r" { NewPane "Right"; SwitchToMode "Normal"; }
+		bind "r" { NewPane "Right"; SwitchToMode "Normal"; }
 		bind "x" { CloseFocus; SwitchToMode "Normal"; }
 		bind "z" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
 		bind "f" { TogglePaneFrames; SwitchToMode "Normal"; }
 		bind "w" { ToggleFloatingPanes; SwitchToMode "Normal"; }
 		bind "Alt a" { ToggleFloatingPanes; SwitchToMode "Normal"; }
 		bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "Normal"; }
-		bind "r" { SwitchToMode "RenamePane"; PaneNameInput 0;}
+		bind "c" { SwitchToMode "RenamePane"; PaneNameInput 0;}
 	}
   move {
       bind "Alt m" { SwitchToMode "Normal"; }
