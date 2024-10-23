@@ -50,27 +50,4 @@ require("catppuccin").setup({
   },
 })
 
--- vim.cmd("set runtimepath^=~/.vim runtimepath+=~/.vim/after")
--- vim.o.packpath = vim.o.runtimepath
-
-require("telescope").setup({
-  defaults = {
-    vimgrep_arguments = {
-      "rg",
-      "--color=never",
-      "--no-heading",
-      "--with-filename",
-      "--line-number",
-      "--column",
-      "--smart-case",
-      "--follow",
-    },
-  },
-  pickers = {
-    find_files = {
-      follow = true,
-    },
-  },
-})
-
 require("neoscroll").setup()
