@@ -105,6 +105,7 @@ cmp.setup.cmdline(":", {
 
 cmp.setup({
   sources = {
+    { name = "copilot", group_index = 2 },
     { name = "nvim_lsp" },
     { name = "buffer", keyword_length = 3 },
     { name = "path" },
