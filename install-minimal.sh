@@ -32,7 +32,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 if which nvim >/dev/null 2>&1; then
   echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
-  echo "NeoVim does not exist, installing it ..."
+  version=$(curl --silent "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+  echo "NeoVim does not exist, installing ${version} ..."
+
   curl -OL https://github.com/neovim/neovim-releases/releases/download/stable/nvim-linux64.tar.gz
   tar -xf nvim-linux64.tar.gz --strip-components=1 -C $INSTALL_DIR
 
