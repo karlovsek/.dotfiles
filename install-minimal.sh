@@ -62,6 +62,20 @@ else
   rm -fr fd-${version}-x86_64-unknown-linux-musl*
 fi
 
+if which sshs >/dev/null 2>&1; then
+  echo -e "${GREEN}sshs exists ($(sshs --version)) ${NC}"
+else
+  echo -e "${YELLOW}sshs does not exist, installing it ... ${NC}"
+  # get the latest version of sshs from github
+  version=$(curl --silent "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+  curl -OL https://github.com/quantumsheep/sshs/releases/download/${version}/sshs-linux-amd64
+  mv sshs-linux-amd64 $INSTALL_BIN_DIR/sshs
+
+  # clean
+  # nothing to do
+fi
+
 if which rg >/dev/null 2>&1; then
   echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
