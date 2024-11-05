@@ -72,8 +72,11 @@ else
   # get the latest version of sshs from github
   version=$(curl --silent "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
-  curl -OL https://github.com/quantumsheep/sshs/releases/download/${version}/sshs-linux-amd64
-  mv sshs-linux-amd64 $INSTALL_BIN_DIR/sshs
+  sshs_bin_name=sshs-linux-amd64-musl
+
+  curl -OL https://github.com/quantumsheep/sshs/releases/download/${version}/${sshs_bin_name}
+  mv ${sshs_bin_name} $INSTALL_BIN_DIR/sshs
+  chmod a+x $INSTALL_BIN_DIR/sshs
 
   # clean
   # nothing to do
@@ -291,14 +294,17 @@ install_zsh_plugin https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZS
 install_zsh_plugin https://github.com/jeffreytse/zsh-vi-mode ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-vi-mode
 install_zsh_plugin https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
+echo -e "\n${YELLOW}Creating symlinks for zsh and p10k ... ${NC}"
 if [ -f $HOME/.zshrc ]; then
   mv $HOME/.zshrc $HOME/.zshrc_orig
 fi
+
 if [ -f $HOME/.p10k.zsh ]; then
   mv $HOME/.p10k.zsh $HOME/.p10k.zsh_orig
 fi
+
 ln -sf ${SCRIPT_DIR}/zsh/.zshrc $HOME/.zshrc
-cp ${SCRIPT_DIR}/zsh/.p10k.zsh $HOME/.p10k.zsh
+ln -sf ${SCRIPT_DIR}/zsh/.p10k.zsh $HOME/.p10k.zsh
 
 echo -e "\n${GREEN}Installation completed! ${NC}"
 read -p "Press Enter to run zsh!"
