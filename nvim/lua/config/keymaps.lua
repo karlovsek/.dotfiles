@@ -15,8 +15,6 @@ keymap.set("n", "#", "#zz", opts)
 keymap.set("n", "g*", "g*zz", opts)
 keymap.set("n", "g#", "g#zz", opts)
 
-keymap.set("t", "jj", "<cmd>ToggleTerm<CR>", opts)
-
 vim.keymap.set("n", "<leader>o", require("osc52").copy_operator, { expr = true })
 vim.keymap.set("n", "<leader>oo", "<leader>o_", { remap = true })
 vim.keymap.set("v", "<leader>o", require("osc52").copy_visual)
