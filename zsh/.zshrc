@@ -206,6 +206,15 @@ else
   alias lg='echo lazygit not installed'
 fi
 
+if (( $+commands[sshs] ))
+then
+  compdef _gnu_generic sshs
+  alias s='sshs -e'
+else
+  alias s='echo sshs not installed'
+fi
+
+
 if (( $+commands[vim.gtk3] ))
 then
   alias vim='vim.gtk3'
