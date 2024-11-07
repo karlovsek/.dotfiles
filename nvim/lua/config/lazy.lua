@@ -129,23 +129,57 @@ local group = vim.api.nvim_create_augroup("OnlyInActiveWindow", { clear = true }
 vim.api.nvim_create_autocmd({ "VimEnter", "WinEnter", "BufWinEnter" }, {
   group = group,
   pattern = "*",
-  command = "setlocal cursorline",
+  callback = function()
+    -- Exclude terminal buffers
+    if vim.bo.buftype == "terminal" then
+      return
+    end
+
+    vim.wo.cursorline = true -- Highlight current line
+  end,
+  -- command = "setlocal cursorline",
 })
 
 vim.api.nvim_create_autocmd("WinLeave", {
   group = group,
   pattern = "*",
-  command = "setlocal nocursorline",
+  callback = function()
+    -- Exclude terminal buffers
+    if vim.bo.buftype == "terminal" then
+      return
+    end
+
+    vim.wo.cursorline = false -- Highlight current line
+  end,
+  -- command = "setlocal nocursorline",
 })
 
 vim.api.nvim_create_autocmd("WinEnter", {
   group = group,
   pattern = "*",
-  command = "set relativenumber",
+  callback = function()
+    -- Exclude terminal buffers
+    if vim.bo.buftype == "terminal" then
+      return
+    end
+
+    -- Your custom logic here for other buffers
+    vim.wo.relativenumber = true -- Enable relative line numbers
+  end,
+  -- command = "set relativenumber",
 })
 
 vim.api.nvim_create_autocmd("WinLeave", {
   group = group,
   pattern = "*",
-  command = "set norelativenumber",
+  callback = function()
+    -- Exclude terminal buffers
+    if vim.bo.buftype == "terminal" then
+      return
+    end
+
+    -- Your custom logic here for other buffers
+    vim.wo.relativenumber = false -- Enable relative line numbers
+  end,
+  -- command = "set norelativenumber",
 })
