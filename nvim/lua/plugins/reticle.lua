@@ -13,7 +13,7 @@ return {
           "NvimTree",
           "TelescopePrompt",
           "Trouble",
-          "dashboard",
+          "snacks_dashboard",
         },
         cursorcolumn = {},
       },
