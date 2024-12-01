@@ -2,6 +2,7 @@ return {
   {
     {
       "m00qek/baleia.nvim",
+      cmd = "BaleiaColorize",
       config = function()
         vim.g.conjure_baleia = require("baleia").setup({ line_starts_at = 3 })
 
