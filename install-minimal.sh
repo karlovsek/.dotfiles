@@ -119,6 +119,23 @@ else
   rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
+if which btop >/dev/null 2>&1; then
+  echo -e "${GREEN}btop exists ($(btop --version)) ${NC}"
+else
+  # get the latest version of btop from github
+  version=$(curl --silent "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  echo -e "${YELLOW}Installing btop ${version} ${NC}"
+
+  curl --silent -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
+  tar -xf btop-x86_64-linux-musl.tbz
+  cd btop
+  PREFIX=~/.local make install
+  cd ..
+
+  # clean
+  rm -fr btop btop-x86_64-linux-musl.tbz
+fi
+
 if which bfs >/dev/null 2>&1; then
   echo -e "${GREEN}bfs exists ($(bfs --version | grep "bfs ")) ${NC}"
 else
