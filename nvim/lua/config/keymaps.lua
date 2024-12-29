@@ -21,3 +21,7 @@ vim.keymap.set("v", "<leader>o", require("osc52").copy_visual)
 
 vim.keymap.set("n", "<leader>j", "m`o<ESC>``")
 vim.keymap.set("n", "<leader>k", "m`O<ESC>``")
+
+keymap.set("n", "<leader>gg", function()
+  require("lazygit-confirm").confirm()
+end, { noremap = true })
