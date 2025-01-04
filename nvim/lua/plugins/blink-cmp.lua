@@ -5,7 +5,7 @@ return {
     "rafamadriz/friendly-snippets", -- Provides additional code snippets
     "onsails/lspkind.nvim", -- Adds icons to completion items
   },
-  version = "*", -- Use the latest version
+  version = "v0.8.2", -- Use the latest version
 
   -- Type annotations for documentation and better tooling support
   ---@module 'blink.cmp'
