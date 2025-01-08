@@ -5,7 +5,7 @@ return {
     "rafamadriz/friendly-snippets", -- Provides additional code snippets
     "onsails/lspkind.nvim", -- Adds icons to completion items
   },
-  version = "v0.8.2", -- Use the latest version
+  version = "*", -- Use the latest version
 
   -- Type annotations for documentation and better tooling support
   ---@module 'blink.cmp'
@@ -27,10 +27,7 @@ return {
         window = { border = "rounded" }, -- Set rounded borders for the documentation window
       },
       list = {
-        selection = function(ctx) -- Customize completion item selection
-          -- Use "auto_insert" in cmdline mode; otherwise, use "preselect"
-          return ctx.mode == "cmdline" and "auto_insert" or "preselect"
-        end,
+        selection = { preselect = false, auto_insert = true },
       },
       menu = { -- Configuration for the completion menu
         border = "rounded", -- Set rounded borders
