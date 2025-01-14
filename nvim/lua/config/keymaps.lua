@@ -15,13 +15,16 @@ keymap.set("n", "#", "#zz", opts)
 keymap.set("n", "g*", "g*zz", opts)
 keymap.set("n", "g#", "g#zz", opts)
 
-vim.keymap.set("n", "<leader>o", require("osc52").copy_operator, { expr = true })
-vim.keymap.set("n", "<leader>oo", "<leader>o_", { remap = true })
-vim.keymap.set("v", "<leader>o", require("osc52").copy_visual)
+keymap.set("n", "<leader>o", require("osc52").copy_operator, { expr = true })
+keymap.set("n", "<leader>oo", "<leader>o_", { remap = true })
+keymap.set("v", "<leader>o", require("osc52").copy_visual)
 
-vim.keymap.set("n", "<leader>j", "m`o<ESC>``")
-vim.keymap.set("n", "<leader>k", "m`O<ESC>``")
+keymap.set("n", "<leader>j", "m`o<ESC>``")
+keymap.set("n", "<leader>k", "m`O<ESC>``")
 
 keymap.set("n", "<leader>gg", function()
   require("lazygit-confirm").confirm()
 end, { noremap = true })
+
+-- reselect pasted text
+keymap.set("n", "<leader>gp", "`[v`]", { desc = "Reselect pasted text" })
