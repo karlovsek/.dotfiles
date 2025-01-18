@@ -1,12 +1,19 @@
 return {
   {
     "gbprod/yanky.nvim",
+
+    config = function()
+      require("yanky").setup({})
+    end,
+
     dependencies = {
       { "kkharji/sqlite.lua" },
     },
+
     opts = {
       ring = { storage = "sqlite" },
     },
+
     keys = {
       {
         "<leader>p",
