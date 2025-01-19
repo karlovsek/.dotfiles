@@ -2,7 +2,8 @@
 require("config.lazy")
 
 require("catppuccin").setup({
-  flavour = "auto", -- latte, frappe, macchiato, mocha
+  priority = 1000,
+  flavour = "mocha", -- latte, frappe, macchiato, mocha
   background = { -- :h background
     light = "latte",
     dark = "mocha",
