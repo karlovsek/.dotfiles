@@ -22,9 +22,5 @@ keymap.set("v", "<leader>o", require("osc52").copy_visual)
 keymap.set("n", "<leader>j", "m`o<ESC>``")
 keymap.set("n", "<leader>k", "m`O<ESC>``")
 
-keymap.set("n", "<leader>gg", function()
-  require("lazygit-confirm").confirm()
-end, { noremap = true })
-
 -- reselect pasted text
 keymap.set("n", "<leader>gp", "`[v`]", { desc = "Reselect pasted text" })
