@@ -40,7 +40,7 @@ require("catppuccin").setup({
   integrations = {
     cmp = false,
     blink_cmp = true,
-    harpoon = true,
+    harpoon = false,
     gitsigns = true,
     nvimtree = true,
     treesitter = true,
