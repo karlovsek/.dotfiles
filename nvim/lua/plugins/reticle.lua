@@ -1,3 +1,6 @@
+-- This plugin provides a convenient solution for configuring the cursorline and cursorcolumn
+-- settings to meet your specific needs, granting you complete control over when they are displayed and when they are not.
+
 return {
   {
     "tummetott/reticle.nvim",
