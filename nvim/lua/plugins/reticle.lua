@@ -17,6 +17,7 @@ return {
           "TelescopePrompt",
           "Trouble",
           "snacks_dashboard",
+          "snacks_terminal",
         },
         cursorcolumn = {},
       },
