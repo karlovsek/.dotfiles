@@ -18,6 +18,7 @@ return {
           "Trouble",
           "snacks_dashboard",
           "snacks_terminal",
+          "snacks_picker_input",
         },
         cursorcolumn = {},
       },
