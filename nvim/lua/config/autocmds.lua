@@ -4,6 +4,8 @@
 
 vim.cmd([[autocmd TermOpen,TermEnter,BufWinEnter,WinEnter term://* startinsert]])
 
+vim.cmd([[autocmd TermOpen * setlocal nonumber norelativenumber]])
+
 vim.api.nvim_create_autocmd("BufWinEnter", {
   callback = function()
     local ft = vim.bo.filetype
