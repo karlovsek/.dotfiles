@@ -104,43 +104,71 @@ return {
       window = { border = "rounded" }, -- Set rounded borders for the signature help window
     },
 
-    sources = { -- Define completion sources
-      default = { "lsp", "path", "snippets", "buffer" }, -- Default sources for completion
-
-      min_keyword_length = function(ctx)
-        return ctx.trigger.kind == "manual" and 0 or 2
-      end,
-
-      cmdline = function()
+    cmdline = {
+      enabled = true,
+      keymap = nil, -- Inherits from top level `keymap` config when not set
+      sources = function()
         local type = vim.fn.getcmdtype()
         -- Search forward and backward
         if type == "/" or type == "?" then
           return { "buffer" }
         end
         -- Commands
-        if type == ":" then
+        if type == ":" or type == "@" then
           return { "cmdline" }
         end
         return {}
       end,
-
-      providers = { -- Configure individual source behavior
-        lsp = {
-          min_keyword_length = 3, -- Minimum characters to trigger completion
-          score_offset = 0, -- Adjust score for LSP items
+      completion = {
+        trigger = {
+          show_on_blocked_trigger_characters = {},
+          show_on_x_blocked_trigger_characters = nil, -- Inherits from top level `completion.trigger.show_on_blocked_trigger_characters` config when not set
         },
-        path = {
-          min_keyword_length = 0, -- No minimum length for path completion
-          max_items = 100,
-        },
-        snippets = {
-          min_keyword_length = 3, -- Minimum characters to trigger snippets
-        },
-        buffer = {
-          -- min_keyword_length = 3, -- Minimum characters for buffer suggestions
-          max_items = 7, -- Limit the number of buffer suggestions
+        menu = {
+          auto_show = nil, -- Inherits from top level `completion.menu.auto_show` config when not set
+          draw = {
+            columns = { { "label", "label_description", gap = 1 } },
+          },
         },
       },
     },
+    -- sources = { -- Define completion sources
+    --   default = { "lsp", "path", "snippets", "buffer" }, -- Default sources for completion
+    --
+    --   min_keyword_length = function(ctx)
+    --     return ctx.trigger.kind == "manual" and 0 or 2
+    --   end,
+    --
+    --   cmdline = function()
+    --     local type = vim.fn.getcmdtype()
+    --     -- Search forward and backward
+    --     if type == "/" or type == "?" then
+    --       return { "buffer" }
+    --     end
+    --     -- Commands
+    --     if type == ":" then
+    --       return { "cmdline" }
+    --     end
+    --     return {}
+    --   end,
+    --
+    --   providers = { -- Configure individual source behavior
+    --     lsp = {
+    --       min_keyword_length = 3, -- Minimum characters to trigger completion
+    --       score_offset = 0, -- Adjust score for LSP items
+    --     },
+    --     path = {
+    --       min_keyword_length = 0, -- No minimum length for path completion
+    --       max_items = 100,
+    --     },
+    --     snippets = {
+    --       min_keyword_length = 3, -- Minimum characters to trigger snippets
+    --     },
+    --     buffer = {
+    --       -- min_keyword_length = 3, -- Minimum characters for buffer suggestions
+    --       max_items = 7, -- Limit the number of buffer suggestions
+    --     },
+    --   },
+    -- },
   },
 }
