@@ -36,11 +36,13 @@ else
 
   echo "NeoVim does not exist, installing ${version} ..."
 
-  curl -OL https://github.com/neovim/neovim-releases/releases/download/stable/nvim-linux64.tar.gz
-  tar -xf nvim-linux64.tar.gz --strip-components=1 -C $INSTALL_DIR
+  nvim_archive=nvim-linux-x86_64.tar.gz
+
+  curl -OL https://github.com/neovim/neovim-releases/releases/download/${version}/${nvim_archive}
+  tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
 
   # clean
-  rm nvim-linux64.tar.gz
+  rm ${nvim_archive}
 fi
 
 if which zsh >/dev/null 2>&1; then
