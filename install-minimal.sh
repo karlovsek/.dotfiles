@@ -161,7 +161,7 @@ if which zoxide >/dev/null 2>&1; then
   echo -e "${GREEN}zoxide exists ($(zoxide --version)) ${NC}"
 else
   echo "Installing zoxide"
-  curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+  curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash -s -- --bin-dir $INSTALL_BIN_DIR
 fi
 
 if which bat >/dev/null 2>&1; then
@@ -207,7 +207,7 @@ else
   curl -OL https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz
   tar -xf lazygit_${version}_Linux_x86_64.tar.gz
   mv lazygit $INSTALL_BIN_DIR/
-  rm lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
+  rm -f lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
 if which zellij >/dev/null 2>&1; then
