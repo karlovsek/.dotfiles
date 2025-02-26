@@ -226,19 +226,6 @@ plugins {
         welcome_screen true
     }
 
-
-    // Define the "autolock" plugin.
-    autolock location="file:$HOME/.config/zellij/plugins/zellij-autolock.wasm" {
-        // Enabled at start?
-        is_enabled true
-        // Lock when any open these programs open.
-        triggers "nvim|vim|git|fzf|zoxide|atuin|vi"
-        // Reaction to input occurs after this many seconds. (default=0.3)
-        // (An existing scheduled reaction prevents additional reactions.)
-        reaction_seconds "0.3"
-        // Print to Zellij log? (default=false)
-        print_to_log true
-    }
 }
 
 // Plugins to load in the background when a new session starts
