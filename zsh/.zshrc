@@ -206,6 +206,14 @@ else
   alias lg='echo lazygit not installed'
 fi
 
+if (( $+commands[lazygit] ))
+then
+  compdef _gnu_generic lazydocker
+  alias ldoc='lazydocker'
+else
+  alias ldoc='echo lazydocker not installed'
+fi
+
 if (( $+commands[sshs] ))
 then
   compdef _gnu_generic sshs
