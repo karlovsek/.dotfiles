@@ -210,6 +210,20 @@ else
   rm -f lazygit_${version}_Linux_x86_64.tar.gz LICENSE README.md
 fi
 
+if which lazydocker >/dev/null 2>&1; then
+  echo -e "${GREEN}lazydocker exists ($(lazydocker --version | head -n1 | awk '{print $2}')) ${NC}"
+else
+  # get the latest version of lazygit from github
+  version=$(curl --silent "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+  echo -e "${YELLOW}Installing lazydocker ${version} ${NC}"
+
+  curl -OL https://github.com/jesseduffield/lazydocker/releases/download/v${version}/lazydocker_${version}_Linux_x86_64.tar.gz
+  tar -xf lazydocker_${version}_Linux_x86_64.tar.gz
+  mv lazydocker $INSTALL_BIN_DIR/
+  rm -f lazydocker_${version}_Linux_x86_64.tar.gz LICENSE README.md
+fi
+
 if which zellij >/dev/null 2>&1; then
   echo -e "${GREEN}zellij exists ($(zellij --version | awk '{print $2}')) ${NC}"
 else
