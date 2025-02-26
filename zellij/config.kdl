@@ -232,7 +232,6 @@ plugins {
 // eg. "file:/path/to/my-plugin.wasm"
 // eg. "https://example.com/my-plugin.wasm"
 load_plugins {
-  autolock
 }
  
 // Use a simplified UI without special fonts (arrow glyphs)
@@ -255,7 +254,7 @@ default_mode "locked"
 // Choose the path to the default shell that zellij will use for opening new panes
 // Default: $SHELL
 // 
-// default_shell "fish"
+default_shell "zsh"
  
 // Choose the path to override cwd that zellij will use for opening new panes
 // 
@@ -397,7 +396,7 @@ default_mode "locked"
  
 // How often in seconds sessions are serialized
 // 
-// serialization_interval 10000
+serialization_interval 600
  
 // Enable or disable writing of session metadata to disk (if disabled, other sessions might not know
 // metadata info on this session)
