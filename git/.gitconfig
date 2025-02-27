@@ -1,15 +1,34 @@
 [user]
-	email = peter.karlovsek@gmail.com
-	name = Peter Karlovsek
+    # email = 
+    # name = 
 [core]
   autocrlf = false
+[column]
+    ui = auto
+[branch]
+    sort = -committerdate
+[tag]
+    sort = version:refname
+[init]
+    defaultBranch = main
+[pull]
+    rebase = true    
 [push]
-	autoSetupRemote = true
-  default = current
+    autoSetupRemote = true
+    default = current
+    followTags = true
+[fetch]
+    prune = true
+    pruneTags = true
+    all = true
 [merge]
-	# conflictstyle = zdiff3
+    # conflictstyle = zdiff3
 [diff]
-	algorithm = histogram
+    algorithm = histogram
+    colorMoved = plain
+    mnemonicPrefix = true
+    renames = true
 [rebase]
-	autosquash = true
-	autostash = true
+    autoSquash = true
+    autoStash = true
+    updateRefs = true
