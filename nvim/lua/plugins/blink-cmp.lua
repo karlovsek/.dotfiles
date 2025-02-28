@@ -106,7 +106,29 @@ return {
 
     cmdline = {
       enabled = true,
-      keymap = nil, -- Inherits from top level `keymap` config when not set
+      keymap = {
+        preset = "none",
+        ["<Tab>"] = {
+          function(cmp)
+            if cmp.is_ghost_text_visible() then
+              return cmp.accept()
+            end
+          end,
+          "select_and_accept",
+        },
+        ["<S-Tab>"] = { "show_and_insert", "select_prev" },
+        ["<C-space>"] = { "show", "fallback" },
+
+        ["<C-n>"] = { "select_next", "fallback" },
+        ["<C-p>"] = { "select_prev", "fallback" },
+        ["<Right>"] = { "select_next", "fallback" },
+        ["<Left>"] = { "select_prev", "fallback" },
+        ["<Up>"] = { "select_prev", "fallback" }, -- Navigate up or fallback
+        ["<Down>"] = { "select_next", "fallback" }, -- Navigate down or fallback
+        ["<C-y>"] = { "select_and_accept" },
+        ["<C-e>"] = { "cancel" },
+      },
+
       sources = function()
         local type = vim.fn.getcmdtype()
         -- Search forward and backward
@@ -132,43 +154,43 @@ return {
         },
       },
     },
-    -- sources = { -- Define completion sources
-    --   default = { "lsp", "path", "snippets", "buffer" }, -- Default sources for completion
-    --
-    --   min_keyword_length = function(ctx)
-    --     return ctx.trigger.kind == "manual" and 0 or 2
-    --   end,
-    --
-    --   cmdline = function()
-    --     local type = vim.fn.getcmdtype()
-    --     -- Search forward and backward
-    --     if type == "/" or type == "?" then
-    --       return { "buffer" }
-    --     end
-    --     -- Commands
-    --     if type == ":" then
-    --       return { "cmdline" }
-    --     end
-    --     return {}
-    --   end,
-    --
-    --   providers = { -- Configure individual source behavior
-    --     lsp = {
-    --       min_keyword_length = 3, -- Minimum characters to trigger completion
-    --       score_offset = 0, -- Adjust score for LSP items
-    --     },
-    --     path = {
-    --       min_keyword_length = 0, -- No minimum length for path completion
-    --       max_items = 100,
-    --     },
-    --     snippets = {
-    --       min_keyword_length = 3, -- Minimum characters to trigger snippets
-    --     },
-    --     buffer = {
-    --       -- min_keyword_length = 3, -- Minimum characters for buffer suggestions
-    --       max_items = 7, -- Limit the number of buffer suggestions
-    --     },
-    --   },
-    -- },
+    sources = { -- Define completion sources
+      default = { "lsp", "path", "snippets", "buffer" }, -- Default sources for completion
+
+      min_keyword_length = function(ctx)
+        return ctx.trigger.kind == "manual" and 0 or 2
+      end,
+
+      -- cmdline = function()
+      --   local type = vim.fn.getcmdtype()
+      --   -- Search forward and backward
+      --   if type == "/" or type == "?" then
+      --     return { "buffer" }
+      --   end
+      --   -- Commands
+      --   if type == ":" then
+      --     return { "cmdline" }
+      --   end
+      --   return {}
+      -- end,
+
+      providers = { -- Configure individual source behavior
+        lsp = {
+          min_keyword_length = 3, -- Minimum characters to trigger completion
+          score_offset = 0, -- Adjust score for LSP items
+        },
+        path = {
+          min_keyword_length = 0, -- No minimum length for path completion
+          max_items = 100,
+        },
+        snippets = {
+          min_keyword_length = 3, -- Minimum characters to trigger snippets
+        },
+        buffer = {
+          min_keyword_length = 2, -- Minimum characters for buffer suggestions
+          max_items = 7, -- Limit the number of buffer suggestions
+        },
+      },
+    },
   },
 }
