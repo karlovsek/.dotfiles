@@ -6,3 +6,20 @@ if vim.g.neovide then
   -- Put anything you want to happen only in Neovide here
   vim.o.guifont = "DejaVuSansM Nerd Font:h11" -- text below applies for VimScript
 end
+
+-- Disable relative numbers
+vim.opt.relativenumber = false
+
+local toggle_rnu_insert = vim.api.nvim_create_augroup("toggle_rnu_insert", { clear = true })
+
+vim.api.nvim_create_autocmd("InsertEnter", {
+  group = toggle_rnu_insert,
+  pattern = "*",
+  command = "setlocal relativenumber",
+})
+
+vim.api.nvim_create_autocmd("InsertLeave", {
+  group = toggle_rnu_insert,
+  pattern = "*",
+  command = "setlocal norelativenumber",
+})
