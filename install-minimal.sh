@@ -16,7 +16,7 @@ if ! grep -q -e "\$PATH\" == .*${INSTALL_BIN_DIR}" "$HOME/.bashrc"; then
   cat <<EOF >>"$HOME/.bashrc"
 
 if [[ ! "\$PATH" == *${INSTALL_BIN_DIR}* ]]; then
-  PATH="\${PATH:+\${PATH}:}${INSTALL_BIN_DIR}"
+  PATH="${INSTALL_BIN_DIR}:\${PATH:+\${PATH}:}"
 fi
 
 EOF
@@ -28,6 +28,32 @@ GREEN='\e[0;32m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+# get current curl version
+if command -v curl >/dev/null 2>&1; then
+  curl_version=$(curl --version | head -n 1 | awk '{print $2}')
+  echo "Curl version ${curl_version} installed"
+else
+  echo "curl is not installed"
+  exit 1
+fi
+
+latest_curl_version=$(curl --silent "https://api.github.com/repos/moparisthebest/static-curl/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+# Test if latest version is greater than current version, and if it is download it
+
+if [ "$(printf '%s\n' "$latest_curl_version" "$curl_version" | sort -V | head -n 1)" != "$latest_version" ]; then
+  echo "A newer version of curl is available. Downloading version $latest_curl_version ..."
+  curl_archive=curl-amd64
+
+  curl -OL https://github.com/moparisthebest/static-curl/releases/download/v${latest_curl_version}/${curl_archive}
+
+  mv $curl_archive ${INSTALL_BIN_DIR}/curl
+  chmod +x ${INSTALL_BIN_DIR}/curl
+  # clean
+else
+  echo "You already have the latest version of curl."
+fi
 
 if which nvim >/dev/null 2>&1; then
   echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
