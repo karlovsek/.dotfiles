@@ -42,7 +42,7 @@ latest_curl_version=$(curl --silent "https://api.github.com/repos/moparisthebest
 
 # Test if latest version is greater than current version, and if it is download it
 
-if [ "$(printf '%s\n' "$latest_curl_version" "$curl_version" | sort -V | head -n 1)" != "$latest_version" ]; then
+if [ "$(printf '%s\n' "$latest_curl_version" "$curl_version" | sort -V | head -n 1)" != "$latest_curl_version" ]; then
   echo "A newer version of curl is available. Downloading version $latest_curl_version ..."
   curl_archive=curl-amd64
 
