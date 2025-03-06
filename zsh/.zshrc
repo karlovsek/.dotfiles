@@ -4,7 +4,7 @@
 export TERM=xterm-256color # enables all colors in the terminal 
 
 if [[ ! "$PATH" == *$HOME/.local/bin* ]]; then
-  PATH="${PATH:+${PATH}:}$HOME/.local/bin"
+  PATH="$HOME/.local/bin:${PATH:+${PATH}:}"
 fi
 
 if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile.d/nix.sh; fi
