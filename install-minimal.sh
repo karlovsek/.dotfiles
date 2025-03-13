@@ -29,6 +29,23 @@ NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
+if which 7zz >/dev/null 2>&1; then
+  echo -e "${GREEN}7zip exists ($(7zz | grep 7-Zip | awk '{print $3}') ${NC}"
+else
+  version=$(curl --silent "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+  echo "NeoVim does not exist, installing ${version} ..."
+
+  nvim_archive=nvim-linux-x86_64.tar.gz
+
+  curl -OL https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
+  tar -xvf 7z2409-linux-x64.tar.xz 7zz
+  chmod +x 7zz && move 7zz $INSTALL_BIN_DIR
+
+  # clean
+  rm 7z2409-linux-x64.tar.xz
+fi
+
 # get current curl version
 if command -v curl >/dev/null 2>&1; then
   curl_version=$(curl --version | head -n 1 | awk '{print $2}')
@@ -172,7 +189,7 @@ else
   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
 
   curl --silent -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
-  unzip -q ${version}.zip
+  7zz x ${version}.zip
   cd bfs-${version}
   ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
   make -j$(nproc) >/dev/null
@@ -214,7 +231,7 @@ else
   version=$(curl --silent "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
   curl -OL https://github.com/eza-community/eza/releases/download/${version}/eza_x86_64-unknown-linux-gnu.zip
-  unzip eza_x86_64-unknown-linux-gnu.zip
+  7zz x eza_x86_64-unknown-linux-gnu.zip
   mv eza $INSTALL_BIN_DIR/eza
   chmod +x $INSTALL_BIN_DIR/eza
 
