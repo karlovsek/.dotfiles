@@ -38,7 +38,7 @@ else
 
   curl -OL https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
   tar -xvf 7z2409-linux-x64.tar.xz 7zz
-  chmod +x 7zz && move 7zz $INSTALL_BIN_DIR
+  chmod +x 7zz && mv 7zz $INSTALL_BIN_DIR
 
   # clean
   rm 7z2409-linux-x64.tar.xz
