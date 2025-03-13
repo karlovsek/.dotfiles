@@ -38,22 +38,22 @@ else
   exit 1
 fi
 
-latest_curl_version=$(curl --silent "https://api.github.com/repos/moparisthebest/static-curl/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+# latest_curl_version=$(curl --silent "https://api.github.com/repos/moparisthebest/static-curl/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 
-# Test if latest version is greater than current version, and if it is download it
+# # Test if latest version is greater than current version, and if it is download it
 
-if [ "$(printf '%s\n' "$latest_curl_version" "$curl_version" | sort -V | head -n 1)" != "$latest_curl_version" ]; then
-  echo "A newer version of curl is available. Downloading version $latest_curl_version ..."
-  curl_archive=curl-amd64
+# if [ "$(printf '%s\n' "$latest_curl_version" "$curl_version" | sort -V | head -n 1)" != "$latest_curl_version" ]; then
+#   echo "A newer version of curl is available. Downloading version $latest_curl_version ..."
+#   curl_archive=curl-amd64
 
-  curl -OL https://github.com/moparisthebest/static-curl/releases/download/v${latest_curl_version}/${curl_archive}
+#   curl -OL https://github.com/moparisthebest/static-curl/releases/download/v${latest_curl_version}/${curl_archive}
 
-  mv $curl_archive ${INSTALL_BIN_DIR}/curl
-  chmod +x ${INSTALL_BIN_DIR}/curl
-  # clean
-else
-  echo "You already have the latest version of curl."
-fi
+#   mv $curl_archive ${INSTALL_BIN_DIR}/curl
+#   chmod +x ${INSTALL_BIN_DIR}/curl
+#   # clean
+# else
+#   echo "You already have the latest version of curl."
+# fi
 
 if which nvim >/dev/null 2>&1; then
   echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
