@@ -32,11 +32,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 if which 7zz >/dev/null 2>&1; then
   echo -e "${GREEN}7zip exists ($(7zz | grep 7-Zip | awk '{print $3}') ${NC}"
 else
-  version=$(curl --silent "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=7z2409
 
-  echo "NeoVim does not exist, installing ${version} ..."
-
-  nvim_archive=nvim-linux-x86_64.tar.gz
+  echo "7zip does not exist, installing ${version} ..."
 
   curl -OL https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
   tar -xvf 7z2409-linux-x64.tar.xz 7zz
