@@ -203,7 +203,7 @@ if which broot >/dev/null 2>&1; then
 else
   # get the latest version of htop from github
   # version=$(curl --silent "https://api.github.com/repos/Canop/broot/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-  echo -e "${YELLOW}Installing broot lates version ${NC}"
+  echo -e "${YELLOW}Installing broot latest version ${NC}"
 
   curl --progress-bar -OL https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
   chmod +x ./broot
