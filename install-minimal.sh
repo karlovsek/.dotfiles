@@ -153,7 +153,7 @@ else
   version=$(curl --silent "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
   echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
-  curl --silent -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
+  curl  --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
   tar -xf htop-${version}.tar.xz
   cd htop-${version}
   ./autogen.sh >/dev/null && ./configure --prefix=$INSTALL_DIR >/dev/null && make >/dev/null && make install >/dev/null
@@ -169,7 +169,7 @@ else
   version=$(curl --silent "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
   echo -e "${YELLOW}Installing btop ${version} ${NC}"
 
-  curl --silent -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
+  curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
   tar -xf btop-x86_64-linux-musl.tbz
   cd btop
   PREFIX=~/.local make install
@@ -186,7 +186,7 @@ else
   version=$(curl --silent "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
 
-  curl --silent -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
+  curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
   7zz x ${version}.zip
   cd bfs-${version}
   ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
@@ -196,6 +196,18 @@ else
   #clean
   cd ..
   rm -fr bfs-${version} ${version}.zip
+fi
+
+if which broot >/dev/null 2>&1; then
+  echo -e "${GREEN}broot exists ($(broot --version | awk '{print $2}')) ${NC}"
+else
+  # get the latest version of htop from github
+  # version=$(curl --silent "https://api.github.com/repos/Canop/broot/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  # echo -e "${YELLOW}Installing broot ${version} ${NC}"
+
+  curl --progress-bar -OL https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
+  chmod +x ./broot
+  mv ./broot ${INSTALL_BIN_DIR}
 fi
 
 if which zoxide >/dev/null 2>&1; then
