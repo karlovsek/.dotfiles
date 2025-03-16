@@ -282,7 +282,8 @@ fi
 # broot
 if [ -f ~/.config/broot/launcher/bash/br ]; then
   source ~/.config/broot/launcher/bash/br
-  alias bs='br --sizes'
+  alias br='br --sizes'
+  alias brs='br --sizes --sort-by-size'
 fi
 
 if (( $+commands[ag] ))
