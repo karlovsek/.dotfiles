@@ -294,6 +294,45 @@ else
   rm -fr zellij_tmp
 fi
 
+# TODO install node
+if which node >/dev/null 2>&1; then
+  echo -e "${GREEN}node exists ($(node -v)) ${NC}"
+else
+  echo -e "${YELLOW}Installing fnm ${NC}"
+
+  # Download and install fnm:
+  curl -o- https://fnm.vercel.app/install | bash
+
+  FNM_PATH="$HOME/.local/share/fnm"
+  if [ -d "$FNM_PATH" ]; then
+    export PATH="$FNM_PATH:$PATH"
+    eval "`fnm env`"
+
+    # Download and install Node.js:
+    fnm install 23
+
+    # Verify the Node.js version:
+    node -v # Should print "v23.11.0".
+
+    # Verify npm version:
+    npm -v # Should print "10.9.2".
+  else
+    echo -e "${RED} FNM not installed ${NC}"
+  fi
+
+  mkdir zellij_tmp && cd zellij_tmp
+  curl -OL https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
+  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
+  mv zellij $INSTALL_BIN_DIR/
+  cd ..
+  rm -fr zellij_tmp
+fi
+
+
+
+
+
+
 echo -ne "\nCreate Vim symlinks? (Y/n): "
 read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")

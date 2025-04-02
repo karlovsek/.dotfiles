@@ -306,9 +306,13 @@ fi
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+FNM_PATH="$HOME/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "`fnm env`"
+fi
 
 export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
-
 
 if [[ ! -z $(uname -a | grep "microsoft-standard-WSL2") ]]
 then
