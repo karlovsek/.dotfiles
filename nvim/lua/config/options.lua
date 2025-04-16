@@ -14,13 +14,13 @@ local toggle_rnu_insert = vim.api.nvim_create_augroup("toggle_rnu_insert", { cle
 
 vim.api.nvim_create_autocmd("InsertEnter", {
   group = toggle_rnu_insert,
-  pattern = "*",
+  pattern = "*.*",
   command = "setlocal relativenumber",
 })
 
 vim.api.nvim_create_autocmd("InsertLeave", {
   group = toggle_rnu_insert,
-  pattern = "*",
+  pattern = "*.*",
   command = "setlocal norelativenumber",
 })
 
