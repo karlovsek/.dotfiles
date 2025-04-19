@@ -422,9 +422,9 @@ let g:cmake_compile_commands_link = '.'
 Plug 'dbeniamine/cheat.sh-vim'
 Plug 'tpope/vim-obsession'
 Plug 'fedorenchik/qt-support.vim'
-if v:version >= 800
-  Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() } }
-end
+" if v:version >= 800
+"   Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() } }
+" end
 Plug 'itchyny/lightline.vim'
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim' " {{{
