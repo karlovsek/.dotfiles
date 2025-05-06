@@ -1,14 +1,13 @@
 -- Lua
 return {
   "gbprod/cutlass.nvim",
-  lazy = false,
   opts = {
     cut_key = "m",
-    override_del = nil,
     exclude = {},
+    override_del = nil,
     registers = {
       select = "s",
-      delete = "d",
+      -- delete = "d", setting this causes delete to be saved to register
       change = "c",
     },
   },
