@@ -137,6 +137,8 @@ keybinds clear-defaults=true {
         bind "Ctrl Alt down" { MoveFocus "down"; }
         bind "Ctrl Alt up" { MoveFocus "up"; }
         bind "Ctrl Alt right" { MoveFocusOrTab "right"; }
+        bind "Alt left" { Resize "Increase"; }
+        bind "Alt right" { Resize "Decrease"; }
         bind "Alt H" { MoveFocusOrTab "left"; }
         bind "Alt I" { MoveTab "left"; }
         bind "Alt J" { MoveFocus "down"; }
