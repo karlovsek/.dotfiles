@@ -28,3 +28,6 @@ keymap.set("n", "<leader>gp", "`[v`]", { desc = "Reselect pasted text" })
 keymap.set("n", "<Space><Space>", function()
   Snacks.picker.smart()
 end, { desc = "Find files, recent and buffers" })
+
+keymap.set("x", "/", "<C-\\><C-n>`</\\%V", { desc = "Search forward within visual selection" })
+keymap.set("x", "?", "<C-\\><C-n>`>?\\%V", { desc = "Search backward within visual selection" })
