@@ -6,6 +6,12 @@ keybinds clear-defaults=true {
     locked {
         bind "Ctrl g" { SwitchToMode "normal"; }
     }
+    normal {
+        bind "Alt left" { Resize "Increase left"; }
+        bind "Alt down" { Resize "Increase down"; }
+        bind "Alt up" { Resize "Increase up"; }
+        bind "Alt right" { Resize "Increase right"; }
+    }
     pane {
         bind "left" { MoveFocus "left"; }
         bind "down" { MoveFocus "down"; }
@@ -137,8 +143,6 @@ keybinds clear-defaults=true {
         bind "Ctrl Alt down" { MoveFocus "down"; }
         bind "Ctrl Alt up" { MoveFocus "up"; }
         bind "Ctrl Alt right" { MoveFocusOrTab "right"; }
-        bind "Alt left" { Resize "Increase"; }
-        bind "Alt right" { Resize "Decrease"; }
         bind "Alt H" { MoveFocusOrTab "left"; }
         bind "Alt I" { MoveTab "left"; }
         bind "Alt J" { MoveFocus "down"; }
