@@ -2,7 +2,7 @@
 return {
   "gbprod/cutlass.nvim",
   opts = {
-    cut_key = "m",
+    cut_key = "M", -- Use capptial M to prevent conflicts with `m` for setting marks
     exclude = {},
     override_del = nil,
     registers = {
