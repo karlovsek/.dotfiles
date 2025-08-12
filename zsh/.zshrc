@@ -250,13 +250,27 @@ then
   alias fd="fd --follow"
 fi
 
-if (( $+commands[fd] && $+commands[fzf] ))
+if (( $+commands[fd] ))
 then
-  compdef _gnu_generic fd fzf
-  export FZF_DEFAULT_COMMAND='fd --follow --type f'
+  compdef _gnu_generic fd
+fi
+
+if (( $+commands[fzf] ))
+then
+  compdef _gnu_generic fzf
+fi
+
+if (( $+commands[fd] && $+commands[fzf] && $+commands[eza] && $+commands[bat] ))
+then
+  export FZF_CTRL_T_OPTS="--preview '([[ -d {} ]] && eza --icons -l --color=always --group-directories-first --no-user {} || bat --style=numbers --color=always {})' \
+    --preview-window=right:60%:wrap"
+
+  # Preview directory contents
+  export FZF_ALT_C_OPTS="--preview 'eza --icons -l --color=always --group-directories-first --no-permissions --no-user {}| head -n 50' --preview-window=right:60%:wrap"
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 
 if (( $+commands[zoxide] ))
 then
