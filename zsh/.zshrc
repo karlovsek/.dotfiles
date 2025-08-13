@@ -193,6 +193,8 @@ if (( $+commands[eza] ))
 then
   compdef _gnu_generic eza
 
+  export EZA_CONFIG_DIR=$HOME/.dotfiles/eza/themes
+  
   # Changing "ls" to "eza"
   # Uncomment alias l* into /home/codac-dev/.oh-my-zsh/lib/directories.zsh
   # Uncomment DISABLE_LS_COLORS="true"
