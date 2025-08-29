@@ -138,6 +138,21 @@ else
   rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
 fi
 
+if which lstr >/dev/null 2>&1; then
+  echo -e "${GREEN}lstr exists ($(lstr --version)) ${NC}"
+else
+  echo -e "${YELLOW}lstr does not exist, installing it ...${NC}"
+
+  mkdir lstr_dir && cd lstr_dir
+  curl -OL https://github.com/bgreenwell/lstr/releases/download/v0.2.1/lstr-linux-x86_64.tar.gz
+  tar -xf lstr-linux-x86_64.tar.gz
+  mv ./lstr $INSTALL_BIN_DIR
+
+  #clean
+  cd ..
+  rm -fr lstr_dir
+fi
+
 if which fzf >/dev/null 2>&1; then
   echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
 else
@@ -153,7 +168,7 @@ else
   version=$(curl --silent "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
   echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
-  curl  --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
+  curl --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
   tar -xf htop-${version}.tar.xz
   cd htop-${version}
   ./autogen.sh >/dev/null && ./configure --prefix=$INSTALL_DIR >/dev/null && make >/dev/null && make install >/dev/null
@@ -306,7 +321,7 @@ else
   FNM_PATH="$HOME/.local/share/fnm"
   if [ -d "$FNM_PATH" ]; then
     export PATH="$FNM_PATH:$PATH"
-    eval "`fnm env`"
+    eval "$(fnm env)"
 
     # Download and install Node.js:
     fnm install 23
@@ -327,11 +342,6 @@ else
   cd ..
   rm -fr zellij_tmp
 fi
-
-
-
-
-
 
 echo -ne "\nCreate Vim symlinks? (Y/n): "
 read answer
