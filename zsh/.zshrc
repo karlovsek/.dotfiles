@@ -31,7 +31,7 @@ fi
 
 #
 # Lines configured by zsh-newuser-install
-HISTFILE=~/.histfile
+HISTFILE=~/.zsh_history
 HISTSIZE=5000
 SAVEHIST=5000
 setopt autocd
