@@ -73,7 +73,7 @@ fi
 if which nvim >/dev/null 2>&1; then
   echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
 else
-  version=$(curl --silent "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   echo "NeoVim does not exist, installing ${version} ..."
 
@@ -98,7 +98,7 @@ if which fd >/dev/null 2>&1; then
 else
   echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
   # get the latest version of fd from github
-  version=$(curl --silent "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
   tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
@@ -113,7 +113,7 @@ if which sshs >/dev/null 2>&1; then
 else
   echo -e "${YELLOW}sshs does not exist, installing it ... ${NC}"
   # get the latest version of sshs from github
-  version=$(curl --silent "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   sshs_bin_name=sshs-linux-amd64-musl
 
@@ -129,22 +129,26 @@ if which rg >/dev/null 2>&1; then
   echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
 else
   echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
+  # get the latest version of ripgrep from github
+  version=$(curl -fsSL "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
-  curl -OL https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
-  tar -xf ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
-  mv ripgrep-13.0.0-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
+  curl -OL https://github.com/BurntSushi/ripgrep/releases/download/${version}/ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
+  tar -xf ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
+  mv ripgrep-${version}-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
 
   #clean
-  rm -fr ripgrep-13.0.0-x86_64-unknown-linux-musl ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz
+  rm -fr ripgrep-${version}-x86_64-unknown-linux-musl ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
 fi
 
 if which lstr >/dev/null 2>&1; then
   echo -e "${GREEN}lstr exists ($(lstr --version)) ${NC}"
 else
   echo -e "${YELLOW}lstr does not exist, installing it ...${NC}"
+  # get the latest version of lstr from github
+  version=$(curl -fsSL "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   mkdir lstr_dir && cd lstr_dir
-  curl -OL https://github.com/bgreenwell/lstr/releases/download/v0.2.1/lstr-linux-x86_64.tar.gz
+  curl -OL https://github.com/bgreenwell/lstr/releases/download/${version}/lstr-linux-x86_64.tar.gz
   tar -xf lstr-linux-x86_64.tar.gz
   mv ./lstr $INSTALL_BIN_DIR
 
@@ -165,7 +169,7 @@ if which htop >/dev/null 2>&1; then
   echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
 else
   # get the latest version of htop from github
-  version=$(curl --silent "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
@@ -181,7 +185,7 @@ if which btop >/dev/null 2>&1; then
   echo -e "${GREEN}btop exists ($(btop --version)) ${NC}"
 else
   # get the latest version of btop from github
-  version=$(curl --silent "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing btop ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
@@ -198,7 +202,7 @@ if which bfs >/dev/null 2>&1; then
   echo -e "${GREEN}bfs exists ($(bfs --version | grep "bfs ")) ${NC}"
 else
   # get the latest version of htop from github
-  version=$(curl --silent "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
@@ -238,7 +242,7 @@ if which bat >/dev/null 2>&1; then
 else
   echo -e "${YELLOW}bat does not exist, installing it ... ${NC}"
   # get the latest version of fd from github
-  version=$(curl --silent "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/sharkdp/bat/releases/download/${version}/bat-${version}-x86_64-unknown-linux-gnu.tar.gz
   tar -xf bat-${version}-x86_64-unknown-linux-gnu.tar.gz
@@ -254,7 +258,7 @@ if which eza >/dev/null 2>&1; then
 else
   echo -e "${YELLOW}eza does not exist, installing it ... ${NC}"
   # get the latest version of fd from github
-  version=$(curl --silent "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/eza-community/eza/releases/download/${version}/eza_x86_64-unknown-linux-gnu.zip
   7zz x eza_x86_64-unknown-linux-gnu.zip
@@ -269,7 +273,7 @@ if which lazygit >/dev/null 2>&1; then
   echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
 else
   # get the latest version of lazygit from github
-  version=$(curl --silent "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${YELLOW}Installing lazygit ${version} ${NC}"
 
@@ -283,7 +287,7 @@ if which lazydocker >/dev/null 2>&1; then
   echo -e "${GREEN}lazydocker exists ($(lazydocker --version | head -n1 | awk '{print $2}')) ${NC}"
 else
   # get the latest version of lazygit from github
-  version=$(curl --silent "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${YELLOW}Installing lazydocker ${version} ${NC}"
 
@@ -297,7 +301,7 @@ if which zellij >/dev/null 2>&1; then
   echo -e "${GREEN}zellij exists ($(zellij --version | awk '{print $2}')) ${NC}"
 else
   # get the latest version of lazygit from github
-  version=$(curl --silent "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  version=$(curl -fsSL "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${YELLOW}Installing zellij ${version} ${NC}"
 
