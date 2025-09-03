@@ -29,19 +29,78 @@ NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-if which 7zz >/dev/null 2>&1; then
-  echo -e "${GREEN}7zip exists ($(7zz | grep 7-Zip | awk '{print $3}') ${NC}"
+# Setup GitHub authentication if GITHUB_PAT is provided
+if [ -n "${GITHUB_PAT:-}" ]; then
+  GITHUB_AUTH_HEADER="-H"
+  GITHUB_AUTH_VALUE="Authorization: token ${GITHUB_PAT}"
+  echo -e "${GREEN}Using GitHub Personal Access Token for API requests${NC}"
 else
-  version=7z2409
+  GITHUB_AUTH_HEADER=""
+  GITHUB_AUTH_VALUE=""
+  echo -e "${YELLOW}No GITHUB_PAT found - using unauthenticated GitHub API (rate limited)${NC}"
+fi
+
+# Helper function to compare versions
+# Returns 0 if $1 <= $2, 1 if $1 > $2
+compare_versions() {
+  if [ "$1" = "$2" ]; then
+    return 0
+  fi
+  # Check if first version is the lesser one
+  if [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Helper function to prompt for update
+prompt_update() {
+  local tool_name=$1
+  local current_version=$2
+  local latest_version=$3
+
+  echo -e "${YELLOW}New version available: $tool_name $current_version -> $latest_version${NC}"
+  echo -ne "Update $tool_name? (Y/n): "
+  read answer
+  answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
+  if [[ "$answer" == "y" || -z "$answer" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+if which 7zz >/dev/null 2>&1; then
+  current_version=$(7zz | grep 7-Zip | awk '{print $3}' | grep -oE '[0-9]+\.[0-9]+')
+  # 7zip doesn't have a GitHub API, so we use a hardcoded latest version that we update periodically
+  latest_version="24.09"
+
+  echo -e "${GREEN}7zip exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "7zip" "$current_version" "$latest_version"; then
+      echo "Updating 7zip to ${latest_version}..."
+      version_no_dot=$(echo $latest_version | tr -d '.')
+      curl -OL https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz
+      tar -xvf 7z${version_no_dot}-linux-x64.tar.xz 7zz
+      chmod +x 7zz && mv 7zz $INSTALL_BIN_DIR
+      rm 7z${version_no_dot}-linux-x64.tar.xz
+      echo -e "${GREEN}7zip updated successfully!${NC}"
+    fi
+  fi
+else
+  version="24.09"
+  version_no_dot=$(echo $version | tr -d '.')
 
   echo "7zip does not exist, installing ${version} ..."
 
-  curl -OL https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
-  tar -xvf 7z2409-linux-x64.tar.xz 7zz
+  curl -OL https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz
+  tar -xvf 7z${version_no_dot}-linux-x64.tar.xz 7zz
   chmod +x 7zz && mv 7zz $INSTALL_BIN_DIR
 
   # clean
-  rm 7z2409-linux-x64.tar.xz
+  rm 7z${version_no_dot}-linux-x64.tar.xz
 fi
 
 # get current curl version
@@ -53,7 +112,7 @@ else
   exit 1
 fi
 
-# latest_curl_version=$(curl --silent "https://api.github.com/repos/moparisthebest/static-curl/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+# latest_curl_version=$(curl --silent ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/moparisthebest/static-curl/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 
 # # Test if latest version is greater than current version, and if it is download it
 
@@ -71,9 +130,23 @@ fi
 # fi
 
 if which nvim >/dev/null 2>&1; then
-  echo -e "${GREEN}NeoVim exists ($(nvim --version | grep NVIM)) ${NC}"
+  current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}NeoVim exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "NeoVim" "$current_version" "$latest_version"; then
+      echo "Updating NeoVim to ${latest_version}..."
+      nvim_archive=nvim-linux-x86_64.tar.gz
+      curl -OL https://github.com/neovim/neovim/releases/download/v${latest_version}/${nvim_archive}
+      tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
+      rm ${nvim_archive}
+      echo -e "${GREEN}NeoVim updated successfully!${NC}"
+    fi
+  fi
 else
-  version=$(curl -fsSL "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   echo "NeoVim does not exist, installing ${version} ..."
 
@@ -94,11 +167,25 @@ else
 fi
 
 if which fd >/dev/null 2>&1; then
-  echo -e "${GREEN}fd exists ($(fd --version)) ${NC}"
+  current_version=$(fd --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}fd exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "fd" "$current_version" "$latest_version"; then
+      echo "Updating fd to ${latest_version}..."
+      curl -OL https://github.com/sharkdp/fd/releases/download/v${latest_version}/fd-v${latest_version}-x86_64-unknown-linux-musl.tar.gz
+      tar zxf fd-v${latest_version}-x86_64-unknown-linux-musl.tar.gz
+      mv fd-v${latest_version}-x86_64-unknown-linux-musl/fd $INSTALL_BIN_DIR
+      rm -fr fd-v${latest_version}-x86_64-unknown-linux-musl*
+      echo -e "${GREEN}fd updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
   # get the latest version of fd from github
-  version=$(curl -fsSL "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
   tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
@@ -109,11 +196,25 @@ else
 fi
 
 if which sshs >/dev/null 2>&1; then
-  echo -e "${GREEN}sshs exists ($(sshs --version)) ${NC}"
+  current_version=$(sshs --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}sshs exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "sshs" "$current_version" "$latest_version"; then
+      echo "Updating sshs to ${latest_version}..."
+      sshs_bin_name=sshs-linux-amd64-musl
+      curl -OL https://github.com/quantumsheep/sshs/releases/download/v${latest_version}/${sshs_bin_name}
+      mv ${sshs_bin_name} $INSTALL_BIN_DIR/sshs
+      chmod a+x $INSTALL_BIN_DIR/sshs
+      echo -e "${GREEN}sshs updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}sshs does not exist, installing it ... ${NC}"
   # get the latest version of sshs from github
-  version=$(curl -fsSL "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   sshs_bin_name=sshs-linux-amd64-musl
 
@@ -126,11 +227,25 @@ else
 fi
 
 if which rg >/dev/null 2>&1; then
-  echo -e "${GREEN}RG exists ($(rg --version | grep rip)) ${NC}"
+  current_version=$(rg --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+
+  echo -e "${GREEN}ripgrep exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "ripgrep" "$current_version" "$latest_version"; then
+      echo "Updating ripgrep to ${latest_version}..."
+      curl -OL https://github.com/BurntSushi/ripgrep/releases/download/${latest_version}/ripgrep-${latest_version}-x86_64-unknown-linux-musl.tar.gz
+      tar -xf ripgrep-${latest_version}-x86_64-unknown-linux-musl.tar.gz
+      mv ripgrep-${latest_version}-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
+      rm -fr ripgrep-${latest_version}-x86_64-unknown-linux-musl ripgrep-${latest_version}-x86_64-unknown-linux-musl.tar.gz
+      echo -e "${GREEN}ripgrep updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
   # get the latest version of ripgrep from github
-  version=$(curl -fsSL "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/BurntSushi/ripgrep/releases/download/${version}/ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
   tar -xf ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
@@ -141,11 +256,27 @@ else
 fi
 
 if which lstr >/dev/null 2>&1; then
-  echo -e "${GREEN}lstr exists ($(lstr --version)) ${NC}"
+  current_version=$(lstr --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}lstr exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "lstr" "$current_version" "$latest_version"; then
+      echo "Updating lstr to ${latest_version}..."
+      mkdir lstr_dir && cd lstr_dir
+      curl -OL https://github.com/bgreenwell/lstr/releases/download/v${latest_version}/lstr-linux-x86_64.tar.gz
+      tar -xf lstr-linux-x86_64.tar.gz
+      mv ./lstr $INSTALL_BIN_DIR
+      cd ..
+      rm -fr lstr_dir
+      echo -e "${GREEN}lstr updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}lstr does not exist, installing it ...${NC}"
   # get the latest version of lstr from github
-  version=$(curl -fsSL "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   mkdir lstr_dir && cd lstr_dir
   curl -OL https://github.com/bgreenwell/lstr/releases/download/${version}/lstr-linux-x86_64.tar.gz
@@ -166,10 +297,26 @@ else
 fi
 
 if which htop >/dev/null 2>&1; then
-  echo -e "${GREEN}htop exists ($(htop --version)) ${NC}"
+  current_version=$(htop --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+
+  echo -e "${GREEN}htop exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "htop" "$current_version" "$latest_version"; then
+      echo "Updating htop to ${latest_version}..."
+      curl --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${latest_version}/htop-${latest_version}.tar.xz
+      tar -xf htop-${latest_version}.tar.xz
+      cd htop-${latest_version}
+      ./autogen.sh >/dev/null && ./configure --prefix=$INSTALL_DIR >/dev/null && make >/dev/null && make install >/dev/null
+      cd ..
+      rm -fr htop-${latest_version} htop-${latest_version}.tar.xz
+      echo -e "${GREEN}htop updated successfully!${NC}"
+    fi
+  fi
 else
   # get the latest version of htop from github
-  version=$(curl -fsSL "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
@@ -182,10 +329,26 @@ else
 fi
 
 if which btop >/dev/null 2>&1; then
-  echo -e "${GREEN}btop exists ($(btop --version)) ${NC}"
+  current_version=$(btop --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}btop exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "btop" "$current_version" "$latest_version"; then
+      echo "Updating btop to ${latest_version}..."
+      curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz
+      tar -xf btop-x86_64-linux-musl.tbz
+      cd btop
+      PREFIX=~/.local make install
+      cd ..
+      rm -fr btop btop-x86_64-linux-musl.tbz
+      echo -e "${GREEN}btop updated successfully!${NC}"
+    fi
+  fi
 else
   # get the latest version of btop from github
-  version=$(curl -fsSL "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing btop ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
@@ -199,10 +362,28 @@ else
 fi
 
 if which bfs >/dev/null 2>&1; then
-  echo -e "${GREEN}bfs exists ($(bfs --version | grep "bfs ")) ${NC}"
+  current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+
+  echo -e "${GREEN}bfs exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "bfs" "$current_version" "$latest_version"; then
+      echo "Updating bfs to ${latest_version}..."
+      curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip
+      7zz x ${latest_version}.zip
+      cd bfs-${latest_version}
+      ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
+      make -j$(nproc) >/dev/null
+      make install
+      cd ..
+      rm -fr bfs-${latest_version} ${latest_version}.zip
+      echo -e "${GREEN}bfs updated successfully!${NC}"
+    fi
+  fi
 else
   # get the latest version of htop from github
-  version=$(curl -fsSL "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
@@ -221,7 +402,7 @@ if which broot >/dev/null 2>&1; then
   echo -e "${GREEN}broot exists ($(broot --version | awk '{print $2}')) ${NC}"
 else
   # get the latest version of htop from github
-  # version=$(curl --silent "https://api.github.com/repos/Canop/broot/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  # version=$(curl --silent ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/Canop/broot/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
   echo -e "${YELLOW}Installing broot latest version ${NC}"
 
   curl --progress-bar -OL https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
@@ -238,11 +419,26 @@ else
 fi
 
 if which bat >/dev/null 2>&1; then
-  echo -e "${GREEN}bat exists ($(bat --version | grep -o " .* ")) ${NC}"
+  current_version=$(bat --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}bat exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "bat" "$current_version" "$latest_version"; then
+      echo "Updating bat to ${latest_version}..."
+      curl -OL https://github.com/sharkdp/bat/releases/download/v${latest_version}/bat-v${latest_version}-x86_64-unknown-linux-gnu.tar.gz
+      tar -xf bat-v${latest_version}-x86_64-unknown-linux-gnu.tar.gz
+      mv bat-v${latest_version}-x86_64-unknown-linux-gnu/bat $INSTALL_BIN_DIR/bat
+      chmod +x $INSTALL_BIN_DIR/bat
+      rm -fr bat-v${latest_version}-x86_64-unknown-linux-gnu*
+      echo -e "${GREEN}bat updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}bat does not exist, installing it ... ${NC}"
   # get the latest version of fd from github
-  version=$(curl -fsSL "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/sharkdp/bat/releases/download/${version}/bat-${version}-x86_64-unknown-linux-gnu.tar.gz
   tar -xf bat-${version}-x86_64-unknown-linux-gnu.tar.gz
@@ -254,11 +450,26 @@ else
 fi
 
 if which eza >/dev/null 2>&1; then
-  echo -e "${GREEN}eza exists ($(eza --version | grep -o "^v.* ")) ${NC}"
+  current_version=$(eza --version | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}eza exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "eza" "$current_version" "$latest_version"; then
+      echo "Updating eza to ${latest_version}..."
+      curl -OL https://github.com/eza-community/eza/releases/download/v${latest_version}/eza_x86_64-unknown-linux-gnu.zip
+      7zz x eza_x86_64-unknown-linux-gnu.zip
+      mv eza $INSTALL_BIN_DIR/eza
+      chmod +x $INSTALL_BIN_DIR/eza
+      rm -fr eza_x86_64-unknown-linux-gnu.zip
+      echo -e "${GREEN}eza updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}eza does not exist, installing it ... ${NC}"
   # get the latest version of fd from github
-  version=$(curl -fsSL "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   curl -OL https://github.com/eza-community/eza/releases/download/${version}/eza_x86_64-unknown-linux-gnu.zip
   7zz x eza_x86_64-unknown-linux-gnu.zip
@@ -270,10 +481,24 @@ else
 fi
 
 if which lazygit >/dev/null 2>&1; then
-  echo -e "${GREEN}lazygit exists ($(lazygit --version | awk '{print $6}' | grep -oP "([[:digit:]]*\.?)+")) ${NC}"
+  current_version=$(lazygit --version | grep -oP 'version=\K[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+
+  echo -e "${GREEN}lazygit exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "lazygit" "$current_version" "$latest_version"; then
+      echo "Updating lazygit to ${latest_version}..."
+      curl -OL https://github.com/jesseduffield/lazygit/releases/download/v${latest_version}/lazygit_${latest_version}_Linux_x86_64.tar.gz
+      tar -xf lazygit_${latest_version}_Linux_x86_64.tar.gz
+      mv lazygit $INSTALL_BIN_DIR/
+      rm -f lazygit_${latest_version}_Linux_x86_64.tar.gz LICENSE README.md
+      echo -e "${GREEN}lazygit updated successfully!${NC}"
+    fi
+  fi
 else
   # get the latest version of lazygit from github
-  version=$(curl -fsSL "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${YELLOW}Installing lazygit ${version} ${NC}"
 
@@ -284,10 +509,24 @@ else
 fi
 
 if which lazydocker >/dev/null 2>&1; then
-  echo -e "${GREEN}lazydocker exists ($(lazydocker --version | head -n1 | awk '{print $2}')) ${NC}"
+  current_version=$(lazydocker --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+
+  echo -e "${GREEN}lazydocker exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "lazydocker" "$current_version" "$latest_version"; then
+      echo "Updating lazydocker to ${latest_version}..."
+      curl -OL https://github.com/jesseduffield/lazydocker/releases/download/v${latest_version}/lazydocker_${latest_version}_Linux_x86_64.tar.gz
+      tar -xf lazydocker_${latest_version}_Linux_x86_64.tar.gz
+      mv lazydocker $INSTALL_BIN_DIR/
+      rm -f lazydocker_${latest_version}_Linux_x86_64.tar.gz LICENSE README.md
+      echo -e "${GREEN}lazydocker updated successfully!${NC}"
+    fi
+  fi
 else
   # get the latest version of lazygit from github
-  version=$(curl -fsSL "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${YELLOW}Installing lazydocker ${version} ${NC}"
 
@@ -298,10 +537,26 @@ else
 fi
 
 if which zellij >/dev/null 2>&1; then
-  echo -e "${GREEN}zellij exists ($(zellij --version | awk '{print $2}')) ${NC}"
+  current_version=$(zellij --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+
+  echo -e "${GREEN}zellij exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "zellij" "$current_version" "$latest_version"; then
+      echo "Updating zellij to ${latest_version}..."
+      mkdir zellij_tmp && cd zellij_tmp
+      curl -OL https://github.com/zellij-org/zellij/releases/download/v${latest_version}/zellij-x86_64-unknown-linux-musl.tar.gz
+      tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
+      mv zellij $INSTALL_BIN_DIR/
+      cd ..
+      rm -fr zellij_tmp
+      echo -e "${GREEN}zellij updated successfully!${NC}"
+    fi
+  fi
 else
   # get the latest version of lazygit from github
-  version=$(curl -fsSL "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${YELLOW}Installing zellij ${version} ${NC}"
 
@@ -338,13 +593,6 @@ else
   else
     echo -e "${RED} FNM not installed ${NC}"
   fi
-
-  mkdir zellij_tmp && cd zellij_tmp
-  curl -OL https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
-  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-  mv zellij $INSTALL_BIN_DIR/
-  cd ..
-  rm -fr zellij_tmp
 fi
 
 echo -ne "\nCreate Vim symlinks? (Y/n): "
