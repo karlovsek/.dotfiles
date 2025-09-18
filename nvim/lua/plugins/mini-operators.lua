@@ -1,6 +1,6 @@
 return {
   {
-    "echasnovski/mini.operators",
+    "nvim-mini/mini.operators",
     version = "*",
     config = function()
       -- require("mini.operators").setup()
