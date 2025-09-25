@@ -131,7 +131,7 @@ fi
 
 if which nvim >/dev/null 2>&1; then
   current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/neovim/neovim-releases/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}NeoVim exists (v${current_version})${NC}"
 
@@ -139,7 +139,7 @@ if which nvim >/dev/null 2>&1; then
     if prompt_update "NeoVim" "$current_version" "$latest_version"; then
       echo "Updating NeoVim to ${latest_version}..."
       nvim_archive=nvim-linux-x86_64.tar.gz
-      curl -OL https://github.com/neovim/neovim/releases/download/v${latest_version}/${nvim_archive}
+      curl -OL https://github.com/neovim/neovim-releases/releases/download/v${latest_version}/${nvim_archive}
       tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
       rm ${nvim_archive}
       echo -e "${GREEN}NeoVim updated successfully!${NC}"
