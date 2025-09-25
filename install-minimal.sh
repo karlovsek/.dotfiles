@@ -71,6 +71,15 @@ prompt_update() {
   fi
 }
 
+if which jq > /dev/null 2>&q; then
+  echo -e "${GREEN}jq exists${NC}"
+else
+  curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-linux-amd64
+  chmod +x ~/.local/bin/jq
+fi
+
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/marverix/gah/refs/heads/master/tools/install.sh)"
+
 if which 7zz >/dev/null 2>&1; then
   current_version=$(7zz | grep 7-Zip | awk '{print $3}' | grep -oE '[0-9]+\.[0-9]+')
   # 7zip doesn't have a GitHub API, so we use a hardcoded latest version that we update periodically
@@ -152,7 +161,8 @@ else
 
   nvim_archive=nvim-linux-x86_64.tar.gz
 
-  curl -OL https://github.com/neovim/neovim/releases/download/${version}/${nvim_archive}
+  # curl -OL https://github.com/neovim/neovim/releases/download/${version}/${nvim_archive}
+  curl -OL https://github.com/neovim/neovim-releases/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
   tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
 
   # clean
