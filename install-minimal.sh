@@ -458,11 +458,14 @@ if which eza >/dev/null 2>&1; then
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "eza" "$current_version" "$latest_version"; then
       echo "Updating eza to ${latest_version}..."
+      mkdir eza_tmp && cd eza_tmp
       curl -OL https://github.com/eza-community/eza/releases/download/v${latest_version}/eza_x86_64-unknown-linux-gnu.zip
       7zz x eza_x86_64-unknown-linux-gnu.zip
       mv eza $INSTALL_BIN_DIR/eza
       chmod +x $INSTALL_BIN_DIR/eza
       rm -fr eza_x86_64-unknown-linux-gnu.zip
+      cd ..
+      rm -fr eza_tmp
       echo -e "${GREEN}eza updated successfully!${NC}"
     fi
   fi
@@ -471,6 +474,8 @@ else
   # get the latest version of fd from github
   version=$(curl -fsSL ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
+  mkdir eza_tmp && cd eza_tmp
+  pwd
   curl -OL https://github.com/eza-community/eza/releases/download/${version}/eza_x86_64-unknown-linux-gnu.zip
   7zz x eza_x86_64-unknown-linux-gnu.zip
   mv eza $INSTALL_BIN_DIR/eza
@@ -478,6 +483,8 @@ else
 
   #clean
   rm -fr eza_x86_64-unknown-linux-gnu.zip
+  cd ..
+  rm -fr eza_tmp
 fi
 
 if which lazygit >/dev/null 2>&1; then
