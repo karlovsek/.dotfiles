@@ -218,32 +218,10 @@ else
 fi
 
 if which rg >/dev/null 2>&1; then
-  current_version=$(rg --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  echo -e "${GREEN}ripgrep exists (v${current_version})${NC}"
-
-  if ! compare_versions "$current_version" "$latest_version"; then
-    if prompt_update "ripgrep" "$current_version" "$latest_version"; then
-      echo "Updating ripgrep to ${latest_version}..."
-      curl -OL https://github.com/BurntSushi/ripgrep/releases/download/${latest_version}/ripgrep-${latest_version}-x86_64-unknown-linux-musl.tar.gz
-      tar -xf ripgrep-${latest_version}-x86_64-unknown-linux-musl.tar.gz
-      mv ripgrep-${latest_version}-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
-      rm -fr ripgrep-${latest_version}-x86_64-unknown-linux-musl ripgrep-${latest_version}-x86_64-unknown-linux-musl.tar.gz
-      echo -e "${GREEN}ripgrep updated successfully!${NC}"
-    fi
-  fi
+  echo -e "${GREEN}ripgrep exists${NC}"
 else
-  echo -e "${YELLOW}RG does not exist, installing it ...${NC}"
-  # get the latest version of ripgrep from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  curl -OL https://github.com/BurntSushi/ripgrep/releases/download/${version}/ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
-  tar -xf ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
-  mv ripgrep-${version}-x86_64-unknown-linux-musl/rg $INSTALL_BIN_DIR
-
-  #clean
-  rm -fr ripgrep-${version}-x86_64-unknown-linux-musl ripgrep-${version}-x86_64-unknown-linux-musl.tar.gz
+  echo -e "${YELLOW}ripgrep does not exist, installing it ... ${NC}"
+  gah install BurntSushi/ripgrep --unattended
 fi
 
 if which lstr >/dev/null 2>&1; then
