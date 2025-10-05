@@ -230,26 +230,13 @@ if which sshs >/dev/null 2>&1; then
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "sshs" "$current_version" "$latest_version"; then
       echo "Updating sshs to ${latest_version}..."
-      sshs_bin_name=sshs-linux-amd64-musl
-      curl -OL https://github.com/quantumsheep/sshs/releases/download/v${latest_version}/${sshs_bin_name}
-      mv ${sshs_bin_name} $INSTALL_BIN_DIR/sshs
-      chmod a+x $INSTALL_BIN_DIR/sshs
+      gah install quantumsheep/sshs --unattended
       echo -e "${GREEN}sshs updated successfully!${NC}"
     fi
   fi
 else
   echo -e "${YELLOW}sshs does not exist, installing it ... ${NC}"
-  # get the latest version of sshs from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  sshs_bin_name=sshs-linux-amd64-musl
-
-  curl -OL https://github.com/quantumsheep/sshs/releases/download/${version}/${sshs_bin_name}
-  mv ${sshs_bin_name} $INSTALL_BIN_DIR/sshs
-  chmod a+x $INSTALL_BIN_DIR/sshs
-
-  # clean
-  # nothing to do
+  gah install quantumsheep/sshs --unattended
 fi
 
 if which rg >/dev/null 2>&1; then
