@@ -71,7 +71,7 @@ prompt_update() {
   fi
 }
 
-if which jq > /dev/null 2>&q; then
+if which jq > /dev/null 2>&1; then
   echo -e "${GREEN}jq exists${NC}"
 else
   curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-linux-amd64
