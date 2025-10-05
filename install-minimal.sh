@@ -193,32 +193,10 @@ else
 fi
 
 if which fd >/dev/null 2>&1; then
-  current_version=$(fd --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
-
-  echo -e "${GREEN}fd exists (v${current_version})${NC}"
-
-  if ! compare_versions "$current_version" "$latest_version"; then
-    if prompt_update "fd" "$current_version" "$latest_version"; then
-      echo "Updating fd to ${latest_version}..."
-      curl -OL https://github.com/sharkdp/fd/releases/download/v${latest_version}/fd-v${latest_version}-x86_64-unknown-linux-musl.tar.gz
-      tar zxf fd-v${latest_version}-x86_64-unknown-linux-musl.tar.gz
-      mv fd-v${latest_version}-x86_64-unknown-linux-musl/fd $INSTALL_BIN_DIR
-      rm -fr fd-v${latest_version}-x86_64-unknown-linux-musl*
-      echo -e "${GREEN}fd updated successfully!${NC}"
-    fi
-  fi
+  echo -e "${GREEN}fd exists${NC}"
 else
   echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
-  # get the latest version of fd from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  curl -OL https://github.com/sharkdp/fd/releases/download/${version}/fd-${version}-x86_64-unknown-linux-musl.tar.gz
-  tar zxf fd-${version}-x86_64-unknown-linux-musl.tar.gz
-  mv fd-${version}-x86_64-unknown-linux-musl/fd $INSTALL_BIN_DIR
-
-  #clean
-  rm -fr fd-${version}-x86_64-unknown-linux-musl*
+  gah install sharkdp/fd --unattended
 fi
 
 if which sshs >/dev/null 2>&1; then
