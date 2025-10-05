@@ -225,36 +225,10 @@ else
 fi
 
 if which lstr >/dev/null 2>&1; then
-  current_version=$(lstr --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
-
-  echo -e "${GREEN}lstr exists (v${current_version})${NC}"
-
-  if ! compare_versions "$current_version" "$latest_version"; then
-    if prompt_update "lstr" "$current_version" "$latest_version"; then
-      echo "Updating lstr to ${latest_version}..."
-      mkdir lstr_dir && cd lstr_dir
-      curl -OL https://github.com/bgreenwell/lstr/releases/download/v${latest_version}/lstr-linux-x86_64.tar.gz
-      tar -xf lstr-linux-x86_64.tar.gz
-      mv ./lstr $INSTALL_BIN_DIR
-      cd ..
-      rm -fr lstr_dir
-      echo -e "${GREEN}lstr updated successfully!${NC}"
-    fi
-  fi
+  echo -e "${GREEN}lstr exists${NC}"
 else
-  echo -e "${YELLOW}lstr does not exist, installing it ...${NC}"
-  # get the latest version of lstr from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  mkdir lstr_dir && cd lstr_dir
-  curl -OL https://github.com/bgreenwell/lstr/releases/download/${version}/lstr-linux-x86_64.tar.gz
-  tar -xf lstr-linux-x86_64.tar.gz
-  mv ./lstr $INSTALL_BIN_DIR
-
-  #clean
-  cd ..
-  rm -fr lstr_dir
+  echo -e "${YELLOW}lstr does not exist, installing it ... ${NC}"
+  gah install bgreenwell/lstr --unattended
 fi
 
 if which fzf >/dev/null 2>&1; then
