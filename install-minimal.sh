@@ -424,23 +424,13 @@ if which lazydocker >/dev/null 2>&1; then
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "lazydocker" "$current_version" "$latest_version"; then
       echo "Updating lazydocker to ${latest_version}..."
-      curl -OL https://github.com/jesseduffield/lazydocker/releases/download/v${latest_version}/lazydocker_${latest_version}_Linux_x86_64.tar.gz
-      tar -xf lazydocker_${latest_version}_Linux_x86_64.tar.gz
-      mv lazydocker $INSTALL_BIN_DIR/
-      rm -f lazydocker_${latest_version}_Linux_x86_64.tar.gz LICENSE README.md
+      gah install jesseduffield/lazydocker --unattended
       echo -e "${GREEN}lazydocker updated successfully!${NC}"
     fi
   fi
 else
-  # get the latest version of lazygit from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
-
-  echo -e "${YELLOW}Installing lazydocker ${version} ${NC}"
-
-  curl -OL https://github.com/jesseduffield/lazydocker/releases/download/v${version}/lazydocker_${version}_Linux_x86_64.tar.gz
-  tar -xf lazydocker_${version}_Linux_x86_64.tar.gz
-  mv lazydocker $INSTALL_BIN_DIR/
-  rm -f lazydocker_${version}_Linux_x86_64.tar.gz LICENSE README.md
+  echo -e "${YELLOW}lazydocker does not exist, installing it ... ${NC}"
+  gah install jesseduffield/lazydocker --unattended
 fi
 
 if which zellij >/dev/null 2>&1; then
