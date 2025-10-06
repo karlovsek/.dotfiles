@@ -75,7 +75,7 @@ if which jq > /dev/null 2>&1; then
   current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
 
-  echo -e "${GREEN}jq exists (v${current_version})${NC}"
+  echo -e "${GREEN}jq exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "jq" "$current_version" "$latest_version"; then
@@ -93,7 +93,7 @@ if which gah >/dev/null 2>&1; then
   current_version=$(gah version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/marverix/gah/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}gah exists (v${current_version})${NC}"
+  echo -e "${GREEN}gah exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "gah" "$current_version" "$latest_version"; then
@@ -112,7 +112,7 @@ if which 7zz >/dev/null 2>&1; then
   # 7zip doesn't have a GitHub API, so we use a hardcoded latest version that we update periodically
   latest_version="24.09"
 
-  echo -e "${GREEN}7zip exists (v${current_version})${NC}"
+  echo -e "${GREEN}7zip exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "7zip" "$current_version" "$latest_version"; then
@@ -169,7 +169,7 @@ if which nvim >/dev/null 2>&1; then
   current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/neovim/neovim-releases/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}NeoVim exists (v${current_version})${NC}"
+  echo -e "${GREEN}NeoVim exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "NeoVim" "$current_version" "$latest_version"; then
@@ -207,7 +207,7 @@ if which fd >/dev/null 2>&1; then
   current_version=$(fd --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}fd exists (v${current_version})${NC}"
+  echo -e "${GREEN}fd exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "fd" "$current_version" "$latest_version"; then
@@ -225,7 +225,7 @@ if which sshs >/dev/null 2>&1; then
   current_version=$(sshs --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}sshs exists (v${current_version})${NC}"
+  echo -e "${GREEN}sshs exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "sshs" "$current_version" "$latest_version"; then
@@ -243,7 +243,7 @@ if which rg >/dev/null 2>&1; then
   current_version=$(rg --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
-  echo -e "${GREEN}ripgrep exists (v${current_version})${NC}"
+  echo -e "${GREEN}ripgrep exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "ripgrep" "$current_version" "$latest_version"; then
@@ -261,7 +261,7 @@ if which lstr >/dev/null 2>&1; then
   current_version=$(lstr --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}lstr exists (v${current_version})${NC}"
+  echo -e "${GREEN}lstr exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "lstr" "$current_version" "$latest_version"; then
@@ -287,7 +287,7 @@ if which htop >/dev/null 2>&1; then
   current_version=$(htop --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
-  echo -e "${GREEN}htop exists (v${current_version})${NC}"
+  echo -e "${GREEN}htop exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "htop" "$current_version" "$latest_version"; then
@@ -319,7 +319,7 @@ if which btop >/dev/null 2>&1; then
   current_version=$(btop --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}btop exists (v${current_version})${NC}"
+  echo -e "${GREEN}btop exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "btop" "$current_version" "$latest_version"; then
@@ -352,7 +352,7 @@ if which bfs >/dev/null 2>&1; then
   current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
-  echo -e "${GREEN}bfs exists (v${current_version})${NC}"
+  echo -e "${GREEN}bfs exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "bfs" "$current_version" "$latest_version"; then
@@ -409,7 +409,7 @@ if which bat >/dev/null 2>&1; then
   current_version=$(bat --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}bat exists (v${current_version})${NC}"
+  echo -e "${GREEN}bat exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "bat" "$current_version" "$latest_version"; then
@@ -427,7 +427,7 @@ if which eza >/dev/null 2>&1; then
   current_version=$(eza --version | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}eza exists (v${current_version})${NC}"
+  echo -e "${GREEN}eza exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "eza" "$current_version" "$latest_version"; then
@@ -445,7 +445,7 @@ if which lazygit >/dev/null 2>&1; then
   current_version=$(lazygit --version | grep -oP 'version=\K[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
-  echo -e "${GREEN}lazygit exists (v${current_version})${NC}"
+  echo -e "${GREEN}lazygit exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "lazygit" "$current_version" "$latest_version"; then
@@ -463,7 +463,7 @@ if which lazydocker >/dev/null 2>&1; then
   current_version=$(lazydocker --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
-  echo -e "${GREEN}lazydocker exists (v${current_version})${NC}"
+  echo -e "${GREEN}lazydocker exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "lazydocker" "$current_version" "$latest_version"; then
@@ -481,7 +481,7 @@ if which zellij >/dev/null 2>&1; then
   current_version=$(zellij --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
-  echo -e "${GREEN}zellij exists (v${current_version})${NC}"
+  echo -e "${GREEN}zellij exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "zellij" "$current_version" "$latest_version"; then
