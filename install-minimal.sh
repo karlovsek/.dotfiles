@@ -370,26 +370,13 @@ if which bat >/dev/null 2>&1; then
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "bat" "$current_version" "$latest_version"; then
       echo "Updating bat to ${latest_version}..."
-      curl -OL https://github.com/sharkdp/bat/releases/download/v${latest_version}/bat-v${latest_version}-x86_64-unknown-linux-gnu.tar.gz
-      tar -xf bat-v${latest_version}-x86_64-unknown-linux-gnu.tar.gz
-      mv bat-v${latest_version}-x86_64-unknown-linux-gnu/bat $INSTALL_BIN_DIR/bat
-      chmod +x $INSTALL_BIN_DIR/bat
-      rm -fr bat-v${latest_version}-x86_64-unknown-linux-gnu*
+      gah install sharkdp/bat --unattended
       echo -e "${GREEN}bat updated successfully!${NC}"
     fi
   fi
 else
   echo -e "${YELLOW}bat does not exist, installing it ... ${NC}"
-  # get the latest version of fd from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  curl -OL https://github.com/sharkdp/bat/releases/download/${version}/bat-${version}-x86_64-unknown-linux-gnu.tar.gz
-  tar -xf bat-${version}-x86_64-unknown-linux-gnu.tar.gz
-  mv bat-${version}-x86_64-unknown-linux-gnu/bat $INSTALL_BIN_DIR/bat
-  chmod +x $INSTALL_BIN_DIR/bat
-
-  #clean
-  rm -fr bat-${version}-x86_64-unknown-linux-gnu*
+  gah install sharkdp/bat --unattended
 fi
 
 if which eza >/dev/null 2>&1; then
