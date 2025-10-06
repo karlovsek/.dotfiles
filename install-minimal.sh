@@ -85,7 +85,9 @@ if which jq > /dev/null 2>&1; then
     fi
   fi
 else
-  curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-linux-amd64
+  echo -e "${YELLOW}jq does not exist, installing it ... ${NC}"
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
+  curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-${latest_version}/jq-linux-amd64
   chmod +x ~/.local/bin/jq
 fi
 
