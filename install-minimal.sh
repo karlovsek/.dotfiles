@@ -72,7 +72,18 @@ prompt_update() {
 }
 
 if which jq > /dev/null 2>&1; then
-  echo -e "${GREEN}jq exists${NC}"
+  current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
+
+  echo -e "${GREEN}jq exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "jq" "$current_version" "$latest_version"; then
+      echo "Updating jq to ${latest_version}..."
+      gah install jqlang/jq --unattended
+      echo -e "${GREEN}jq updated successfully!${NC}"
+    fi
+  fi
 else
   curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-linux-amd64
   chmod +x ~/.local/bin/jq
@@ -193,7 +204,18 @@ else
 fi
 
 if which fd >/dev/null 2>&1; then
-  echo -e "${GREEN}fd exists${NC}"
+  current_version=$(fd --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}fd exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "fd" "$current_version" "$latest_version"; then
+      echo "Updating fd to ${latest_version}..."
+      gah install sharkdp/fd --unattended
+      echo -e "${GREEN}fd updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}fd does not exist, installing it ... ${NC}"
   gah install sharkdp/fd --unattended
@@ -218,14 +240,36 @@ else
 fi
 
 if which rg >/dev/null 2>&1; then
-  echo -e "${GREEN}ripgrep exists${NC}"
+  current_version=$(rg --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+
+  echo -e "${GREEN}ripgrep exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "ripgrep" "$current_version" "$latest_version"; then
+      echo "Updating ripgrep to ${latest_version}..."
+      gah install BurntSushi/ripgrep --unattended
+      echo -e "${GREEN}ripgrep updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}ripgrep does not exist, installing it ... ${NC}"
   gah install BurntSushi/ripgrep --unattended
 fi
 
 if which lstr >/dev/null 2>&1; then
-  echo -e "${GREEN}lstr exists${NC}"
+  current_version=$(lstr --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}lstr exists (v${current_version})${NC}"
+
+  if ! compare_versions "$current_version" "$latest_version"; then
+    if prompt_update "lstr" "$current_version" "$latest_version"; then
+      echo "Updating lstr to ${latest_version}..."
+      gah install bgreenwell/lstr --unattended
+      echo -e "${GREEN}lstr updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}lstr does not exist, installing it ... ${NC}"
   gah install bgreenwell/lstr --unattended
