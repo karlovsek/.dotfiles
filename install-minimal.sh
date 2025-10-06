@@ -442,27 +442,13 @@ if which zellij >/dev/null 2>&1; then
   if ! compare_versions "$current_version" "$latest_version"; then
     if prompt_update "zellij" "$current_version" "$latest_version"; then
       echo "Updating zellij to ${latest_version}..."
-      mkdir zellij_tmp && cd zellij_tmp
-      curl -OL https://github.com/zellij-org/zellij/releases/download/v${latest_version}/zellij-x86_64-unknown-linux-musl.tar.gz
-      tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-      mv zellij $INSTALL_BIN_DIR/
-      cd ..
-      rm -fr zellij_tmp
+      gah install zellij-org/zellij --unattended
       echo -e "${GREEN}zellij updated successfully!${NC}"
     fi
   fi
 else
-  # get the latest version of lazygit from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
-
-  echo -e "${YELLOW}Installing zellij ${version} ${NC}"
-
-  mkdir zellij_tmp && cd zellij_tmp
-  curl -OL https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz
-  tar -xf zellij-x86_64-unknown-linux-musl.tar.gz
-  mv zellij $INSTALL_BIN_DIR/
-  cd ..
-  rm -fr zellij_tmp
+  echo -e "${YELLOW}zellij does not exist, installing it ... ${NC}"
+  gah install zellij-org/zellij --unattended
 fi
 
 # TODO install node
