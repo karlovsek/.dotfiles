@@ -71,7 +71,7 @@ prompt_update() {
   fi
 }
 
-if which jq > /dev/null 2>&1; then
+if which jq >/dev/null 2>&1; then
   current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
 
@@ -441,6 +441,25 @@ if which eza >/dev/null 2>&1; then
 else
   echo -e "${YELLOW}eza does not exist, installing it ... ${NC}"
   gah install eza-community/eza --unattended
+fi
+
+# Latest lazygit needs newer version of git
+# To have as little as possible dependencies, we compile git from source without https support
+git_version=$(git --version | awk '{print $3}')
+if [ "$(printf '%s\n' "2.30" "$git_version" | sort -V | head -n1)" = "$git_version" ] && [ "$git_version" != "2.30" ]; then
+  echo "Your git version ($git_version) is below 2.30. Do you want to update git from source? [y/N]"
+  read -r update_git
+  if [ "$update_git" = "y" ] || [ "$update_git" = "Y" ]; then
+    git_new_version="2.51.0"
+    wget "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${git_new_version}.tar.gz"
+    tar -xzf "git-${git_new_version}.tar.gz"
+    cd "git-${git_new_version}" || exit 1
+    ./configure --without-iconv --without-tcltk --prefix="$INSTALL_DIR"
+    make NO_GETTEXT=1 NO_TCLTK=1 install
+    cd ..
+    rm -rf "git-${git_new_version}" "git-${git_new_version}.tar.gz"
+    echo "Git has been updated and installed to $INSTALL_BIN_DIR"
+  fi
 fi
 
 if which lazygit >/dev/null 2>&1; then
