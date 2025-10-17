@@ -2,6 +2,22 @@
 
 INSTALL_DIR="$HOME/.local"
 
+# Parse command-line arguments
+FORCE_UPDATE=false
+for arg in "$@"; do
+  case $arg in
+    --force-update)
+      FORCE_UPDATE=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $arg"
+      echo "Usage: $0 [--force-update]"
+      exit 1
+      ;;
+  esac
+done
+
 echo -e "\e[0;33m\nPress Enter to intall all programs into $INSTALL_DIR \033[0m"
 read -p ""
 
@@ -31,12 +47,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # Setup GitHub authentication if GITHUB_PAT is provided
 if [ -n "${GITHUB_PAT:-}" ]; then
-  GITHUB_AUTH_HEADER="-H"
-  GITHUB_AUTH_VALUE="Authorization: token ${GITHUB_PAT}"
+  GITHUB_AUTH_ARGS=(-H "Authorization: token ${GITHUB_PAT}")
   echo -e "${GREEN}Using GitHub Personal Access Token for API requests${NC}"
 else
-  GITHUB_AUTH_HEADER=""
-  GITHUB_AUTH_VALUE=""
+  GITHUB_AUTH_ARGS=()
   echo -e "${YELLOW}No GITHUB_PAT found - using unauthenticated GitHub API (rate limited)${NC}"
 fi
 
@@ -61,6 +75,12 @@ prompt_update() {
   local latest_version=$3
 
   echo -e "${YELLOW}New version available: $tool_name $current_version -> $latest_version${NC}"
+
+  if [ "$FORCE_UPDATE" = true ]; then
+    echo "Forcing update (--force-update flag is set)"
+    return 0
+  fi
+
   echo -ne "Update $tool_name? (Y/n): "
   read answer
   answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
@@ -73,11 +93,11 @@ prompt_update() {
 
 if which jq >/dev/null 2>&1; then
   current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
 
   echo -e "${GREEN}jq exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "jq" "$current_version" "$latest_version"; then
       echo "Updating jq to ${latest_version}..."
       gah install jqlang/jq --unattended
@@ -86,18 +106,18 @@ if which jq >/dev/null 2>&1; then
   fi
 else
   echo -e "${YELLOW}jq does not exist, installing it ... ${NC}"
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
   curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-${latest_version}/jq-linux-amd64
   chmod +x ~/.local/bin/jq
 fi
 
 if which gah >/dev/null 2>&1; then
   current_version=$(gah version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/marverix/gah/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/marverix/gah/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}gah exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "gah" "$current_version" "$latest_version"; then
       echo "Updating gah to ${latest_version}..."
       bash -c "$(curl -fsSL https://raw.githubusercontent.com/marverix/gah/refs/heads/master/tools/install.sh)"
@@ -116,7 +136,7 @@ if which 7zz >/dev/null 2>&1; then
 
   echo -e "${GREEN}7zip exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "7zip" "$current_version" "$latest_version"; then
       echo "Updating 7zip to ${latest_version}..."
       version_no_dot=$(echo $latest_version | tr -d '.')
@@ -169,11 +189,11 @@ fi
 
 if which nvim >/dev/null 2>&1; then
   current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/neovim/neovim-releases/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/neovim/neovim-releases/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}NeoVim exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "NeoVim" "$current_version" "$latest_version"; then
       echo "Updating NeoVim to ${latest_version}..."
       nvim_archive=nvim-linux-x86_64.tar.gz
@@ -184,7 +204,7 @@ if which nvim >/dev/null 2>&1; then
     fi
   fi
 else
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   echo "NeoVim does not exist, installing ${version} ..."
 
@@ -207,11 +227,11 @@ fi
 
 if which fd >/dev/null 2>&1; then
   current_version=$(fd --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/sharkdp/fd/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}fd exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "fd" "$current_version" "$latest_version"; then
       echo "Updating fd to ${latest_version}..."
       gah install sharkdp/fd --unattended
@@ -225,11 +245,11 @@ fi
 
 if which sshs >/dev/null 2>&1; then
   current_version=$(sshs --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}sshs exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "sshs" "$current_version" "$latest_version"; then
       echo "Updating sshs to ${latest_version}..."
       gah install quantumsheep/sshs --unattended
@@ -243,11 +263,11 @@ fi
 
 if which rg >/dev/null 2>&1; then
   current_version=$(rg --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/BurntSushi/ripgrep/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   echo -e "${GREEN}ripgrep exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "ripgrep" "$current_version" "$latest_version"; then
       echo "Updating ripgrep to ${latest_version}..."
       gah install BurntSushi/ripgrep --unattended
@@ -261,11 +281,11 @@ fi
 
 if which lstr >/dev/null 2>&1; then
   current_version=$(lstr --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/bgreenwell/lstr/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}lstr exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "lstr" "$current_version" "$latest_version"; then
       echo "Updating lstr to ${latest_version}..."
       gah install bgreenwell/lstr --unattended
@@ -287,11 +307,11 @@ fi
 
 if which htop >/dev/null 2>&1; then
   current_version=$(htop --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   echo -e "${GREEN}htop exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "htop" "$current_version" "$latest_version"; then
       echo "Updating htop to ${latest_version}..."
       curl --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${latest_version}/htop-${latest_version}.tar.xz
@@ -305,7 +325,7 @@ if which htop >/dev/null 2>&1; then
   fi
 else
   # get the latest version of htop from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/htop-dev/htop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing htop ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz
@@ -319,11 +339,11 @@ fi
 
 if which btop >/dev/null 2>&1; then
   current_version=$(btop --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}btop exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "btop" "$current_version" "$latest_version"; then
       echo "Updating btop to ${latest_version}..."
       curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz
@@ -337,7 +357,7 @@ if which btop >/dev/null 2>&1; then
   fi
 else
   # get the latest version of btop from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing btop ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
@@ -351,12 +371,12 @@ else
 fi
 
 if which bfs >/dev/null 2>&1; then
-  current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
 
   echo -e "${GREEN}bfs exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "bfs" "$current_version" "$latest_version"; then
       echo "Updating bfs to ${latest_version}..."
       curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip
@@ -372,7 +392,7 @@ if which bfs >/dev/null 2>&1; then
   fi
 else
   # get the latest version of htop from github
-  version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
 
   curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
@@ -409,11 +429,11 @@ fi
 
 if which bat >/dev/null 2>&1; then
   current_version=$(bat --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}bat exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "bat" "$current_version" "$latest_version"; then
       echo "Updating bat to ${latest_version}..."
       gah install sharkdp/bat --unattended
@@ -427,11 +447,11 @@ fi
 
 if which eza >/dev/null 2>&1; then
   current_version=$(eza --version | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/eza-community/eza/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}eza exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "eza" "$current_version" "$latest_version"; then
       echo "Updating eza to ${latest_version}..."
       gah install eza-community/eza --unattended
@@ -464,11 +484,11 @@ fi
 
 if which lazygit >/dev/null 2>&1; then
   current_version=$(lazygit --version | grep -oP 'version=\K[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${GREEN}lazygit exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "lazygit" "$current_version" "$latest_version"; then
       echo "Updating lazygit to ${latest_version}..."
       gah install jesseduffield/lazygit --unattended
@@ -482,11 +502,11 @@ fi
 
 if which lazydocker >/dev/null 2>&1; then
   current_version=$(lazydocker --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jesseduffield/lazydocker/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${GREEN}lazydocker exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "lazydocker" "$current_version" "$latest_version"; then
       echo "Updating lazydocker to ${latest_version}..."
       gah install jesseduffield/lazydocker --unattended
@@ -500,11 +520,11 @@ fi
 
 if which zellij >/dev/null 2>&1; then
   current_version=$(zellij --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL ${GITHUB_AUTH_HEADER} ${GITHUB_AUTH_VALUE} "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/zellij-org/zellij/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | cut -c2-)
 
   echo -e "${GREEN}zellij exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$current_version" "$latest_version"; then
+  if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "zellij" "$current_version" "$latest_version"; then
       echo "Updating zellij to ${latest_version}..."
       gah install zellij-org/zellij --unattended
