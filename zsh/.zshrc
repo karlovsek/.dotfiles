@@ -173,6 +173,7 @@ export LANG=en_US.UTF-8
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 alias df="df -hT -x tmpfs"
+alias tree="eza --tree"
 
 if (( $+commands[aichat] )); then
   eval_aichat() {
