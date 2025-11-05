@@ -174,6 +174,8 @@ export LANG=en_US.UTF-8
 
 alias df="df -hT -x tmpfs"
 alias tree="eza --tree"
+alias fhl="find . -xdev \! -type d -links +1 -printf '%20D %20i %p\n' | sort -n | uniq -w 42 --all-repeated=separate"
+
 
 if (( $+commands[aichat] )); then
   eval_aichat() {
