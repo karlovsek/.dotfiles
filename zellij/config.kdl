@@ -4,7 +4,7 @@
 
 keybinds clear-defaults=true {
     locked {
-        bind "Ctrl g" { SwitchToMode "normal"; }
+        bind "Ctrl Alt g" { SwitchToMode "normal"; }
     }
     normal {
         bind "Alt left" { Resize "Increase left"; }
