@@ -31,3 +31,7 @@ end, { desc = "Find files, recent and buffers" })
 
 keymap.set("x", "/", "<C-\\><C-n>`</\\%V", { desc = "Search forward within visual selection" })
 keymap.set("x", "?", "<C-\\><C-n>`>?\\%V", { desc = "Search backward within visual selection" })
+
+keymap.set("n", "<leader>yp", ":let @+=expand('%:.')<cr>", { desc = "Copy relative path" })
+keymap.set("n", "<leader>yP", ":let @+=@%<cr>", { desc = "Copy absolute path" })
+keymap.set("n", "<leader>yn", ":let @+=expand('%:t')<cr>", { desc = "Copy file name" })
