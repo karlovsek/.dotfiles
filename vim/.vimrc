@@ -226,21 +226,26 @@ endif " has("autocmd")
 " Plugins "
 
 " Install and run vim-plug on first run
+let s:vim_plug_dir = path . '/autoload'
+let s:vim_plugged_dir = path . '/plugged'
+
 if has("win32")
-    if !filereadable(expand('$HOME\vimfiles\autoload\plug.vim'))
-      echo "plug.vim is not installed , installing"
+    if !filereadable(s:vim_plug_dir . '/plug.vim')
+      echo "plug.vim is not installed, installing to " . s:vim_plug_dir
+      call mkdir(s:vim_plug_dir, 'p')
       let current_shell = &shell
-      echo "Current shell is " current_shell
       set shell=powershell
-      silent !"iwr -useb https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim |` ni $HOME/vimfiles/autoload/plug.vim -Force"
+      execute 'silent !"iwr -useb https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim |` ni ' . s:vim_plug_dir . '/plug.vim -Force"'
       let &shell=current_shell
     endif
-elseif empty(glob('~/.vim/autoload/plug.vim'))
-    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+elseif empty(glob(s:vim_plug_dir . '/plug.vim'))
+    echo "plug.vim is not installed, installing to " . s:vim_plug_dir
+    call mkdir(s:vim_plug_dir, 'p')
+    silent execute '!curl -fLo ' . s:vim_plug_dir . '/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
     autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
-call plug#begin('~/.vim/plugged')
+call plug#begin(s:vim_plugged_dir)
 Plug 'liuchengxu/vim-which-key'
 nnoremap <silent> <leader> :WhichKey '<Space>'<CR>
 Plug 'ojroques/vim-oscyank', {'branch': 'main'} " {{{
@@ -317,7 +322,7 @@ nmap S <plug>(SubversiveSubstituteToEndOfLine)
 " For live preview of replace
 " https://github.com/markonm/traces.vim ~/.vim/pack/plugins/start/traces.vim
 Plug 'rafi/awesome-vim-colorschemes' " {{{
-set runtimepath+=~/.vim/plugged/awesome-vim-colorschemes
+exec 'set runtimepath+=' . s:vim_plugged_dir . '/awesome-vim-colorschemes'
   colorscheme gruvbox
 " colorscheme PaperColor
 " colorscheme afterglow
@@ -505,8 +510,8 @@ Plug 'tyru/open-browser.vim'
   nmap gx <Plug>(openbrowser-search)
 " }}}
 Plug 'Shougo/junkfile.vim' " {{{
-  nnoremap <leader>JO :JunkfileOpen 
-  let g:junkfile#directory = $HOME . '/.vim/cache/junkfile'
+  nnoremap <leader>JO :JunkfileOpen
+  let g:junkfile#directory = path . '/cache/junkfile'
 " }}}
 Plug 'junegunn/vim-peekaboo' " {{{
   let g:peekaboo_delay = 400
