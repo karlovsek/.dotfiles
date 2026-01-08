@@ -296,6 +296,14 @@ fi
 alias glp="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'''"
 alias glpa="git log --graph --abbrev-commit --decorate --date=relative --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --all'"
 
+# fuzzy-kill - Interactive process killer with fuzzy finding
+if command -v fuzzy-kill &> /dev/null || [ -f "$HOME/.dotfiles/bin/fuzzy-kill" ]; then
+  alias fk='fuzzy-kill'
+  alias fkk='fuzzy-kill --signal KILL'       # Force kill mode
+  alias fku='fuzzy-kill --user $USER'         # Only your processes
+  alias fkd='fuzzy-kill --dry-run'           # Dry run mode
+  alias cl='claude cl'
+fi
 
 if (( $+commands[bit] ))
 then

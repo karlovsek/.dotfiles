@@ -536,6 +536,15 @@ else
   gah install zellij-org/zellij --unattended
 fi
 
+# Install fuzzy-kill (fuzzy process finder and killer)
+if [ -f "${SCRIPT_DIR}/bin/fuzzy-kill" ]; then
+  echo -e "${GREEN}Installing fuzzy-kill...${NC}"
+  ln -sf ${SCRIPT_DIR}/bin/fuzzy-kill $INSTALL_BIN_DIR/fuzzy-kill
+  ln -sf ${SCRIPT_DIR}/bin/fuzzy-kill $INSTALL_BIN_DIR/fk  # Short alias
+  chmod +x ${SCRIPT_DIR}/bin/fuzzy-kill
+  echo -e "${GREEN}fuzzy-kill installed (alias: fk)${NC}"
+fi
+
 # TODO install node
 if which node >/dev/null 2>&1; then
   echo -e "${GREEN}node exists ($(node -v)) ${NC}"

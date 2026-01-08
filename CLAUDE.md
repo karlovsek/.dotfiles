@@ -1,3 +1,6 @@
+
+<!-- @sessions/CLAUDE.sessions.md -->
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -9,6 +12,7 @@ This is a dotfiles repository that provides configuration and installation scrip
 ## Key Architecture
 
 The repository is organized by application/tool:
+
 - **nvim/** - Neovim configuration using LazyVim framework with custom plugins
 - **zsh/** - ZSH shell configuration with Oh My ZSH, plugins, and Powerlevel10k theme
 - **vim/** - Traditional Vim configuration
@@ -17,16 +21,19 @@ The repository is organized by application/tool:
 - **eza/** - Modern `ls` replacement configuration
 - **zellij/** - Alternative terminal multiplexer configuration
 - **bin/** - Custom scripts and utilities
+  - **fuzzy-kill** - Interactive fuzzy process finder and killer (replaces rip)
 
 ## Installation Commands
 
 ### Full Installation
+
 ```bash
 # Clone and run full installation
 git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install.sh
 ```
 
 ### Minimal Installation (Installs tools without requiring sudo)
+
 ```bash
 # Installs to ~/.local without requiring system packages
 git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install-minimal.sh
@@ -35,6 +42,7 @@ git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HO
 ## Common Development Commands
 
 ### Neovim Plugin Management
+
 ```bash
 # Open Neovim and manage plugins with LazyVim
 nvim
@@ -42,12 +50,14 @@ nvim
 ```
 
 ### Update Tools (for minimal installation)
+
 ```bash
 # Re-run the install script to update tools to latest versions
 bash $HOME/.dotfiles/install-minimal.sh
 ```
 
 ### Apply Configuration Changes
+
 ```bash
 # After modifying dotfiles, recreate symlinks
 # For ZSH
@@ -68,6 +78,7 @@ ln -sf $HOME/.dotfiles/tmux/.tmux.conf.local $HOME/.tmux.conf.local
 ## Installation Process Architecture
 
 ### install-minimal.sh
+
 - Installs everything to `$HOME/.local` (no sudo required)
 - Downloads and installs the latest versions of development tools from GitHub releases
 - Tools installed: nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide, bat, eza, lazygit, lazydocker, zellij, fnm (for Node.js)
@@ -75,6 +86,7 @@ ln -sf $HOME/.dotfiles/tmux/.tmux.conf.local $HOME/.tmux.conf.local
 - Installs Oh My ZSH and plugins
 
 ### install.sh  
+
 - Optionally installs additional TUI tools via separate repository
 - Sets ZSH as default shell (requires sudo)
 - Creates configuration symlinks
@@ -83,6 +95,7 @@ ln -sf $HOME/.dotfiles/tmux/.tmux.conf.local $HOME/.tmux.conf.local
 ## Neovim Configuration
 
 Uses LazyVim as a base configuration framework with custom plugins in `nvim/lua/plugins/`:
+
 - Package management via lazy.nvim
 - Custom keymaps in `lua/config/keymaps.lua`
 - Custom options in `lua/config/options.lua`
@@ -96,9 +109,41 @@ Uses LazyVim as a base configuration framework with custom plugins in `nvim/lua/
 - FZF integration for fuzzy finding
 - Custom PATH management for `~/.local/bin`
 
+## Fuzzy-Kill Tool
+
+A custom interactive process manager that combines htop's clarity with fzf's fuzzy-finding capabilities.
+
+**Location:** `bin/fuzzy-kill`
+
+**Features:**
+- Fuzzy search across all running processes
+- Multi-select processes with Tab key
+- Color-coded CPU/memory display
+- Interactive kill with signal selection (TERM, KILL, INT, etc.)
+- Preview window with detailed process information
+- Safety features (critical process protection, dry-run mode)
+
+**Usage:**
+```bash
+fuzzy-kill                    # Interactive process selector
+fk                           # Short alias
+fkk                          # Force kill mode (SIGKILL)
+fku                          # Only your processes
+fkd                          # Dry-run mode (safe preview)
+
+# With options:
+fuzzy-kill --filter chrome   # Pre-filter by name
+fuzzy-kill --user $USER      # Filter by user
+fuzzy-kill --signal KILL     # Use SIGKILL
+fuzzy-kill --sort mem        # Sort by memory
+```
+
+**Documentation:** See `fzf-htop/README.md` for complete guide
+
 ## Important Notes
 
 1. The minimal installation script (`install-minimal.sh`) is self-contained and doesn't require system package managers
 2. All tools are installed to `$HOME/.local` to avoid requiring root permissions
 3. Configuration files are managed via symlinks - modify files in the repository, not in their installed locations
 4. The repository tracks its own plugin/tool versions and updates them when the install scripts are re-run
+
