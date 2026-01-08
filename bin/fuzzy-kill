@@ -1,0 +1,395 @@
+#!/usr/bin/env bash
+#
+# fuzzy-kill - Fuzzy find and kill processes
+#
+# A powerful process manager that combines the clarity of htop with the
+# fuzzy-finding capabilities of fzf, inspired by the 'rip' tool.
+#
+# Usage: fuzzy-kill [OPTIONS]
+#
+# Options:
+#   --filter <pattern>    Pre-filter processes by name
+#   --user <username>     Filter by user
+#   --signal <signal>     Signal to send (TERM, KILL, INT, HUP, etc.)
+#   --sort <field>        Sort by: cpu (default), mem, pid, name
+#   --dry-run            Show what would be killed without killing
+#   -h, --help           Show this help message
+#
+
+set -euo pipefail
+
+# Colors
+RED='\033[1;31m'
+YELLOW='\033[0;33m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+GRAY='\033[0;90m'
+BOLD='\033[1m'
+NC='\033[0m'  # No Color
+
+# Default options
+FILTER=""
+USER_FILTER=""
+SIGNAL="TERM"
+SORT_BY="cpu"
+DRY_RUN=false
+
+# Help message
+show_help() {
+    cat << EOF
+fuzzy-kill - Fuzzy find and kill processes
+
+Usage: fuzzy-kill [OPTIONS]
+
+A powerful process manager combining htop's clarity with fzf's fuzzy-finding.
+Select multiple processes with Tab, kill them with Enter.
+
+Options:
+  --filter <pattern>    Pre-filter processes by name (e.g., --filter chrome)
+  --user <username>     Filter by user (e.g., --user $USER)
+  --signal <signal>     Signal to send: TERM (default), KILL, INT, HUP, QUIT
+  --sort <field>        Sort by: cpu (default), mem, pid, name
+  --dry-run            Show what would be killed without actually killing
+  -h, --help           Show this help message
+
+Keybindings in fzf:
+  Tab          Select/deselect process
+  Ctrl-A       Select all
+  Ctrl-D       Deselect all
+  Ctrl-R       Reload process list
+  Alt-C        Sort by CPU usage (descending ↓)
+  Alt-M        Sort by memory usage (descending ↓)
+  Alt-P        Sort by PID (ascending ↑)
+  Alt-N        Sort by process name (ascending ↑)
+  Enter        Kill selected processes
+  Esc/Ctrl-C   Cancel
+
+Note: Sorted column is highlighted in yellow with a direction arrow
+
+Examples:
+  fuzzy-kill                      # Interactive process selector
+  fuzzy-kill --filter chrome      # Show only chrome processes
+  fuzzy-kill --signal KILL        # Use SIGKILL instead of SIGTERM
+  fuzzy-kill --user $USER         # Show only your processes
+  fuzzy-kill --dry-run            # Preview without killing
+
+EOF
+    exit 0
+}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --filter)
+            FILTER="$2"
+            shift 2
+            ;;
+        --user)
+            USER_FILTER="$2"
+            shift 2
+            ;;
+        --signal)
+            SIGNAL="$2"
+            shift 2
+            ;;
+        --sort)
+            SORT_BY="$2"
+            shift 2
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}" >&2
+            echo "Use --help for usage information" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# Validate signal
+validate_signal() {
+    local sig="$1"
+    case "${sig^^}" in
+        TERM|KILL|INT|HUP|QUIT|USR1|USR2|STOP|CONT)
+            return 0
+            ;;
+        [0-9]|[0-9][0-9])
+            return 0
+            ;;
+        *)
+            echo -e "${RED}Invalid signal: $sig${NC}" >&2
+            echo "Valid signals: TERM, KILL, INT, HUP, QUIT, USR1, USR2, STOP, CONT" >&2
+            exit 1
+            ;;
+    esac
+}
+
+validate_signal "$SIGNAL"
+
+# Check if fzf is available
+if ! command -v fzf &> /dev/null; then
+    echo -e "${RED}Error: fzf is not installed or not in PATH${NC}" >&2
+    echo "Please install fzf: https://github.com/junegunn/fzf" >&2
+    exit 1
+fi
+
+# Colorize CPU percentage
+colorize_cpu() {
+    local cpu="$1"
+    local cpu_num="${cpu%.*}"  # Remove decimal part
+
+    if (( cpu_num >= 50 )); then
+        echo -e "${RED}${cpu}${NC}"
+    elif (( cpu_num >= 10 )); then
+        echo -e "${YELLOW}${cpu}${NC}"
+    else
+        echo -e "${GRAY}${cpu}${NC}"
+    fi
+}
+
+# Colorize memory percentage
+colorize_mem() {
+    local mem="$1"
+    echo -e "${CYAN}${mem}${NC}"
+}
+
+# Get and format processes
+get_processes() {
+    # Accept sort field as parameter, default to SORT_BY or "cpu"
+    local sort_by="${1:-${SORT_BY:-cpu}}"
+
+    local sort_option
+    case "$sort_by" in
+        cpu)  sort_option="-%cpu" ;;
+        mem)  sort_option="-rss" ;;
+        pid)  sort_option="-pid" ;;
+        name) sort_option="-comm" ;;
+        *)    sort_option="-%cpu" ;;
+    esac
+
+    # Calculate max username length to avoid truncation
+    local max_user_len
+    max_user_len=$(ps -eo user --no-headers 2>/dev/null | awk '{ if (length($0) > max) max = length($0) } END { print max }' 2>/dev/null || echo "20")
+    # Ensure minimum width of 12 for "USER" header, default to 20 if empty
+    [[ -z "$max_user_len" ]] && max_user_len=20
+    [[ $max_user_len -lt 12 ]] && max_user_len=12
+
+    # Get processes, apply filters (set defaults for filter variables)
+    local user_filter="${USER_FILTER:-}"
+    local name_filter="${FILTER:-}"
+
+    # Print table header with sorted column highlighted (↓=descending, ↑=ascending)
+    case "$sort_by" in
+        pid)
+            printf "\033[1;37m\033[1;33m%7s↑\033[0m\033[1;37m │ %-12s │ %7s │ %9s │ %s\033[0m\n" "PID" "USER" "CPU" "MEM(MB)" "COMMAND"
+            ;;
+        name)
+            printf "\033[1;37m%7s │ \033[1;33m%-12s↑\033[0m\033[1;37m │ %7s │ %9s │ %s\033[0m\n" "PID" "USER" "CPU" "MEM(MB)" "COMMAND"
+            ;;
+        cpu)
+            printf "\033[1;37m%7s │ %-12s │ \033[1;33m%7s↓\033[0m\033[1;37m │ %9s │ %s\033[0m\n" "PID" "USER" "CPU" "MEM(MB)" "COMMAND"
+            ;;
+        mem)
+            printf "\033[1;37m%7s │ %-12s │ %7s │ \033[1;33m%9s↓\033[0m\033[1;37m │ %s\033[0m\n" "PID" "USER" "CPU" "MEM(MB)" "COMMAND"
+            ;;
+    esac
+
+    ps -eo user:${max_user_len},pid,%cpu,rss,vsz,tty,stat,start,time,args --sort="$sort_option" 2>/dev/null | awk -v user_filter="$user_filter" -v name_filter="$name_filter" '
+    BEGIN {
+        # ANSI color codes
+        RED = "\033[1;31m"
+        YELLOW = "\033[0;33m"
+        GRAY = "\033[0;90m"
+        CYAN = "\033[0;36m"
+        NC = "\033[0m"
+    }
+    NR > 1 {
+        # Apply filters
+        if (user_filter != "" && $1 != user_filter) next
+        if (name_filter != "" && tolower($10) !~ tolower(name_filter)) next
+
+        # Extract fields
+        pid = $2
+        user = $1
+        cpu = $3
+        rss_kb = $4  # Memory in KB
+
+        # Get command (everything from field 10 onwards)
+        cmd = ""
+        for (i = 10; i <= NF; i++) {
+            cmd = cmd $i " "
+        }
+        cmd = substr(cmd, 1, length(cmd)-1)  # Remove trailing space
+
+        # Truncate long commands
+        if (length(cmd) > 60) {
+            cmd = substr(cmd, 1, 57) "..."
+        }
+
+        # Convert memory from KB to MB
+        mem_mb = rss_kb / 1024
+        mem_str = sprintf("%.1f", mem_mb)
+
+        # Color code CPU
+        cpu_num = int(cpu)
+        if (cpu_num >= 50) {
+            cpu_colored = RED cpu "%" NC
+        } else if (cpu_num >= 10) {
+            cpu_colored = YELLOW cpu "%" NC
+        } else {
+            cpu_colored = GRAY cpu "%" NC
+        }
+
+        # Color code memory (MB)
+        if (mem_mb >= 1000) {
+            mem_colored = RED mem_str NC
+        } else if (mem_mb >= 100) {
+            mem_colored = YELLOW mem_str NC
+        } else {
+            mem_colored = CYAN mem_str NC
+        }
+
+        # Print formatted line
+        printf "%7s │ %-12s │ %s │ %9s │ %s\n", pid, user, cpu_colored, mem_colored, cmd
+    }
+    ' 2>/dev/null | column -t -s'│' 2>/dev/null || true
+}
+
+# FZF selector
+select_processes() {
+    local header="Select processes to kill with SIG${SIGNAL} (Tab=select, Alt-C/M/P/N=sort, Ctrl-R=reload)"
+
+    # Export function and variables for fzf reload
+    export -f get_processes
+    export FILTER USER_FILTER
+
+    fzf --multi \
+        --ansi \
+        --header="$header" \
+        --header-lines=1 \
+        --preview='ps -p {1} -o pid,ppid,pri,ni,vsz,rss,stat,start,time,command 2>/dev/null || echo "Process no longer exists"' \
+        --preview-window='up:7:wrap' \
+        --bind="ctrl-r:reload(bash -c 'get_processes ${SORT_BY}')" \
+        --bind="alt-c:reload(bash -c 'get_processes cpu')" \
+        --bind="alt-m:reload(bash -c 'get_processes mem')" \
+        --bind="alt-p:reload(bash -c 'get_processes pid')" \
+        --bind="alt-n:reload(bash -c 'get_processes name')" \
+        --bind='ctrl-a:select-all' \
+        --bind='ctrl-d:deselect-all' \
+        --prompt="Search> " \
+        --pointer="▶" \
+        --marker="✓" \
+        --layout=reverse \
+        --border \
+        --info=inline
+}
+
+# Check if process is critical
+is_critical_process() {
+    local pid="$1"
+    local comm
+    comm=$(ps -p "$pid" -o comm= 2>/dev/null || echo "")
+
+    case "$comm" in
+        systemd|init|launchd|kernel|kthreadd|Xorg|sshd|gdm|lightdm)
+            return 0
+            ;;
+        *)
+            # Check if it's PID 1
+            if [[ "$pid" == "1" ]]; then
+                return 0
+            fi
+            return 1
+            ;;
+    esac
+}
+
+# Kill selected processes
+kill_processes() {
+    local signal="$1"
+    shift
+    local pids=("$@")
+
+    if [[ ${#pids[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}No processes selected${NC}"
+        return 0
+    fi
+
+    echo -e "\n${BOLD}Killing ${#pids[@]} process(es) with SIG${signal}:${NC}\n"
+
+    local success=0
+    local failed=0
+    local skipped=0
+
+    for pid in "${pids[@]}"; do
+        # Skip empty PIDs
+        [[ -z "$pid" ]] && continue
+
+        # Get process info
+        local proc_info
+        proc_info=$(ps -p "$pid" -o pid,user,comm 2>/dev/null || echo "")
+
+        if [[ -z "$proc_info" ]]; then
+            echo -e "  ${GRAY}✗ PID $pid - Process no longer exists${NC}"
+            ((skipped++))
+            continue
+        fi
+
+        # Check if critical
+        if is_critical_process "$pid" && [[ "$DRY_RUN" == "false" ]]; then
+            echo -e "  ${YELLOW}⚠ PID $pid - Critical process, skipping${NC}"
+            ((skipped++))
+            continue
+        fi
+
+        # Dry run mode
+        if [[ "$DRY_RUN" == "true" ]]; then
+            echo -e "  ${CYAN}[DRY RUN] Would kill PID $pid ($proc_info)${NC}"
+            ((success++))
+            continue
+        fi
+
+        # Attempt to kill
+        if kill -"$signal" "$pid" 2>/dev/null; then
+            echo -e "  ${GREEN}✓ Killed PID $pid${NC}"
+            ((success++))
+        else
+            echo -e "  ${RED}✗ Failed to kill PID $pid (permission denied or process not found)${NC}"
+            ((failed++))
+        fi
+    done
+
+    # Summary
+    echo -e "\n${BOLD}Summary:${NC}"
+    echo -e "  ${GREEN}Success: $success${NC}"
+    [[ $failed -gt 0 ]] && echo -e "  ${RED}Failed: $failed${NC}"
+    [[ $skipped -gt 0 ]] && echo -e "  ${YELLOW}Skipped: $skipped${NC}"
+}
+
+# Main execution
+main() {
+    # Get process list and pipe to fzf
+    local selected
+    selected=$(get_processes | select_processes)
+
+    # Check if any processes were selected
+    if [[ -z "$selected" ]]; then
+        echo -e "${YELLOW}No processes selected. Exiting.${NC}"
+        exit 0
+    fi
+
+    # Extract PIDs (first column)
+    local pids
+    mapfile -t pids < <(echo "$selected" | awk '{print $1}')
+
+    # Kill processes
+    kill_processes "$SIGNAL" "${pids[@]}"
+}
+
+# Run main function
+main
