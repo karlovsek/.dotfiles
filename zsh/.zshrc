@@ -302,7 +302,6 @@ if command -v fuzzy-kill &> /dev/null || [ -f "$HOME/.dotfiles/bin/fuzzy-kill" ]
   alias fkk='fuzzy-kill --signal KILL'       # Force kill mode
   alias fku='fuzzy-kill --user $USER'         # Only your processes
   alias fkd='fuzzy-kill --dry-run'           # Dry run mode
-  alias cl='claude cl'
 fi
 
 if (( $+commands[bit] ))
