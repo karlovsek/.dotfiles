@@ -26,7 +26,7 @@ mkdir -p $INSTALL_BIN_DIR
 
 export PATH=$PATH:$INSTALL_BIN_DIR
 
-if ! grep -q -e "\$PATH\" == .*${INSTALL_BIN_DIR}" "$HOME/.bashrc"; then
+if ! grep -q -e "\$PATH.*${INSTALL_BIN_DIR}" "$HOME/.bashrc"; then
   echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
 
   cat <<EOF >>"$HOME/.bashrc"
