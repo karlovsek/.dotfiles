@@ -210,8 +210,7 @@ else
 
   nvim_archive=nvim-linux-x86_64.tar.gz
 
-  # curl -OL https://github.com/neovim/neovim/releases/download/${version}/${nvim_archive}
-  curl -OL https://github.com/neovim/neovim-releases/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
+  curl -OL https://github.com/neovim/neovim-releases/releases/download/${version}/${nvim_archive}
   tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
 
   # clean
