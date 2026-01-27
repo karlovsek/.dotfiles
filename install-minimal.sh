@@ -543,11 +543,9 @@ else
     # Download and install Node.js:
     fnm install 23
 
-    # Verify the Node.js version:
-    node -v # Should print "v23.11.0".
-
-    # Verify npm version:
-    npm -v # Should print "10.9.2".
+    # Verify the installation:
+    node -v
+    npm -v
   else
     echo -e "${RED} FNM not installed ${NC}"
   fi
