@@ -21,10 +21,10 @@ done
 echo -e "\e[0;33m\nPress Enter to install all programs into $INSTALL_DIR \033[0m"
 read -p ""
 
-INSTALL_BIN_DIR=$INSTALL_DIR/bin
-mkdir -p $INSTALL_BIN_DIR
+INSTALL_BIN_DIR="$INSTALL_DIR/bin"
+mkdir -p "$INSTALL_BIN_DIR"
 
-export PATH=$PATH:$INSTALL_BIN_DIR
+export PATH="$PATH:$INSTALL_BIN_DIR"
 
 if ! grep -q -e "\$PATH.*${INSTALL_BIN_DIR}" "$HOME/.bashrc"; then
   echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
@@ -142,7 +142,7 @@ if which 7zz >/dev/null 2>&1; then
       version_no_dot=$(echo $latest_version | tr -d '.')
       curl -OL https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz
       tar -xvf 7z${version_no_dot}-linux-x64.tar.xz 7zz
-      chmod +x 7zz && mv 7zz $INSTALL_BIN_DIR
+      chmod +x 7zz && mv 7zz "$INSTALL_BIN_DIR"
       rm 7z${version_no_dot}-linux-x64.tar.xz
       echo -e "${GREEN}7zip updated successfully!${NC}"
     fi
@@ -155,7 +155,7 @@ else
 
   curl -OL https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz
   tar -xvf 7z${version_no_dot}-linux-x64.tar.xz 7zz
-  chmod +x 7zz && mv 7zz $INSTALL_BIN_DIR
+  chmod +x 7zz && mv 7zz "$INSTALL_BIN_DIR"
 
   # clean
   rm 7z${version_no_dot}-linux-x64.tar.xz
@@ -415,7 +415,7 @@ else
 
   curl --progress-bar -OL https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
   chmod +x ./broot
-  mv ./broot ${INSTALL_BIN_DIR}
+  mv ./broot "$INSTALL_BIN_DIR"
   broot --version
 fi
 
@@ -538,9 +538,9 @@ fi
 # Install fuzzy-kill (fuzzy process finder and killer)
 if [ -f "${SCRIPT_DIR}/bin/fuzzy-kill" ]; then
   echo -e "${GREEN}Installing fuzzy-kill...${NC}"
-  ln -sf ${SCRIPT_DIR}/bin/fuzzy-kill $INSTALL_BIN_DIR/fuzzy-kill
-  ln -sf ${SCRIPT_DIR}/bin/fuzzy-kill $INSTALL_BIN_DIR/fk  # Short alias
-  chmod +x ${SCRIPT_DIR}/bin/fuzzy-kill
+  ln -sf "${SCRIPT_DIR}/bin/fuzzy-kill" "$INSTALL_BIN_DIR/fuzzy-kill"
+  ln -sf "${SCRIPT_DIR}/bin/fuzzy-kill" "$INSTALL_BIN_DIR/fk"  # Short alias
+  chmod +x "${SCRIPT_DIR}/bin/fuzzy-kill"
   echo -e "${GREEN}fuzzy-kill installed (alias: fk)${NC}"
 fi
 
