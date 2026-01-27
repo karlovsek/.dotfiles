@@ -373,7 +373,7 @@ if which bfs >/dev/null 2>&1; then
     fi
   fi
 else
-  # get the latest version of htop from github
+  # get the latest version of bfs from github
   version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
 
@@ -392,8 +392,7 @@ fi
 if which broot >/dev/null 2>&1; then
   echo -e "${GREEN}broot exists ($(broot --version | awk '{print $2}')) ${NC}"
 else
-  # get the latest version of htop from github
-  # version=$(curl --silent ${GITHUB_AUTH_HEADER} "${GITHUB_AUTH_VALUE}" "https://api.github.com/repos/Canop/broot/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  # Install latest version of broot from official download
   echo -e "${YELLOW}Installing broot latest version ${NC}"
 
   curl --progress-bar -OL https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
