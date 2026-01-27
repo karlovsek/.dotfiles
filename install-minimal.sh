@@ -18,7 +18,7 @@ for arg in "$@"; do
   esac
 done
 
-echo -e "\e[0;33m\nPress Enter to intall all programs into $INSTALL_DIR \033[0m"
+echo -e "\e[0;33m\nPress Enter to install all programs into $INSTALL_DIR \033[0m"
 read -p ""
 
 INSTALL_BIN_DIR=$INSTALL_DIR/bin
