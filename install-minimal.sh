@@ -618,7 +618,7 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   echo -e "\t${GREEN}Symlinks created! ${NC}"
 fi
 
-if which zellij 2>/dev/null 2>&1; then
+if which zellij >/dev/null 2>&1; then
   echo -e "${GREEN}zellij exists ${NC}"
 
   echo -ne "Create Zellij symlinks? (Y/n): "
