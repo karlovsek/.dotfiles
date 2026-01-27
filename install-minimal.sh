@@ -107,7 +107,14 @@ if which jq >/dev/null 2>&1; then
 else
   echo -e "${YELLOW}jq does not exist, installing it ... ${NC}"
   latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
-  curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-${latest_version}/jq-linux-amd64
+  if [ -z "$latest_version" ]; then
+    echo -e "${RED}Failed to fetch jq version from GitHub API${NC}"
+    exit 1
+  fi
+  if ! curl -o ~/.local/bin/jq -L https://github.com/jqlang/jq/releases/download/jq-${latest_version}/jq-linux-amd64; then
+    echo -e "${RED}Failed to download jq${NC}"
+    exit 1
+  fi
   chmod +x ~/.local/bin/jq
 fi
 
@@ -153,7 +160,10 @@ else
 
   echo "7zip does not exist, installing ${version} ..."
 
-  curl -OL https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz
+  if ! curl -OL https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz; then
+    echo -e "${RED}Failed to download 7zip${NC}"
+    exit 1
+  fi
   tar -xvf 7z${version_no_dot}-linux-x64.tar.xz 7zz
   chmod +x 7zz && mv 7zz "$INSTALL_BIN_DIR"
 
@@ -188,12 +198,19 @@ if which nvim >/dev/null 2>&1; then
   fi
 else
   version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  if [ -z "$version" ]; then
+    echo -e "${RED}Failed to fetch NeoVim version from GitHub API${NC}"
+    exit 1
+  fi
 
   echo "NeoVim does not exist, installing ${version} ..."
 
   nvim_archive=nvim-linux-x86_64.tar.gz
 
-  curl -OL https://github.com/neovim/neovim-releases/releases/download/${version}/${nvim_archive}
+  if ! curl -OL https://github.com/neovim/neovim-releases/releases/download/${version}/${nvim_archive}; then
+    echo -e "${RED}Failed to download NeoVim${NC}"
+    exit 1
+  fi
   tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
 
   # clean
