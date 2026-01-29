@@ -585,6 +585,12 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   ln -sf ${SCRIPT_DIR}/vim/.vimrc $HOME/.vimrc
   ln -sf ${SCRIPT_DIR}/vim/.vimcommon $HOME/.vimcommon
   echo -e "\t${GREEN}Symlinks created! ${NC}"
+
+  # Install vim-plug and plugins
+  echo -e "${GREEN}Installing vim plugins...${NC}"
+  vim +'PlugInstall --sync' +qall > /dev/null 2>&1
+  echo -e "\t${GREEN}Vim plugins installed! ${NC}"
+
 else
   echo "You can create Vim symlinks as:"
   echo "ln -sf ${SCRIPT_DIR}/vim/.vimrc $HOME/.vimrc && ln -sf ${SCRIPT_DIR}/vim/.vimcommon $HOME/.vimcommon"
