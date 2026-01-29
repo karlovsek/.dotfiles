@@ -229,6 +229,9 @@ endif " has("autocmd")
 let s:vim_plug_dir = path . '/autoload'
 let s:vim_plugged_dir = path . '/plugged'
 
+" Add vim directory to runtime path for autoload
+exec 'set runtimepath+=' . path
+
 if has("win32")
     if !filereadable(s:vim_plug_dir . '/plug.vim')
       echo "plug.vim is not installed, installing to " . s:vim_plug_dir
