@@ -337,38 +337,38 @@ else
   rm -fr htop-${version} htop-${version}.tar.xz
 fi
 
-if which btop >/dev/null 2>&1; then
-  current_version=$(btop --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+# if which btop >/dev/null 2>&1; then
+#   current_version=$(btop --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+#   latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
-  echo -e "${GREEN}btop exists (v${current_version}, latest: v${latest_version})${NC}"
+#   echo -e "${GREEN}btop exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "btop" "$current_version" "$latest_version"; then
-      echo "Updating btop to ${latest_version}..."
-      curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz
-      tar -xf btop-x86_64-linux-musl.tbz
-      cd btop
-      PREFIX=~/.local make install
-      cd ..
-      rm -fr btop btop-x86_64-linux-musl.tbz
-      echo -e "${GREEN}btop updated successfully!${NC}"
-    fi
-  fi
-else
-  # get the latest version of btop from github
-  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-  echo -e "${YELLOW}Installing btop ${version} ${NC}"
+#   if ! compare_versions "$latest_version" "$current_version"; then
+#     if prompt_update "btop" "$current_version" "$latest_version"; then
+#       echo "Updating btop to ${latest_version}..."
+#       curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz
+#       tar -xf btop-x86_64-linux-musl.tbz
+#       cd btop
+#       PREFIX=~/.local make install
+#       cd ..
+#       rm -fr btop btop-x86_64-linux-musl.tbz
+#       echo -e "${GREEN}btop updated successfully!${NC}"
+#     fi
+#   fi
+# else
+#   # get the latest version of btop from github
+#   version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/aristocratos/btop/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+#   echo -e "${YELLOW}Installing btop ${version} ${NC}"
 
-  curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
-  tar -xf btop-x86_64-linux-musl.tbz
-  cd btop
-  PREFIX=~/.local make install
-  cd ..
+#   curl --progress-bar -OL https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz
+#   tar -xf btop-x86_64-linux-musl.tbz
+#   cd btop
+#   PREFIX=~/.local make install
+#   cd ..
 
-  # clean
-  rm -fr btop btop-x86_64-linux-musl.tbz
-fi
+#   # clean
+#   rm -fr btop btop-x86_64-linux-musl.tbz
+# fi
 
 if which bfs >/dev/null 2>&1; then
   current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+')
