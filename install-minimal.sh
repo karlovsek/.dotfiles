@@ -197,17 +197,17 @@ if which nvim >/dev/null 2>&1; then
     fi
   fi
 else
-  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/neovim/neovim/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/neovim/neovim-releases/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
   if [ -z "$version" ]; then
     echo -e "${RED}Failed to fetch NeoVim version from GitHub API${NC}"
     exit 1
   fi
 
-  echo "NeoVim does not exist, installing ${version} ..."
+  echo "NeoVim does not exist, installing v${version} ..."
 
   nvim_archive=nvim-linux-x86_64.tar.gz
 
-  if ! curl -OL https://github.com/neovim/neovim-releases/releases/download/${version}/${nvim_archive}; then
+  if ! curl -OL https://github.com/neovim/neovim-releases/releases/download/v${version}/${nvim_archive}; then
     echo -e "${RED}Failed to download NeoVim${NC}"
     exit 1
   fi
