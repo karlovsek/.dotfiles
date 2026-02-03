@@ -91,6 +91,11 @@ prompt_update() {
   fi
 }
 
+# Helper function to get GLIBC version
+get_glibc_version() {
+  ldd --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1
+}
+
 if which jq >/dev/null 2>&1; then
   current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
@@ -243,21 +248,41 @@ else
 fi
 
 if which sshs >/dev/null 2>&1; then
-  current_version=$(sshs --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  current_version=$(sshs --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  glibc_version=$(get_glibc_version)
+
+  # Determine compatible version based on GLIBC
+  if compare_versions "$glibc_version" "2.28"; then
+    # GLIBC 2.28 or older - use sshs 4.3.0 which is compatible
+    latest_version="4.3.0"
+    echo -e "${YELLOW}GLIBC ${glibc_version} detected, using sshs v${latest_version} (compatible with GLIBC 2.28)${NC}"
+  else
+    latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  fi
 
   echo -e "${GREEN}sshs exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "sshs" "$current_version" "$latest_version"; then
       echo "Updating sshs to ${latest_version}..."
-      gah install quantumsheep/sshs --unattended
+      gah install quantumsheep/sshs --unattended --tag v${latest_version}
       echo -e "${GREEN}sshs updated successfully!${NC}"
     fi
   fi
 else
-  echo -e "${YELLOW}sshs does not exist, installing it ... ${NC}"
-  gah install quantumsheep/sshs --unattended
+  glibc_version=$(get_glibc_version)
+
+  # Determine compatible version based on GLIBC
+  if compare_versions "$glibc_version" "2.28"; then
+    # GLIBC 2.28 or older - use sshs 4.3.0 which is compatible
+    version="4.3.0"
+    echo -e "${YELLOW}GLIBC ${glibc_version} detected, installing sshs v${version} (compatible with GLIBC 2.28)${NC}"
+  else
+    version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+    echo -e "${YELLOW}sshs does not exist, installing v${version} ... ${NC}"
+  fi
+
+  gah install quantumsheep/sshs --unattended --tag v${version}
 fi
 
 if which rg >/dev/null 2>&1; then
