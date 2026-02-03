@@ -270,40 +270,35 @@ fi
 
 if which sshs >/dev/null 2>&1; then
   current_version=$(sshs --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  glibc_version=$(get_glibc_version)
-
-  # Determine compatible version based on GLIBC
-  if compare_versions "$glibc_version" "2.28"; then
-    # GLIBC 2.28 or older - use sshs 4.3.0 which is compatible
-    latest_version="4.3.0"
-    echo -e "${YELLOW}GLIBC ${glibc_version} detected, using sshs v${latest_version} (compatible with GLIBC 2.28)${NC}"
-  else
-    latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
-  fi
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
 
   echo -e "${GREEN}sshs exists (v${current_version}, latest: v${latest_version})${NC}"
 
   if ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "sshs" "$current_version" "$latest_version"; then
       echo "Updating sshs to ${latest_version}..."
-      gah install quantumsheep/sshs --unattended --tag v${latest_version}
+      if ! curl -fsSL -o "$INSTALL_BIN_DIR/sshs" "https://github.com/quantumsheep/sshs/releases/download/${latest_version}/sshs-linux-amd64-musl"; then
+        echo -e "${RED}Failed to download sshs${NC}"
+        exit 1
+      fi
+      chmod +x "$INSTALL_BIN_DIR/sshs"
       echo -e "${GREEN}sshs updated successfully!${NC}"
     fi
   fi
 else
-  glibc_version=$(get_glibc_version)
-
-  # Determine compatible version based on GLIBC
-  if compare_versions "$glibc_version" "2.28"; then
-    # GLIBC 2.28 or older - use sshs 4.3.0 which is compatible
-    version="4.3.0"
-    echo -e "${YELLOW}GLIBC ${glibc_version} detected, installing sshs v${version} (compatible with GLIBC 2.28)${NC}"
-  else
-    version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
-    echo -e "${YELLOW}sshs does not exist, installing v${version} ... ${NC}"
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/quantumsheep/sshs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  if [ -z "$latest_version" ]; then
+    echo -e "${RED}Failed to fetch sshs version from GitHub API${NC}"
+    exit 1
   fi
 
-  gah install quantumsheep/sshs --unattended --tag v${version}
+  echo -e "${YELLOW}sshs does not exist, installing v${latest_version} (musl) ... ${NC}"
+
+  if ! curl -fsSL -o "$INSTALL_BIN_DIR/sshs" "https://github.com/quantumsheep/sshs/releases/download/${latest_version}/sshs-linux-amd64-musl"; then
+    echo -e "${RED}Failed to download sshs${NC}"
+    exit 1
+  fi
+  chmod +x "$INSTALL_BIN_DIR/sshs"
 fi
 
 if which rg >/dev/null 2>&1; then
