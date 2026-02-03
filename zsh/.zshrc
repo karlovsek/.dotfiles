@@ -340,6 +340,8 @@ then
 
   alias br='\br --sizes'
   alias brs='\br --sizes --sort-by-size'
+  
+  source $HOME/.config/broot/launcher/bash/br
 fi
 
 if (( $+commands[ag] ))
@@ -383,4 +385,5 @@ fi
 
 # stop pasted text being highlighted
 zle_highlight+=('paste:none')
+
 
