@@ -555,7 +555,7 @@ else
   FNM_PATH="$HOME/.local/share/fnm"
   if [ -d "$FNM_PATH" ]; then
     export PATH="$FNM_PATH:$PATH"
-    eval "$(fnm env)"
+    eval "$(fnm env --shell bash)"
 
     # Download and install Node.js:
     fnm install 23
@@ -583,8 +583,8 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   echo -e "\t${GREEN}Symlinks created! ${NC}"
 
   # Install vim-plug and plugins
-  echo -e "${GREEN}Installing vim plugins...${NC}"
-  vim +'PlugInstall --sync' +qall >/dev/null 2>&1
+  echo -e "${GREEN}Installing vim plugins (this may take a moment)...${NC}"
+  vim +'PlugInstall --sync' +qall
   echo -e "\t${GREEN}Vim plugins installed! ${NC}"
 
 else
