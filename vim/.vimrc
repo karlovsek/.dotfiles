@@ -326,7 +326,7 @@ nmap S <plug>(SubversiveSubstituteToEndOfLine)
 " https://github.com/markonm/traces.vim ~/.vim/pack/plugins/start/traces.vim
 Plug 'rafi/awesome-vim-colorschemes' " {{{
 exec 'set runtimepath+=' . s:vim_plugged_dir . '/awesome-vim-colorschemes'
-  colorscheme gruvbox
+  silent! colorscheme gruvbox
 " colorscheme PaperColor
 " colorscheme afterglow
 " }}}
