@@ -96,6 +96,24 @@ get_glibc_version() {
   ldd --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1
 }
 
+# Helper function to fix tree-sitter for GLIBC 2.28
+fix_treesitter_glibc() {
+  glibc_version=$(get_glibc_version)
+
+  if compare_versions "$glibc_version" "2.28"; then
+    mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
+    if [ -d "$mason_treesitter_dir" ]; then
+      echo -e "${YELLOW}GLIBC ${glibc_version} detected, copying GLIBC 2.28-compatible tree-sitter...${NC}"
+      if [ -f "${SCRIPT_DIR}/cp_tree-siter-glibc_mason.sh" ]; then
+        bash "${SCRIPT_DIR}/cp_tree-siter-glibc_mason.sh"
+        echo -e "${GREEN}Tree-sitter compatibility fix applied!${NC}"
+      else
+        echo -e "${YELLOW}Warning: cp_tree-siter-glibc_mason.sh not found, skipping tree-sitter fix${NC}"
+      fi
+    fi
+  fi
+}
+
 if which jq >/dev/null 2>&1; then
   current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
@@ -199,6 +217,7 @@ if which nvim >/dev/null 2>&1; then
       tar -xf ${nvim_archive} --strip-components=1 -C $INSTALL_DIR
       rm ${nvim_archive}
       echo -e "${GREEN}NeoVim updated successfully!${NC}"
+      fix_treesitter_glibc
     fi
   fi
 else
@@ -220,6 +239,8 @@ else
 
   # clean
   rm ${nvim_archive}
+
+  fix_treesitter_glibc
 fi
 
 if which zsh >/dev/null 2>&1; then
