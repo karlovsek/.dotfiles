@@ -340,8 +340,9 @@ then
 
   alias br='\br --sizes'
   alias brs='\br --sizes --sort-by-size'
-  
-  source $HOME/.config/broot/launcher/bash/br
+
+  # Source broot launcher if it exists
+  [[ -f "$HOME/.config/broot/launcher/bash/br" ]] && source $HOME/.config/broot/launcher/bash/br
 fi
 
 if (( $+commands[ag] ))
