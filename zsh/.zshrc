@@ -40,6 +40,9 @@ bindkey -v
 # The following lines were added by compinstall
 zstyle :compinstall filename '$HOME/.zshrc'
 
+# Add local completions folder to fpath
+fpath=(~/.zsh/completions $fpath)
+
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
@@ -347,7 +350,11 @@ fi
 
 if (( $+commands[rg] ))
 then
-  compdef _gnu_generic rg
+  # Generate completion file if it doesn't exist
+  if [[ ! -f ~/.zsh/completions/_rg ]]; then
+    mkdir -p ~/.zsh/completions
+    rg --generate complete-zsh > ~/.zsh/completions/_rg
+  fi
   alias rg="rg --smart-case --follow" # follow symlinks
 fi
 
