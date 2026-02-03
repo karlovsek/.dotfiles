@@ -369,42 +369,42 @@ fi
 #   rm -fr btop btop-x86_64-linux-musl.tbz
 # fi
 
-if which bfs >/dev/null 2>&1; then
-  current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+')
-  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-
-  echo -e "${GREEN}bfs exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "bfs" "$current_version" "$latest_version"; then
-      echo "Updating bfs to ${latest_version}..."
-      curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip
-      7zz x ${latest_version}.zip
-      cd bfs-${latest_version}
-      ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
-      make -j$(nproc) >/dev/null
-      make install
-      cd ..
-      rm -fr bfs-${latest_version} ${latest_version}.zip
-      echo -e "${GREEN}bfs updated successfully!${NC}"
-    fi
-  fi
-else
-  # get the latest version of bfs from github
-  version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
-  echo -e "${YELLOW}Installing bfs ${version} ${NC}"
-
-  curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
-  7zz x ${version}.zip
-  cd bfs-${version}
-  ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
-  make -j$(nproc) >/dev/null
-  make install
-
-  #clean
-  cd ..
-  rm -fr bfs-${version} ${version}.zip
-fi
+# if which bfs >/dev/null 2>&1; then
+#   current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+')
+#   latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+#
+#   echo -e "${GREEN}bfs exists (v${current_version}, latest: v${latest_version})${NC}"
+#
+#   if ! compare_versions "$latest_version" "$current_version"; then
+#     if prompt_update "bfs" "$current_version" "$latest_version"; then
+#       echo "Updating bfs to ${latest_version}..."
+#       curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip
+#       7zz x ${latest_version}.zip
+#       cd bfs-${latest_version}
+#       ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
+#       make -j$(nproc) >/dev/null
+#       make install
+#       cd ..
+#       rm -fr bfs-${latest_version} ${latest_version}.zip
+#       echo -e "${GREEN}bfs updated successfully!${NC}"
+#     fi
+#   fi
+# else
+#   # get the latest version of bfs from github
+#   version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/tavianator/bfs/releases/latest" | grep '"tag_name":' | cut -d '"' -f4)
+#   echo -e "${YELLOW}Installing bfs ${version} ${NC}"
+#
+#   curl --progress-bar -OL https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip
+#   7zz x ${version}.zip
+#   cd bfs-${version}
+#   ./configure --enable-release --mandir=$HOME/.local/man --prefix=$HOME/.local
+#   make -j$(nproc) >/dev/null
+#   make install
+#
+#   #clean
+#   cd ..
+#   rm -fr bfs-${version} ${version}.zip
+# fi
 
 if which broot >/dev/null 2>&1; then
   echo -e "${GREEN}broot exists ($(broot --version | awk '{print $2}')) ${NC}"
@@ -538,7 +538,7 @@ fi
 if [ -f "${SCRIPT_DIR}/bin/fuzzy-kill" ]; then
   echo -e "${GREEN}Installing fuzzy-kill...${NC}"
   ln -sf "${SCRIPT_DIR}/bin/fuzzy-kill" "$INSTALL_BIN_DIR/fuzzy-kill"
-  ln -sf "${SCRIPT_DIR}/bin/fuzzy-kill" "$INSTALL_BIN_DIR/fk"  # Short alias
+  ln -sf "${SCRIPT_DIR}/bin/fuzzy-kill" "$INSTALL_BIN_DIR/fk" # Short alias
   chmod +x "${SCRIPT_DIR}/bin/fuzzy-kill"
   echo -e "${GREEN}fuzzy-kill installed (alias: fk)${NC}"
 fi
@@ -584,7 +584,7 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
 
   # Install vim-plug and plugins
   echo -e "${GREEN}Installing vim plugins...${NC}"
-  vim +'PlugInstall --sync' +qall > /dev/null 2>&1
+  vim +'PlugInstall --sync' +qall >/dev/null 2>&1
   echo -e "\t${GREEN}Vim plugins installed! ${NC}"
 
 else
