@@ -502,6 +502,45 @@ else
   gah install eza-community/eza --unattended
 fi
 
+if which gdu >/dev/null 2>&1; then
+  current_version=$(gdu --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/dundee/gdu/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}gdu exists (v${current_version}, latest: v${latest_version})${NC}"
+
+  if ! compare_versions "$latest_version" "$current_version"; then
+    if prompt_update "gdu" "$current_version" "$latest_version"; then
+      echo "Updating gdu to ${latest_version}..."
+      if ! curl -fsSL -o /tmp/gdu_linux_amd64_static.tgz "https://github.com/dundee/gdu/releases/download/v${latest_version}/gdu_linux_amd64_static.tgz"; then
+        echo -e "${RED}Failed to download gdu${NC}"
+        exit 1
+      fi
+      tar -xzf /tmp/gdu_linux_amd64_static.tgz -C "$INSTALL_BIN_DIR" gdu_linux_amd64_static
+      mv "$INSTALL_BIN_DIR/gdu_linux_amd64_static" "$INSTALL_BIN_DIR/gdu"
+      chmod +x "$INSTALL_BIN_DIR/gdu"
+      rm /tmp/gdu_linux_amd64_static.tgz
+      echo -e "${GREEN}gdu updated successfully!${NC}"
+    fi
+  fi
+else
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/dundee/gdu/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+  if [ -z "$latest_version" ]; then
+    echo -e "${RED}Failed to fetch gdu version from GitHub API${NC}"
+    exit 1
+  fi
+
+  echo -e "${YELLOW}gdu does not exist, installing v${latest_version} (static) ... ${NC}"
+
+  if ! curl -fsSL -o /tmp/gdu_linux_amd64_static.tgz "https://github.com/dundee/gdu/releases/download/v${latest_version}/gdu_linux_amd64_static.tgz"; then
+    echo -e "${RED}Failed to download gdu${NC}"
+    exit 1
+  fi
+  tar -xzf /tmp/gdu_linux_amd64_static.tgz -C "$INSTALL_BIN_DIR" gdu_linux_amd64_static
+  mv "$INSTALL_BIN_DIR/gdu_linux_amd64_static" "$INSTALL_BIN_DIR/gdu"
+  chmod +x "$INSTALL_BIN_DIR/gdu"
+  rm /tmp/gdu_linux_amd64_static.tgz
+fi
+
 # Latest lazygit needs newer version of git
 # To have as little as possible dependencies, we compile git from source without https support
 git_version=$(git --version | awk '{print $3}')
