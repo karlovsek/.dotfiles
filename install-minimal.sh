@@ -541,22 +541,67 @@ else
   rm /tmp/gdu_linux_amd64_static.tgz
 fi
 
-# Latest lazygit needs newer version of git
-# To have as little as possible dependencies, we compile git from source without https support
+# Latest lazygit needs git >= 2.32; compile from source if needed
 git_version=$(git --version | awk '{print $3}')
-if [ "$(printf '%s\n' "2.30" "$git_version" | sort -V | head -n1)" = "$git_version" ] && [ "$git_version" != "2.30" ]; then
-  echo "Your git version ($git_version) is below 2.30. Do you want to update git from source? [y/N]"
+if [ "$(printf '%s\n' "2.32" "$git_version" | sort -V | head -n1)" = "$git_version" ] && [ "$git_version" != "2.32" ]; then
+  echo "Your git version ($git_version) is below 2.32 (required by lazygit). Do you want to update git from source? [y/N]"
   read -r update_git
   if [ "$update_git" = "y" ] || [ "$update_git" = "Y" ]; then
+    export PKG_CONFIG_PATH="$INSTALL_DIR/lib/pkgconfig:$INSTALL_DIR/lib64/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+    LOCAL_LDFLAGS="-L$INSTALL_DIR/lib -L$INSTALL_DIR/lib64 -Wl,-rpath,$INSTALL_DIR/lib -Wl,-rpath,$INSTALL_DIR/lib64"
+    export CPPFLAGS="-I$INSTALL_DIR/include"
+
+    # Step 1: compile OpenSSL if headers are missing (required by curl for HTTPS)
+    if ! pkg-config --exists openssl 2>/dev/null && ! [ -f /usr/include/openssl/ssl.h ]; then
+      echo "OpenSSL headers not found; compiling OpenSSL from source..."
+      openssl_src_version="1.1.1w"
+      wget "https://www.openssl.org/source/openssl-${openssl_src_version}.tar.gz"
+      tar -xzf "openssl-${openssl_src_version}.tar.gz"
+      (
+        cd "openssl-${openssl_src_version}" || exit 1
+        ./config --prefix="$INSTALL_DIR" --openssldir="$INSTALL_DIR/ssl" \
+          shared no-tests
+        make -j"$(nproc)"
+        make install_sw
+      ) || echo -e "${YELLOW}Warning: OpenSSL compilation failed; git may lack HTTPS support.${NC}"
+      rm -rf "openssl-${openssl_src_version}" "openssl-${openssl_src_version}.tar.gz"
+    fi
+
+    # Step 2: compile curl if headers are missing (required by git for HTTPS)
+    if ! curl-config --libs >/dev/null 2>&1 && ! pkg-config --exists libcurl 2>/dev/null; then
+      echo "libcurl-dev not found; compiling curl from source for HTTPS support..."
+      curl_src_version="8.11.1"
+      wget "https://curl.se/download/curl-${curl_src_version}.tar.gz"
+      tar -xzf "curl-${curl_src_version}.tar.gz"
+      (
+        cd "curl-${curl_src_version}" || exit 1
+        LDFLAGS="$LOCAL_LDFLAGS" \
+        ./configure --prefix="$INSTALL_DIR" --with-openssl \
+          --without-libpsl --without-brotli --without-zstd --disable-ldap
+        make -j"$(nproc)" install
+      ) || echo -e "${YELLOW}Warning: curl compilation failed; git may lack HTTPS support.${NC}"
+      rm -rf "curl-${curl_src_version}" "curl-${curl_src_version}.tar.gz"
+      export PATH="$INSTALL_BIN_DIR:$PATH"
+    fi
+
+    # Step 3: compile git
     git_new_version="2.51.0"
     wget "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${git_new_version}.tar.gz"
     tar -xzf "git-${git_new_version}.tar.gz"
-    cd "git-${git_new_version}" || exit 1
-    ./configure --without-iconv --without-tcltk --prefix="$INSTALL_DIR"
-    make NO_GETTEXT=1 NO_TCLTK=1 install
-    cd ..
+    (
+      cd "git-${git_new_version}" || exit 1
+      LDFLAGS="$LOCAL_LDFLAGS" \
+      ./configure --without-tcltk --prefix="$INSTALL_DIR"
+      make NO_GETTEXT=1 NO_TCLTK=1 install
+    )
     rm -rf "git-${git_new_version}" "git-${git_new_version}.tar.gz"
-    echo "Git has been updated and installed to $INSTALL_BIN_DIR"
+    echo "Git ${git_new_version} installed to $INSTALL_BIN_DIR"
+
+    # Verify HTTPS support
+    if ! ls "$INSTALL_DIR/libexec/git-core/git-remote-https" >/dev/null 2>&1; then
+      echo -e "${YELLOW}Warning: git was compiled without HTTPS support.${NC}"
+      echo -e "${YELLOW}Re-run install-minimal.sh to retry.${NC}"
+    fi
   fi
 fi
 
