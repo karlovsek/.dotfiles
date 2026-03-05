@@ -1,6 +1,6 @@
 [user]
-    # email = 
-    # name = 
+	email = peter.karlovsek@gmail.com
+	name = Peter Karlovsek
 [core]
   autocrlf = false
 [column]
