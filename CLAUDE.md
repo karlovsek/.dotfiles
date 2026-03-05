@@ -21,76 +21,37 @@ The repository is organized by application/tool:
 - **eza/** - Modern `ls` replacement configuration
 - **zellij/** - Alternative terminal multiplexer configuration
 - **bin/** - Custom scripts and utilities
-  - **fuzzy-kill** - Interactive fuzzy process finder and killer (replaces rip)
+  - **fuzzy-kill** - Interactive fuzzy process finder and killer
+  - **watch_file_change.sh** - File watcher utility
 
-## Installation Commands
-
-### Full Installation
-
-```bash
-# Clone and run full installation
-git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install.sh
-```
-
-### Minimal Installation (Installs tools without requiring sudo)
+## Installation
 
 ```bash
-# Installs to ~/.local without requiring system packages
+# Clone and run installation (no sudo required)
 git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HOME/.dotfiles/install-minimal.sh
+
+# Force update all tools to latest versions
+bash $HOME/.dotfiles/install-minimal.sh --force-update
 ```
 
-## Common Development Commands
+`install-minimal.sh` installs everything to `$HOME/.local`, downloads tools from GitHub releases, creates symlinks, and installs Oh My ZSH and plugins. Tools: nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide, bat, eza, lazygit, lazydocker, zellij, fnm (for Node.js), gdu.
 
-### Neovim Plugin Management
+Set `GITHUB_PAT` env var to avoid GitHub API rate limits during installation.
 
-```bash
-# Open Neovim and manage plugins with LazyVim
-nvim
-# Inside Neovim: :Lazy to open plugin manager
-```
+## Symlink Management
 
-### Update Tools (for minimal installation)
+Configuration files are managed via symlinks. After modifying dotfiles:
 
 ```bash
-# Re-run the install script to update tools to latest versions
-bash $HOME/.dotfiles/install-minimal.sh
-```
-
-### Apply Configuration Changes
-
-```bash
-# After modifying dotfiles, recreate symlinks
-# For ZSH
 ln -sf $HOME/.dotfiles/zsh/.zshrc $HOME/.zshrc
 ln -sf $HOME/.dotfiles/zsh/.p10k.zsh $HOME/.p10k.zsh
-
-# For Neovim
 ln -sf $HOME/.dotfiles/nvim $HOME/.config/nvim
-
-# For Git
 ln -sf $HOME/.dotfiles/git/.gitconfig $HOME/.gitconfig
-
-# For Tmux
 ln -sf $HOME/.dotfiles/tmux/.tmux.conf $HOME/.tmux.conf
 ln -sf $HOME/.dotfiles/tmux/.tmux.conf.local $HOME/.tmux.conf.local
 ```
 
-## Installation Process Architecture
-
-### install-minimal.sh
-
-- Installs everything to `$HOME/.local` (no sudo required)
-- Downloads and installs the latest versions of development tools from GitHub releases
-- Tools installed: nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide, bat, eza, lazygit, lazydocker, zellij, fnm (for Node.js)
-- Creates symlinks for configuration files
-- Installs Oh My ZSH and plugins
-
-### install.sh  
-
-- Optionally installs additional TUI tools via separate repository
-- Sets ZSH as default shell (requires sudo)
-- Creates configuration symlinks
-- Lighter weight than install-minimal.sh
+Always modify files in the repository, not at their installed symlink locations.
 
 ## Neovim Configuration
 
@@ -138,12 +99,8 @@ fuzzy-kill --signal KILL     # Use SIGKILL
 fuzzy-kill --sort mem        # Sort by memory
 ```
 
-**Documentation:** See `fzf-htop/README.md` for complete guide
-
 ## Important Notes
 
-1. The minimal installation script (`install-minimal.sh`) is self-contained and doesn't require system package managers
-2. All tools are installed to `$HOME/.local` to avoid requiring root permissions
-3. Configuration files are managed via symlinks - modify files in the repository, not in their installed locations
-4. The repository tracks its own plugin/tool versions and updates them when the install scripts are re-run
+- Installing nvim plugins in `--headless` mode produces error output but doesn't break installation
+- The `nvim/` directory has a `.gitignore` that excludes lazy.nvim state/cache - plugin state is not committed
 
