@@ -541,6 +541,64 @@ else
   rm /tmp/gdu_linux_amd64_static.tgz
 fi
 
+# Guard: check if github.com/archive/{sha}.tar.gz returns 404.
+# Some networks/servers return 404 for this URL format; codeload.github.com
+# is the canonical equivalent and always works.
+# Uses a known tree-sitter-bash commit SHA as the probe target.
+_probe_sha="a06c2e4415e9bc0346c6b86d401879ffb44058f7"
+_probe_url="https://github.com/tree-sitter/tree-sitter-bash/archive/${_probe_sha}.tar.gz"
+if ! curl -sf "${GITHUB_AUTH_ARGS[@]}" --head "$_probe_url" >/dev/null 2>&1; then
+  echo "GitHub archive URLs return 404 on this system; installing curl wrapper..."
+  if [ ! -f "$INSTALL_BIN_DIR/curl-real" ]; then
+    if [ -f "$INSTALL_BIN_DIR/curl" ]; then
+      mv "$INSTALL_BIN_DIR/curl" "$INSTALL_BIN_DIR/curl-real"
+    else
+      ln -sf "$(command -v curl)" "$INSTALL_BIN_DIR/curl-real"
+    fi
+  fi
+  cat > "$INSTALL_BIN_DIR/curl" << 'CURL_WRAPPER'
+#!/bin/bash
+# Rewrite github.com/{owner}/{repo}/archive/{sha}.tar.gz
+# to codeload.github.com/{owner}/{repo}/tar.gz/{sha}
+ARGS=()
+for arg in "$@"; do
+  if [[ "$arg" =~ ^https://github\.com/([^/]+)/([^/]+)/archive/([^/]+)\.tar\.gz$ ]]; then
+    ARGS+=("https://codeload.github.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/tar.gz/${BASH_REMATCH[3]}")
+  else
+    ARGS+=("$arg")
+  fi
+done
+exec "$(dirname "$0")/curl-real" "${ARGS[@]}"
+CURL_WRAPPER
+  chmod +x "$INSTALL_BIN_DIR/curl"
+fi
+
+# Guard: check if setting file timestamps is restricted (container environments).
+# tar extractions fail with "Cannot utime: Operation not permitted" when the
+# kernel disallows utime calls, requiring --touch to skip timestamp restoration.
+_utime_test=$(mktemp)
+if ! touch -t 200001010000 "$_utime_test" 2>/dev/null; then
+  echo "File timestamp changes restricted on this system; installing tar wrapper..."
+  cat > "$INSTALL_BIN_DIR/tar" << 'TAR_WRAPPER'
+#!/bin/bash
+ARGS=()
+is_extract=false
+has_touch=false
+for arg in "$@"; do
+  case "$arg" in
+    -x*|--extract|--get) is_extract=true ;;
+    --touch|-m) has_touch=true ;;
+  esac
+  [[ "$arg" =~ ^-[a-zA-Z]*x[a-zA-Z]* ]] && is_extract=true
+  ARGS+=("$arg")
+done
+[[ "$is_extract" == "true" && "$has_touch" == "false" ]] && ARGS+=("--touch")
+exec /usr/bin/tar "${ARGS[@]}"
+TAR_WRAPPER
+  chmod +x "$INSTALL_BIN_DIR/tar"
+fi
+rm -f "$_utime_test"
+
 # Latest lazygit needs git >= 2.32; compile from source if needed
 git_version=$(git --version | awk '{print $3}')
 if [ "$(printf '%s\n' "2.32" "$git_version" | sort -V | head -n1)" = "$git_version" ] && [ "$git_version" != "2.32" ]; then
