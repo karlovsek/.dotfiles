@@ -751,6 +751,14 @@ else
   fi
 fi
 
+# Install npm packages required by nvim mason (markdown + treesitter tooling)
+if which npm >/dev/null 2>&1; then
+  echo -e "${GREEN}Installing npm packages for nvim (tree-sitter-cli, markdownlint-cli2, markdown-toc)...${NC}"
+  npm install -g tree-sitter-cli markdownlint-cli2 markdown-toc
+else
+  echo -e "${YELLOW}npm not found, skipping tree-sitter-cli/markdownlint-cli2/markdown-toc${NC}"
+fi
+
 echo -ne "\nCreate Vim symlinks? (Y/n): "
 read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
@@ -782,6 +790,11 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   mkdir -p $HOME/.config
   ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim
   echo -e "\t${GREEN}Symlinks created! ${NC}"
+
+  # Install nvim plugins via lazy.nvim
+  echo -e "${GREEN}Installing nvim plugins (this may take a moment)...${NC}"
+  nvim --headless -c "Lazy! sync" -c "qa" 2>&1 || true
+  echo -e "\t${GREEN}Nvim plugins installed! ${NC}"
 else
   echo "You can create NeoVim symlinks as:"
   echo "ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
