@@ -1,6 +1,52 @@
+ARG GIT_PREFIX=/root/.local
+ARG GIT_VERSION=2.51.0
+
+FROM alpine:3.19 AS git-builder
+ARG GIT_PREFIX
+ARG GIT_VERSION
+
+RUN apk add --no-cache \
+    make gcc \
+    musl-dev \
+    openssl-dev openssl-libs-static \
+    zlib-dev zlib-static \
+    ca-certificates wget perl
+
+# Build minimal static libcurl (HTTPS only: OpenSSL + zlib, no HTTP/2/brotli/psl)
+RUN CURL_VERSION="8.12.1" \
+ && wget -q "https://curl.se/download/curl-${CURL_VERSION}.tar.gz" -O /tmp/curl.tar.gz \
+ && tar -xzf /tmp/curl.tar.gz -C /tmp \
+ && cd /tmp/curl-${CURL_VERSION} \
+ && ./configure \
+      --prefix=/opt/curl \
+      --disable-shared --enable-static \
+      --with-openssl \
+      --without-nghttp2 --without-brotli --without-libpsl \
+      --without-libidn2 --without-librtmp --without-libssh2 \
+      --without-zstd \
+      --disable-ldap --disable-rtsp \
+      --disable-ftp --disable-smtp --disable-pop3 --disable-imap --disable-dict \
+ && make -j$(nproc) install \
+ && rm -rf /tmp/curl-${CURL_VERSION} /tmp/curl.tar.gz
+
+# Build git 2.51.0 statically against our minimal libcurl (skip configure; drive Makefile directly)
+RUN wget -q "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.gz" \
+         -O /tmp/git.tar.gz \
+ && tar -xzf /tmp/git.tar.gz -C /tmp \
+ && cd /tmp/git-${GIT_VERSION} \
+ && CURL_STATIC_LIBS=$(/opt/curl/bin/curl-config --static-libs) \
+ && make NO_GETTEXT=1 NO_TCLTK=1 NO_ICONV=1 NO_EXPAT=1 NO_REGEX=NeedsStartEnd \
+         CURL_CONFIG=/opt/curl/bin/curl-config \
+         CFLAGS="-I/opt/curl/include" \
+         LDFLAGS="-static -L/opt/curl/lib" \
+         CURL_LIBCURL="$CURL_STATIC_LIBS" \
+         prefix="${GIT_PREFIX}" install \
+ && strip "${GIT_PREFIX}/bin/git"
+
 FROM rockylinux:8.5
 
 ENV HOME=/root
+ENV GIT_PREFIX=${HOME}/.local
 
 RUN dnf -y upgrade && \
     dnf install -y \
@@ -17,12 +63,19 @@ RUN dnf -y upgrade && \
     which \
     && dnf clean all
 
+# Alpine's libcurl expects CA certs at /etc/ssl/certs/ca-certificates.crt; Rocky keeps them elsewhere
+RUN mkdir -p /etc/ssl/certs \
+ && ln -sf /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
+
 RUN git clone --depth 1 https://github.com/karlovsek/.dotfiles.git /root/.dotfiles
 
 WORKDIR /tmp
 
 ARG GITHUB_PAT
 RUN printf '\nn\n\n\n\n\n' | GITHUB_PAT="${GITHUB_PAT}" bash /root/.dotfiles/install-minimal.sh || true
+
+COPY --from=git-builder ${GIT_PREFIX}/bin/git ${GIT_PREFIX}/bin/git
+COPY --from=git-builder ${GIT_PREFIX}/libexec/git-core ${GIT_PREFIX}/libexec/git-core
 
 COPY test.sh /root/test.sh
 CMD ["/bin/bash", "/root/test.sh"]

@@ -56,6 +56,8 @@ check "lazydocker"  lazydocker --version
 check "zellij"      zellij --version
 check "fuzzy-kill executable"  test -x "$HOME/.local/bin/fuzzy-kill"
 check "fk executable"          test -x "$HOME/.local/bin/fk"
+check "git statically linked"  bash -c "ldd $HOME/.local/bin/git 2>&1 | grep -qE '(statically linked|not a dynamic)'"
+check "git https"              bash -c "$HOME/.local/bin/git ls-remote --heads https://github.com/karlovsek/.dotfiles.git"
 
 echo ""
 echo "=== Symlink tests ==="
