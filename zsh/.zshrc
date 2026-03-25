@@ -387,4 +387,4 @@ fi
 # stop pasted text being highlighted
 zle_highlight+=('paste:none')
 
-
+alias be='mkdir -p build && cmake -S . -B build > /dev/null && cmake --build build > /dev/null && ll -f build | grep -v --ignore-case "make"'
