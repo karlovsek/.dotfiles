@@ -34,25 +34,25 @@ local function paste()
 end
 
 local function is_windows()
-    return vim.loop.os_uname().sysname:find("Windows") ~= nil
+  return vim.loop.os_uname().sysname:find("Windows") ~= nil
 end
 
 if is_windows() then
-    -- On Windows, we typically want the native clipboard integration
-    -- This allows Neovim to use win32yank or the system provider automatically
-    vim.opt.clipboard = "unnamedplus"
+  -- On Windows, we typically want the native clipboard integration
+  -- This allows Neovim to use win32yank or the system provider automatically
+  vim.opt.clipboard = "unnamedplus"
 else
-    -- On Linux/Remote, use your OSC 52 configuration
-    vim.g.clipboard = {
-        name = "OSC 52",
-        copy = {
-            ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-            ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-            [""] = require("vim.ui.clipboard.osc52").copy(""),
-        },
-        paste = {
-            ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-            ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
-        },
-    }
+  -- On Linux/Remote, use your OSC 52 configuration
+  vim.g.clipboard = {
+    name = "OSC 52",
+    copy = {
+      ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+      ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+      [""] = require("vim.ui.clipboard.osc52").copy(""),
+    },
+    paste = {
+      ["+"] = paste,
+      ["*"] = paste,
+    },
+  }
 end
