@@ -805,7 +805,7 @@ read answer
 answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
 if [[ "$answer" == "y" || -z "$answer" ]]; then
   mkdir -p $HOME/.config
-  ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim
+  ln -sfn ${SCRIPT_DIR}/nvim $HOME/.config/nvim
   echo -e "\t${GREEN}Symlinks created! ${NC}"
 
   # Install nvim plugins via lazy.nvim
@@ -814,7 +814,7 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   echo -e "\t${GREEN}Nvim plugins installed! ${NC}"
 else
   echo "You can create NeoVim symlinks as:"
-  echo "ln -sf ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
+  echo "ln -sfn ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
 echo -ne "\nCreate Git config symlinks? (Y/n): "
@@ -836,11 +836,11 @@ if which zellij >/dev/null 2>&1; then
   answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
   if [[ "$answer" == "y" || -z "$answer" ]]; then
     mkdir -p $HOME/.config
-    ln -sf ${SCRIPT_DIR}/zellij $HOME/.config/zellij
+    ln -sfn ${SCRIPT_DIR}/zellij $HOME/.config/zellij
     echo -e "\t${GREEN}Symlinks created! ${NC}"
   else
     echo "You can create Zellij symlinks as:"
-    echo "ln -sf ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
+    echo "ln -sfn ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
   fi
 fi
 
