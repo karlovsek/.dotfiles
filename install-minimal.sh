@@ -338,7 +338,24 @@ else
 fi
 
 if which fzf >/dev/null 2>&1; then
-  echo -e "${GREEN}fzf exists ($(fzf --version | awk '{print $1}')) ${NC}"
+  current_version=$(fzf --version | awk '{print $1}')
+  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]}" "https://api.github.com/repos/junegunn/fzf/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^v//')
+
+  echo -e "${GREEN}fzf exists (v${current_version}, latest: v${latest_version})${NC}"
+
+  if ! compare_versions "$latest_version" "$current_version"; then
+    if prompt_update "fzf" "$current_version" "$latest_version"; then
+      echo "Updating fzf to ${latest_version}..."
+      if [ -d "$INSTALL_DIR/fzf" ]; then
+        cd $INSTALL_DIR/fzf && git fetch --depth 1 origin && git checkout FETCH_HEAD && cd -
+      else
+        rm -rf $INSTALL_DIR/fzf
+        git clone -q --depth 1 https://github.com/junegunn/fzf.git $INSTALL_DIR/fzf
+      fi
+      $INSTALL_DIR/fzf/install --key-bindings --completion --update-rc
+      echo -e "${GREEN}fzf updated successfully!${NC}"
+    fi
+  fi
 else
   echo -e "${YELLOW}Installing fzf ${NC}"
   git clone -q --depth 1 https://github.com/junegunn/fzf.git $INSTALL_DIR/fzf
