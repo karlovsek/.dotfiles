@@ -5,6 +5,8 @@
 if vim.g.neovide then
   -- Put anything you want to happen only in Neovide here
   vim.o.guifont = "DejaVuSansM Nerd Font:h11" -- text below applies for VimScript
+  vim.o.background = "dark"
+  vim.g.neovide_theme = 'dark'
 end
 
 -- Disable relative numbers
