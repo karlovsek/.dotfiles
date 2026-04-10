@@ -777,6 +777,9 @@ fi
 _utime_test=$(mktemp)
 if ! touch -t 200001010000 "$_utime_test" 2>/dev/null; then
   echo "File timestamp changes restricted on this system; installing tar wrapper..."
+  # Export TAR_OPTIONS so ALL tar invocations (including those from nvim-treesitter
+  # and other tools that call tar internally) automatically get --touch.
+  export TAR_OPTIONS="--no-same-owner --touch"
   cat > "$INSTALL_BIN_DIR/tar" << 'TAR_WRAPPER'
 #!/bin/bash
 ARGS=()
