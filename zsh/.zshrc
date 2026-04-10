@@ -32,9 +32,12 @@ fi
 #
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.zsh_history
-HISTSIZE=5000
-SAVEHIST=5000
+HISTSIZE=50000
+SAVEHIST=50000
 setopt autocd
+setopt HIST_IGNORE_ALL_DUPS
+setopt SHARE_HISTORY
+setopt HIST_REDUCE_BLANKS
 bindkey -v
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
@@ -47,7 +50,7 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-ulimit -c unlimited 
+ulimit -c unlimited  # Enable core dumps for debugging (may use disk space on crashes)
 
 # set Vim/NeoVim as pager
 
@@ -222,7 +225,7 @@ else
   alias lg='echo lazygit not installed'
 fi
 
-if (( $+commands[lazygit] ))
+if (( $+commands[lazydocker] ))
 then
   compdef _gnu_generic lazydocker
   alias ldoc='lazydocker'
@@ -254,17 +257,14 @@ fi
 if (( $+commands[nvim] ))
 then
   export EDITOR=nvim
+  export VISUAL=nvim
   alias vi='nvim'
 fi
 
 if (( $+commands[fd] ))
 then
-  alias fd="fd --follow"
-fi
-
-if (( $+commands[fd] ))
-then
   compdef _gnu_generic fd
+  alias fd="fd --follow"
 fi
 
 if (( $+commands[fzf] ))
@@ -309,8 +309,6 @@ fi
 
 if (( $+commands[bit] ))
 then
-  autoload -U +X bashcompinit && bashcompinit
-  complete -o nospace -C /usr/local/bin/bit bit
   autoload -U +X bashcompinit && bashcompinit
   complete -o nospace -C /usr/local/bin/bit bit
 fi
@@ -375,7 +373,8 @@ if [ -d "$FNM_PATH" ]; then
   eval "$(fnm env --shell zsh)"
 fi
 
-export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
+# .local/bin is already prepended at the top of this file
+export PATH="$PATH:$HOME/.cargo/bin"
 
 if [[ ! -z $(uname -a | grep "microsoft-standard-WSL2") ]]
 then
