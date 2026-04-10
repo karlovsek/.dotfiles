@@ -250,8 +250,10 @@ fix_treesitter_glibc() {
   fi
 }
 
-# Ensure tree-sitter-cli is installed via mason, then apply GLIBC fix if needed.
-# Called after Lazy sync since mason installs happen asynchronously during sync.
+# Ensure tree-sitter-cli is available and apply GLIBC fix if needed.
+# With tree-sitter-manager.nvim, parsers are compiled using the tree-sitter CLI
+# from PATH (installed via npm). On old GLIBC systems, we also patch mason's copy
+# if it exists (for backward compat with nvim-treesitter setups).
 ensure_treesitter_glibc_fix() {
   local glibc_version
   glibc_version=$(get_glibc_version)
@@ -263,14 +265,12 @@ ensure_treesitter_glibc_fix() {
 
   local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
 
-  # If mason hasn't installed tree-sitter-cli yet, trigger it explicitly and wait
-  if [ ! -d "$mason_treesitter_dir" ]; then
-    echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29: ensuring mason installs tree-sitter-cli...${NC}"
-    nvim --headless +"lua require('lazy').load({ plugins = { 'mason.nvim' } })" +"MasonInstall tree-sitter-cli" +"sleep 15" +"qa" 2>&1 || true
+  # If mason tree-sitter-cli dir exists, apply the GLIBC compat fix
+  if [ -d "$mason_treesitter_dir" ]; then
+    fix_treesitter_glibc
+  else
+    echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29: mason tree-sitter-cli not present (tree-sitter-manager uses npm CLI instead)${NC}"
   fi
-
-  # Now apply the fix
-  fix_treesitter_glibc
 }
 
 ###############################################################################
