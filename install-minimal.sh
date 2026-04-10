@@ -355,7 +355,7 @@ if command -v 7zz >/dev/null 2>&1; then
         echo -e "${YELLOW}[DRY RUN] Would update 7zip to ${SEVENZIP_VERSION}${NC}"
       else
         local_version_no_dot=$(echo "$SEVENZIP_VERSION" | tr -d '.')
-        curl -OL --output-dir "$SCRATCH_DIR" "https://www.7-zip.org/a/7z${local_version_no_dot}-linux-x64.tar.xz"
+        curl -fL -o "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" "https://www.7-zip.org/a/7z${local_version_no_dot}-linux-x64.tar.xz"
         tar -xf "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" -C "$SCRATCH_DIR" 7zz
         chmod +x "$SCRATCH_DIR/7zz" && mv "$SCRATCH_DIR/7zz" "$INSTALL_BIN_DIR"
         echo -e "${GREEN}7zip updated successfully!${NC}"
@@ -370,7 +370,7 @@ else
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install 7zip ${SEVENZIP_VERSION}${NC}"
   else
-    if ! curl -OL --output-dir "$SCRATCH_DIR" "https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz"; then
+    if ! curl -fL -o "$SCRATCH_DIR/7z${version_no_dot}-linux-x64.tar.xz" "https://www.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz"; then
       echo -e "${RED}Failed to download 7zip${NC}"
       exit 1
     fi
@@ -401,7 +401,7 @@ if command -v nvim >/dev/null 2>&1; then
         echo -e "${YELLOW}[DRY RUN] Would update NeoVim to ${latest_version}${NC}"
       else
         nvim_archive=nvim-linux-x86_64.tar.gz
-        curl -OL --output-dir "$SCRATCH_DIR" "https://github.com/neovim/neovim-releases/releases/download/v${latest_version}/${nvim_archive}"
+        curl -fL -o "$SCRATCH_DIR/${nvim_archive}" "https://github.com/neovim/neovim-releases/releases/download/v${latest_version}/${nvim_archive}"
         tar -xf "$SCRATCH_DIR/${nvim_archive}" --strip-components=1 -C "$INSTALL_DIR"
         echo -e "${GREEN}NeoVim updated successfully!${NC}"
         fix_treesitter_glibc
@@ -421,7 +421,7 @@ else
     echo -e "${YELLOW}[DRY RUN] Would install NeoVim ${version}${NC}"
   else
     nvim_archive=nvim-linux-x86_64.tar.gz
-    if ! curl -OL --output-dir "$SCRATCH_DIR" "https://github.com/neovim/neovim-releases/releases/download/v${version}/${nvim_archive}"; then
+    if ! curl -fL -o "$SCRATCH_DIR/${nvim_archive}" "https://github.com/neovim/neovim-releases/releases/download/v${version}/${nvim_archive}"; then
       echo -e "${RED}Failed to download NeoVim${NC}"
       exit 1
     fi
@@ -536,7 +536,7 @@ if command -v htop >/dev/null 2>&1; then
       if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would update htop to ${latest_version}${NC}"
       else
-        curl --progress-bar -OL --output-dir "$SCRATCH_DIR" "https://github.com/htop-dev/htop/releases/download/${latest_version}/htop-${latest_version}.tar.xz"
+        curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${latest_version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${latest_version}/htop-${latest_version}.tar.xz"
         (
           cd "$SCRATCH_DIR"
           tar -xf "htop-${latest_version}.tar.xz"
@@ -554,7 +554,7 @@ else
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install htop ${version}${NC}"
   else
-    curl --progress-bar -OL --output-dir "$SCRATCH_DIR" "https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz"
+    curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz"
     (
       cd "$SCRATCH_DIR"
       tar -xf "htop-${version}.tar.xz"
@@ -573,7 +573,7 @@ fi
 #   if ! compare_versions "$latest_version" "$current_version"; then
 #     if prompt_update "btop" "$current_version" "$latest_version"; then
 #       echo "Updating btop to ${latest_version}..."
-#       curl --progress-bar -OL --output-dir "$SCRATCH_DIR" "https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz"
+#       curl --progress-bar -fL -o "$SCRATCH_DIR/btop-x86_64-linux-musl.tbz" "https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz"
 #       (
 #         cd "$SCRATCH_DIR"
 #         tar -xf btop-x86_64-linux-musl.tbz
@@ -587,7 +587,7 @@ fi
 #   version=$(get_latest_version "aristocratos/btop") || true
 #   echo -e "${YELLOW}Installing btop ${version}${NC}"
 #
-#   curl --progress-bar -OL --output-dir "$SCRATCH_DIR" "https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz"
+#   curl --progress-bar -fL -o "$SCRATCH_DIR/btop-x86_64-linux-musl.tbz" "https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz"
 #   (
 #     cd "$SCRATCH_DIR"
 #     tar -xf btop-x86_64-linux-musl.tbz
@@ -605,7 +605,7 @@ fi
 #   if ! compare_versions "$latest_version" "$current_version"; then
 #     if prompt_update "bfs" "$current_version" "$latest_version"; then
 #       echo "Updating bfs to ${latest_version}..."
-#       curl --progress-bar -OL --output-dir "$SCRATCH_DIR" "https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip"
+#       curl --progress-bar -fL -o "$SCRATCH_DIR/${latest_version}.zip" "https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip"
 #       (
 #         cd "$SCRATCH_DIR"
 #         7zz x "${latest_version}.zip"
@@ -621,7 +621,7 @@ fi
 #   version=$(get_latest_version "tavianator/bfs" "") || true
 #   echo -e "${YELLOW}Installing bfs ${version}${NC}"
 #
-#   curl --progress-bar -OL --output-dir "$SCRATCH_DIR" "https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip"
+#   curl --progress-bar -fL -o "$SCRATCH_DIR/${version}.zip" "https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip"
 #   (
 #     cd "$SCRATCH_DIR"
 #     7zz x "${version}.zip"
@@ -643,7 +643,7 @@ if command -v broot >/dev/null 2>&1; then
     if [ "$DRY_RUN" = true ]; then
       echo -e "${YELLOW}[DRY RUN] Would update broot${NC}"
     else
-      curl --progress-bar -OL --output-dir "$SCRATCH_DIR" https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
+      curl --progress-bar -fL -o "$SCRATCH_DIR/broot" https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
       chmod +x "$SCRATCH_DIR/broot"
       mv "$SCRATCH_DIR/broot" "$INSTALL_BIN_DIR"
       echo -e "${GREEN}broot updated to $(broot --version | awk '{print $2}')${NC}"
@@ -654,7 +654,7 @@ else
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install broot${NC}"
   else
-    curl --progress-bar -OL --output-dir "$SCRATCH_DIR" https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
+    curl --progress-bar -fL -o "$SCRATCH_DIR/broot" https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
     chmod +x "$SCRATCH_DIR/broot"
     mv "$SCRATCH_DIR/broot" "$INSTALL_BIN_DIR"
     broot --version
