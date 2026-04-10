@@ -1,0 +1,101 @@
+###############################################################################
+# Dockerfile.test-rocky
+#
+# Validates install-minimal.sh on Rocky Linux 8 (GLIBC 2.28).
+# This specifically tests the tree-sitter GLIBC < 2.29 compatibility fix.
+#
+# Build:
+#   docker build --build-arg GITHUB_PAT="$GITHUB_PAT" \
+#     -f podman/Dockerfile.test-rocky -t dotfiles-test-rocky .
+#
+# Run:
+#   docker run --rm dotfiles-test-rocky
+###############################################################################
+
+ARG GIT_PREFIX=/home/testuser/.local
+ARG GIT_VERSION=2.51.0
+
+# ---- Stage 1: build a static git -------------------------------------------
+FROM alpine:3.19 AS git-builder
+ARG GIT_PREFIX
+ARG GIT_VERSION
+
+RUN apk add --no-cache \
+    make gcc musl-dev \
+    openssl-dev openssl-libs-static \
+    zlib-dev zlib-static \
+    ca-certificates wget perl
+
+RUN CURL_VERSION="8.12.1" \
+ && wget -q "https://curl.se/download/curl-${CURL_VERSION}.tar.gz" -O /tmp/curl.tar.gz \
+ && tar -xzf /tmp/curl.tar.gz -C /tmp \
+ && cd /tmp/curl-${CURL_VERSION} \
+ && ./configure \
+      --prefix=/opt/curl \
+      --disable-shared --enable-static \
+      --with-openssl \
+      --without-nghttp2 --without-brotli --without-libpsl \
+      --without-libidn2 --without-librtmp --without-libssh2 \
+      --without-zstd \
+      --disable-ldap --disable-rtsp \
+      --disable-ftp --disable-smtp --disable-pop3 --disable-imap --disable-dict \
+ && make -j$(nproc) install \
+ && rm -rf /tmp/curl-${CURL_VERSION} /tmp/curl.tar.gz
+
+RUN wget -q "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.gz" \
+         -O /tmp/git.tar.gz \
+ && tar -xzf /tmp/git.tar.gz -C /tmp \
+ && cd /tmp/git-${GIT_VERSION} \
+ && CURL_STATIC_LIBS=$(/opt/curl/bin/curl-config --static-libs) \
+ && make NO_GETTEXT=1 NO_TCLTK=1 NO_ICONV=1 NO_EXPAT=1 NO_REGEX=NeedsStartEnd \
+         CURL_CONFIG=/opt/curl/bin/curl-config \
+         CFLAGS="-I/opt/curl/include" \
+         LDFLAGS="-static -L/opt/curl/lib" \
+         CURL_LIBCURL="$CURL_STATIC_LIBS" \
+         prefix="${GIT_PREFIX}" install \
+ && strip "${GIT_PREFIX}/bin/git"
+
+# ---- Stage 2: Rocky Linux 8 (GLIBC 2.28) -----------------------------------
+FROM rockylinux:8.5
+
+ENV HOME=/home/testuser
+
+RUN dnf -y upgrade && \
+    dnf install -y \
+    curl \
+    git \
+    make \
+    gcc \
+    autoconf \
+    automake \
+    ncurses-devel \
+    xz \
+    unzip \
+    findutils \
+    which \
+    && dnf clean all
+
+# Alpine's libcurl expects CA certs at /etc/ssl/certs/ca-certificates.crt
+RUN mkdir -p /etc/ssl/certs \
+ && ln -sf /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt
+
+RUN useradd -m -s /bin/bash testuser
+USER testuser
+WORKDIR /home/testuser
+
+COPY --chown=testuser:testuser . /home/testuser/.dotfiles
+
+ARG GIT_PREFIX
+COPY --from=git-builder --chown=testuser:testuser ${GIT_PREFIX}/bin/git ${GIT_PREFIX}/bin/git
+COPY --from=git-builder --chown=testuser:testuser ${GIT_PREFIX}/libexec/git-core ${GIT_PREFIX}/libexec/git-core
+
+RUN cd /home/testuser/.dotfiles && git init && git add -A && git commit -m "test snapshot" --allow-empty
+
+ARG GITHUB_PAT
+RUN export PATH="$HOME/.local/bin:$PATH" \
+ && printf '\ny\ny\ny\ny\ny\n' | GITHUB_PAT="${GITHUB_PAT}" bash /home/testuser/.dotfiles/install-minimal.sh --force-update 2>&1 || true
+
+COPY --chown=testuser:testuser podman/validate.sh /home/testuser/validate.sh
+RUN chmod +x /home/testuser/validate.sh
+
+CMD ["/bin/bash", "/home/testuser/validate.sh"]
