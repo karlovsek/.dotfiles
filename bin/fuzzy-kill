@@ -257,7 +257,7 @@ get_processes() {
         # Print formatted line
         printf "%7s │ %-12s │ %s │ %9s │ %s\n", pid, user, cpu_colored, mem_colored, cmd
     }
-    ' 2>/dev/null | column -t -s'│' 2>/dev/null || true
+    ' 2>/dev/null | (column -t -s'│' 2>/dev/null || cat)
 }
 
 # FZF selector
