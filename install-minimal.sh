@@ -266,7 +266,7 @@ ensure_treesitter_glibc_fix() {
   # If mason hasn't installed tree-sitter-cli yet, trigger it explicitly and wait
   if [ ! -d "$mason_treesitter_dir" ]; then
     echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29: ensuring mason installs tree-sitter-cli...${NC}"
-    nvim --headless -c "MasonInstall tree-sitter-cli" -c "sleep 15" -c "qa" 2>&1 || true
+    nvim --headless +"lua require('lazy').load({ plugins = { 'mason.nvim' } })" +"MasonInstall tree-sitter-cli" +"sleep 15" +"qa" 2>&1 || true
   fi
 
   # Now apply the fix
