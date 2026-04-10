@@ -38,6 +38,48 @@ bash $HOME/.dotfiles/install-minimal.sh --force-update
 
 Set `GITHUB_PAT` env var to avoid GitHub API rate limits during installation.
 
+Other flags:
+```bash
+bash install-minimal.sh --dry-run        # Preview what would be installed without making changes
+bash install-minimal.sh --force-update   # Re-download all tools to their latest versions
+```
+
+## Git from Source (with HTTPS Support)
+
+If the system git is below v2.32 (required by lazygit), `install-minimal.sh` offers to compile git from source with full HTTPS support. This is a 3-step dependency chain, all installed to `~/.local` (no root required):
+
+1. **OpenSSL** (only if system headers are missing) — Downloads OpenSSL 1.1.1w and compiles it so that curl and git can link against it for TLS.
+2. **libcurl** (only if `curl-config` / `pkg-config libcurl` are missing) — Downloads curl 8.11.1 and compiles it with `--with-openssl` pointing to the OpenSSL from step 1.
+3. **git** — Downloads git 2.51.0 from kernel.org and compiles it against the above. The result includes `git-remote-https` in `~/.local/libexec/git-core/`, enabling clone/push/fetch over HTTPS.
+
+After compilation, the script verifies that `git-remote-https` exists. If any step fails, a warning is printed and the system git is kept as a fallback.
+
+For environments where compilation isn't possible (no `make`/`gcc`), the Docker test infrastructure pre-builds a statically-linked git in an Alpine stage and copies it into the test container — see `podman/Dockerfile.test-ubuntu` for that approach.
+
+## Testing with Docker/Podman
+
+The `podman/` directory contains a full CI-style validation suite:
+
+```bash
+./podman/run-tests.sh              # Run all tests (Ubuntu 22.04 + Rocky Linux 8)
+./podman/run-tests.sh ubuntu       # Run only Ubuntu test
+./podman/run-tests.sh rocky        # Run only Rocky test (GLIBC 2.28, tests tree-sitter compat)
+```
+
+Both `docker` and `podman` are auto-detected. Set `GITHUB_PAT` to avoid rate limits:
+```bash
+GITHUB_PAT=ghp_xxx ./podman/run-tests.sh
+```
+
+The test suite (`podman/validate.sh`) covers 11 areas: binary existence, minimum version checks, symlinks, install log, ZSH plugins, nvim Lazy loading, git HTTPS support, GLIBC/tree-sitter compatibility, dry-run mode, fuzzy-kill, and git repo status.
+
+To build and run a single container manually:
+```bash
+docker build --build-arg GITHUB_PAT="$GITHUB_PAT" \
+  -f podman/Dockerfile.test-ubuntu -t dotfiles-test-ubuntu .
+docker run --rm dotfiles-test-ubuntu
+```
+
 ## Symlink Management
 
 Configuration files are managed via symlinks. After modifying dotfiles:

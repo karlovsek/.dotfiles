@@ -1,4 +1,59 @@
 #!/bin/bash
+###############################################################################
+# install-minimal.sh — Bootstrap a complete Linux dev environment
+#
+# Usage:
+#   bash install-minimal.sh                  # Interactive install
+#   bash install-minimal.sh --force-update   # Re-download all tools to latest
+#   bash install-minimal.sh --dry-run        # Preview without making changes
+#
+# Environment:
+#   GITHUB_PAT=ghp_xxx  Set a GitHub personal access token to avoid API
+#                        rate limits when fetching latest release versions.
+#
+# What it installs (all to ~/.local, no sudo required):
+#   nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide,
+#   bat, eza, gdu, lazygit, lazydocker, zellij, fnm (Node.js), jq, 7zip, gah
+#
+# Git from source (with HTTPS support):
+#   If the system git is below v2.32 (required by lazygit), the script offers
+#   to compile git from source. This is a 3-step process:
+#
+#     Step 1 — OpenSSL (if headers are missing)
+#       Downloads OpenSSL 1.1.1w and compiles it into ~/.local so that curl
+#       and git can link against it for TLS/HTTPS support.
+#
+#     Step 2 — libcurl (if curl-config / pkg-config libcurl are missing)
+#       Downloads curl 8.11.1 and compiles it with --with-openssl pointing
+#       to the OpenSSL built in Step 1. This gives git a working HTTP client.
+#
+#     Step 3 — git itself
+#       Downloads git 2.51.0 from kernel.org and compiles it with the curl
+#       and OpenSSL from above. The result includes git-remote-https in
+#       ~/.local/libexec/git-core/, enabling clone/push over HTTPS.
+#
+#   After compilation, the script verifies that git-remote-https exists.
+#   If any step fails, a warning is printed and the system git is kept.
+#
+# Testing:
+#   The podman/ directory contains Docker-based validation for this script.
+#   Both Ubuntu 22.04 and Rocky Linux 8 (GLIBC 2.28) are tested:
+#
+#     ./podman/run-tests.sh              # Run all tests (Ubuntu + Rocky)
+#     ./podman/run-tests.sh ubuntu       # Run only Ubuntu test
+#     ./podman/run-tests.sh rocky        # Run only Rocky test
+#
+#   Supports both docker and podman (auto-detected). Set GITHUB_PAT to avoid
+#   rate limits during builds. See podman/validate.sh for the full test suite
+#   (11 sections: binaries, versions, symlinks, logs, ZSH plugins, nvim Lazy,
+#   git HTTPS, GLIBC tree-sitter compat, dry-run, fuzzy-kill, git status).
+#
+#   To build and run a single test container manually:
+#     docker build --build-arg GITHUB_PAT="$GITHUB_PAT" \
+#       -f podman/Dockerfile.test-ubuntu -t dotfiles-test-ubuntu .
+#     docker run --rm dotfiles-test-ubuntu
+#
+###############################################################################
 set -e
 
 INSTALL_DIR="$HOME/.local"
@@ -744,6 +799,14 @@ rm -f "$_utime_test"
 
 ###############################################################################
 # Git compilation (if lazygit needs git >= 2.32)
+#
+# Builds git from source with HTTPS support via a 3-step dependency chain:
+#   1. OpenSSL  (only if system headers are missing)
+#   2. libcurl  (only if curl-config / pkg-config libcurl are missing)
+#   3. git      (compiled against the above, producing git-remote-https)
+#
+# Everything is installed to $INSTALL_DIR (~/.local) — no root required.
+# See the file header for a detailed explanation.
 ###############################################################################
 
 git_version=$(git --version | awk '{print $3}')
