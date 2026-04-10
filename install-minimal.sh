@@ -222,55 +222,57 @@ get_glibc_version() {
   ldd --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1
 }
 
-# Fix tree-sitter for systems with GLIBC < 2.29
-# The pre-built tree-sitter binary requires GLIBC >= 2.29. On older systems
-# (e.g. RHEL 8 / CentOS 8 with GLIBC 2.28), we replace it with a compatible build.
+# Fix tree-sitter for systems with old GLIBC.
+# The pre-built tree-sitter binaries (from npm and mason) require GLIBC >= 2.34.
+# On older systems (e.g. RHEL 8 / Rocky 8 with GLIBC 2.28), we replace them with
+# a statically-linked compatible build stored in the repo as tree-sitter-glibc_2.28.
+#
+# This installs the compat binary to:
+#   1. ~/.local/bin/tree-sitter         — so tree-sitter-manager.nvim finds it on PATH
+#   2. npm's tree-sitter-cli binary     — so npm-based tools also work
+#   3. mason's tree-sitter-linux-x64    — backward compat if mason dir exists
 fix_treesitter_glibc() {
   local glibc_version
   glibc_version=$(get_glibc_version)
 
-  # compare_versions returns 0 (true) when $1 <= $2, so this triggers when glibc < 2.29
-  if ! compare_versions "2.29" "$glibc_version"; then
-    local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
-    local compat_binary="${SCRIPT_DIR}/tree-sitter-glibc_2.28"
-
-    if [ ! -f "$compat_binary" ]; then
-      echo -e "${YELLOW}Warning: GLIBC ${glibc_version} detected but compatible tree-sitter binary not found at ${compat_binary}${NC}"
-      return 0
-    fi
-
-    if [ -d "$mason_treesitter_dir" ]; then
-      echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29 detected, replacing tree-sitter with compatible build...${NC}"
-      cp "$compat_binary" "$mason_treesitter_dir/tree-sitter-linux-x64"
-      chmod +x "$mason_treesitter_dir/tree-sitter-linux-x64"
-      echo -e "${GREEN}Tree-sitter compatibility fix applied!${NC}"
-    else
-      echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29 detected but mason tree-sitter-cli not yet installed (will retry after plugin sync)${NC}"
-    fi
-  fi
-}
-
-# Ensure tree-sitter-cli is available and apply GLIBC fix if needed.
-# With tree-sitter-manager.nvim, parsers are compiled using the tree-sitter CLI
-# from PATH (installed via npm). On old GLIBC systems, we also patch mason's copy
-# if it exists (for backward compat with nvim-treesitter setups).
-ensure_treesitter_glibc_fix() {
-  local glibc_version
-  glibc_version=$(get_glibc_version)
-
-  # Only needed on systems with GLIBC < 2.29
-  if compare_versions "2.29" "$glibc_version"; then
+  # The compat binary targets GLIBC 2.28; modern binaries need >= 2.34
+  if compare_versions "2.34" "$glibc_version"; then
     return 0
   fi
 
-  local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
-
-  # If mason tree-sitter-cli dir exists, apply the GLIBC compat fix
-  if [ -d "$mason_treesitter_dir" ]; then
-    fix_treesitter_glibc
-  else
-    echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29: mason tree-sitter-cli not present (tree-sitter-manager uses npm CLI instead)${NC}"
+  local compat_binary="${SCRIPT_DIR}/tree-sitter-glibc_2.28"
+  if [ ! -f "$compat_binary" ]; then
+    echo -e "${YELLOW}Warning: GLIBC ${glibc_version} detected but compatible tree-sitter binary not found at ${compat_binary}${NC}"
+    return 0
   fi
+
+  echo -e "${YELLOW}GLIBC ${glibc_version} < 2.34: installing compatible tree-sitter binary...${NC}"
+
+  # 1. Put it on PATH so tree-sitter-manager.nvim (and anything else) finds it
+  cp "$compat_binary" "$INSTALL_BIN_DIR/tree-sitter"
+  chmod +x "$INSTALL_BIN_DIR/tree-sitter"
+
+  # 2. Replace the npm tree-sitter-cli binary if it exists
+  local npm_ts_bin
+  npm_ts_bin=$(command -v tree-sitter 2>/dev/null || true)
+  # Find the npm module's binary (may differ from the PATH one)
+  local npm_ts_module_bin
+  npm_ts_module_bin=$(find "$HOME" -path "*/node_modules/tree-sitter-cli/tree-sitter" -type f 2>/dev/null | head -1)
+  if [ -n "$npm_ts_module_bin" ]; then
+    cp "$compat_binary" "$npm_ts_module_bin"
+    chmod +x "$npm_ts_module_bin"
+    echo -e "${GREEN}  Replaced npm tree-sitter-cli binary${NC}"
+  fi
+
+  # 3. Replace mason's copy if it exists
+  local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
+  if [ -d "$mason_treesitter_dir" ]; then
+    cp "$compat_binary" "$mason_treesitter_dir/tree-sitter-linux-x64"
+    chmod +x "$mason_treesitter_dir/tree-sitter-linux-x64"
+    echo -e "${GREEN}  Replaced mason tree-sitter-cli binary${NC}"
+  fi
+
+  echo -e "${GREEN}Tree-sitter GLIBC compatibility fix applied!${NC}"
 }
 
 ###############################################################################
@@ -936,6 +938,8 @@ if command -v npm >/dev/null 2>&1; then
     echo -e "${YELLOW}[DRY RUN] Would install npm packages${NC}"
   else
     npm install -g tree-sitter-cli markdownlint-cli2 markdown-toc
+    # On old GLIBC systems, replace the npm tree-sitter binary with the compat build
+    fix_treesitter_glibc
   fi
 else
   echo -e "${YELLOW}npm not found, skipping tree-sitter-cli/markdownlint-cli2/markdown-toc${NC}"
@@ -981,9 +985,8 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   nvim --headless -c "Lazy! sync" -c "qa" 2>&1 || true
   echo -e "\t${GREEN}Nvim plugins installed!${NC}"
 
-  # On old GLIBC systems, ensure mason's tree-sitter-cli is replaced with a compatible build.
-  # Uses ensure_treesitter_glibc_fix which will trigger MasonInstall if the dir doesn't exist yet.
-  ensure_treesitter_glibc_fix
+  # On old GLIBC systems, ensure all tree-sitter binaries use the compatible build
+  fix_treesitter_glibc
 else
   echo "You can create NeoVim symlinks as:"
   echo "ln -sfn ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
