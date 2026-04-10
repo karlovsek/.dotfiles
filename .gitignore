@@ -1,4 +1,4 @@
 nvim/.config/nvim/undodir/*
 nvim/.config/nvim/plugged/*
 nvim/lazy-lock.json
-/podman/artifacts/
+podman/artifacts/
