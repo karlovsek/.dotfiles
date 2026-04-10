@@ -28,7 +28,16 @@
     colorMoved = plain
     mnemonicPrefix = true
     renames = true
+[rerere]
+    enabled = true
 [rebase]
     autoSquash = true
     autoStash = true
     updateRefs = true
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    lg = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)'
+    lga = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
+    unstage = reset HEAD --
