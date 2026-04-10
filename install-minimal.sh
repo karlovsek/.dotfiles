@@ -355,7 +355,7 @@ if command -v 7zz >/dev/null 2>&1; then
         echo -e "${YELLOW}[DRY RUN] Would update 7zip to ${SEVENZIP_VERSION}${NC}"
       else
         local_version_no_dot=$(echo "$SEVENZIP_VERSION" | tr -d '.')
-        curl -fL -o "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" "https://d.7-zip.org/a/7z${local_version_no_dot}-linux-x64.tar.xz"
+        curl -fL -o "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" "https://github.com/ip7z/7zip/releases/download/${SEVENZIP_VERSION}/7z${local_version_no_dot}-linux-x64.tar.xz"
         tar -xf "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" -C "$SCRATCH_DIR" 7zz
         chmod +x "$SCRATCH_DIR/7zz" && mv "$SCRATCH_DIR/7zz" "$INSTALL_BIN_DIR"
         echo -e "${GREEN}7zip updated successfully!${NC}"
@@ -370,7 +370,7 @@ else
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install 7zip ${SEVENZIP_VERSION}${NC}"
   else
-    if ! curl -fL -o "$SCRATCH_DIR/7z${version_no_dot}-linux-x64.tar.xz" "https://d.7-zip.org/a/7z${version_no_dot}-linux-x64.tar.xz"; then
+    if ! curl -fL -o "$SCRATCH_DIR/7z${version_no_dot}-linux-x64.tar.xz" "https://github.com/ip7z/7zip/releases/download/${SEVENZIP_VERSION}/7z${version_no_dot}-linux-x64.tar.xz"; then
       echo -e "${RED}Failed to download 7zip${NC}"
       exit 1
     fi
