@@ -61,23 +61,32 @@ INSTALL_DIR="$HOME/.local"
 # Parse command-line arguments
 FORCE_UPDATE=false
 DRY_RUN=false
+ASSUME_YES=${ASSUME_YES:-false}
 for arg in "$@"; do
   case $arg in
     --force-update)
       FORCE_UPDATE=true
-      shift
       ;;
     --dry-run)
       DRY_RUN=true
-      shift
+      ;;
+    --yes|-y)
+      ASSUME_YES=true
       ;;
     *)
       echo "Unknown option: $arg"
-      echo "Usage: $0 [--force-update] [--dry-run]"
+      echo "Usage: $0 [--force-update] [--dry-run] [--yes]"
       exit 1
       ;;
   esac
 done
+
+# If stdin is not a TTY (CI, piped install, container), default to --yes so
+# read prompts don't hang the script.
+if [ ! -t 0 ]; then
+  ASSUME_YES=true
+fi
+export ASSUME_YES
 
 INSTALL_BIN_DIR="$INSTALL_DIR/bin"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
@@ -88,13 +97,15 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 echo ""
 echo "=== Install started at $(date) ==="
 
-read -p $'\e[0;33mPress Enter to install all programs into '"$INSTALL_DIR"$' \033[0m'
+if [ "$ASSUME_YES" != true ]; then
+  read -r -p $'\e[0;33mPress Enter to install all programs into '"$INSTALL_DIR"$' \033[0m' _
+fi
 
 mkdir -p "$INSTALL_BIN_DIR"
 
 export PATH="$PATH:$INSTALL_BIN_DIR"
 
-if ! grep -q -e "\$PATH.*${INSTALL_BIN_DIR}" "$HOME/.bashrc"; then
+if ! grep -qF "${INSTALL_BIN_DIR}" "$HOME/.bashrc" 2>/dev/null; then
   echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
 
   cat <<EOF >>"$HOME/.bashrc"
@@ -140,6 +151,29 @@ compare_versions() {
   fi
 }
 
+# Read a yes/no answer with a prompt. Defaults to "yes" when stdin is not a
+# TTY (e.g., CI / piped installs) so the script doesn't hang. $1 is the prompt
+# text, $2 is the default ("y" or "n"). Returns 0 for yes, 1 for no.
+confirm_yn() {
+  local prompt=$1
+  local default=${2:-y}
+  local answer=""
+
+  if [ ! -t 0 ] || [ "${ASSUME_YES:-false}" = true ]; then
+    echo "${prompt}(non-interactive: defaulting to ${default})"
+    [ "$default" = "y" ]
+    return
+  fi
+
+  echo -ne "$prompt"
+  read -r answer
+  answer=$(tr '[:upper:]' '[:lower:]' <<<"$answer")
+  if [ -z "$answer" ]; then
+    answer=$default
+  fi
+  [ "$answer" = "y" ] || [ "$answer" = "yes" ]
+}
+
 # Prompt for update (respects --force-update)
 prompt_update() {
   local tool_name=$1
@@ -153,20 +187,15 @@ prompt_update() {
     return 0
   fi
 
-  echo -ne "Update $tool_name? (Y/n): "
-  read answer
-  answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
-  if [[ "$answer" == "y" || -z "$answer" ]]; then
-    return 0
-  else
-    return 1
-  fi
+  confirm_yn "Update $tool_name? (Y/n): " y
 }
 
-# Get latest version tag from GitHub releases using jq
+# Get latest version tag from GitHub releases using jq.
+# Pass empty string as $2 to skip prefix stripping (note the single-dash in
+# ${2-v} — this treats unset and empty differently, unlike ${2:-v}).
 get_latest_version() {
   local repo=$1
-  local strip_prefix=${2:-v}  # prefix to strip, default "v"
+  local strip_prefix=${2-v}  # prefix to strip; unset => "v", empty => no strip
   local tag
   tag=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]+"${GITHUB_AUTH_ARGS[@]}"}" \
     "https://api.github.com/repos/${repo}/releases/latest" | jq -r '.tag_name')
@@ -174,7 +203,11 @@ get_latest_version() {
     echo ""
     return 1
   fi
-  echo "$tag" | sed "s/^${strip_prefix}//"
+  if [ -n "$strip_prefix" ]; then
+    echo "${tag#"$strip_prefix"}"
+  else
+    echo "$tag"
+  fi
 }
 
 # Install or update a tool via gah (GitHub Asset Helper)
@@ -183,6 +216,18 @@ install_or_update_gah() {
   local name=$1
   local repo=$2
   local version_cmd=$3
+
+  # Guard: gah itself must exist (or be a planned dry-run install) before we
+  # try to install/update tools through it.
+  if ! command -v gah >/dev/null 2>&1; then
+    if [ "$DRY_RUN" = true ]; then
+      echo -e "${YELLOW}[DRY RUN] gah not installed; would install $name via gah${NC}"
+      return 0
+    else
+      echo -e "${YELLOW}Warning: gah not found on PATH; skipping $name${NC}"
+      return 0
+    fi
+  fi
 
   if command -v "$name" >/dev/null 2>&1; then
     local current_version
@@ -267,6 +312,94 @@ fix_treesitter_glibc() {
   fi
 }
 
+# Compile git from source (with HTTPS support) if the system git is below
+# 2.32 — required by lazygit and by several repos cloned later in this script.
+# Must be called BEFORE the first `git clone` in the script.
+#
+# 3-step chain, all installed to $INSTALL_DIR:
+#   1. OpenSSL  (only if system headers are missing)
+#   2. libcurl  (only if curl-config / pkg-config libcurl are missing)
+#   3. git      (compiled against the above, producing git-remote-https)
+compile_git_if_needed() {
+  local git_version
+  git_version=$(git --version 2>/dev/null | awk '{print $3}')
+
+  # compare_versions returns 0 when $1 <= $2; we want to trigger when
+  # git_version < "2.32" (strict less-than).
+  if [ -n "$git_version" ] && [ "$git_version" != "2.32" ] \
+     && compare_versions "$git_version" "2.32"; then
+    :
+  else
+    return 0
+  fi
+
+  echo "Your git version (${git_version:-none}) is below 2.32 (required by lazygit)."
+  if ! confirm_yn "Do you want to update git from source? [y/N] " n; then
+    return 0
+  fi
+
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would compile git from source${NC}"
+    return 0
+  fi
+
+  export PKG_CONFIG_PATH="$INSTALL_DIR/lib/pkgconfig:$INSTALL_DIR/lib64/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+  local LOCAL_LDFLAGS="-L$INSTALL_DIR/lib -L$INSTALL_DIR/lib64 -Wl,-rpath,$INSTALL_DIR/lib -Wl,-rpath,$INSTALL_DIR/lib64"
+  export CPPFLAGS="-I$INSTALL_DIR/include"
+
+  # Step 1: compile OpenSSL if headers are missing (required by curl for HTTPS)
+  if ! pkg-config --exists openssl 2>/dev/null && ! [ -f /usr/include/openssl/ssl.h ]; then
+    echo "OpenSSL headers not found; compiling OpenSSL from source..."
+    local openssl_src_version="1.1.1w"
+    wget -P "$SCRATCH_DIR" "https://www.openssl.org/source/openssl-${openssl_src_version}.tar.gz"
+    (
+      cd "$SCRATCH_DIR"
+      tar -xzf "openssl-${openssl_src_version}.tar.gz"
+      cd "openssl-${openssl_src_version}"
+      ./config --prefix="$INSTALL_DIR" --openssldir="$INSTALL_DIR/ssl" \
+        shared no-tests
+      make -j"$(nproc)"
+      make install_sw
+    ) || echo -e "${YELLOW}Warning: OpenSSL compilation failed; git may lack HTTPS support.${NC}"
+  fi
+
+  # Step 2: compile curl if headers are missing (required by git for HTTPS)
+  if ! curl-config --libs >/dev/null 2>&1 && ! pkg-config --exists libcurl 2>/dev/null; then
+    echo "libcurl-dev not found; compiling curl from source for HTTPS support..."
+    local curl_src_version="8.11.1"
+    wget -P "$SCRATCH_DIR" "https://curl.se/download/curl-${curl_src_version}.tar.gz"
+    (
+      cd "$SCRATCH_DIR"
+      tar -xzf "curl-${curl_src_version}.tar.gz"
+      cd "curl-${curl_src_version}"
+      LDFLAGS="$LOCAL_LDFLAGS" \
+      ./configure --prefix="$INSTALL_DIR" --with-openssl \
+        --without-libpsl --without-brotli --without-zstd --disable-ldap
+      make -j"$(nproc)" install
+    ) || echo -e "${YELLOW}Warning: curl compilation failed; git may lack HTTPS support.${NC}"
+    export PATH="$INSTALL_BIN_DIR:$PATH"
+  fi
+
+  # Step 3: compile git
+  local git_new_version="2.51.0"
+  wget -P "$SCRATCH_DIR" "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${git_new_version}.tar.gz"
+  (
+    cd "$SCRATCH_DIR"
+    tar -xzf "git-${git_new_version}.tar.gz"
+    cd "git-${git_new_version}"
+    LDFLAGS="$LOCAL_LDFLAGS" \
+    ./configure --without-tcltk --prefix="$INSTALL_DIR"
+    make NO_GETTEXT=1 NO_TCLTK=1 install
+  )
+  echo "Git ${git_new_version} installed to $INSTALL_BIN_DIR"
+
+  # Verify HTTPS support
+  if ! ls "$INSTALL_DIR/libexec/git-core/git-remote-https" >/dev/null 2>&1; then
+    echo -e "${YELLOW}Warning: git was compiled without HTTPS support.${NC}"
+    echo -e "${YELLOW}Re-run install-minimal.sh to retry.${NC}"
+  fi
+}
+
 # Ensure tree-sitter-cli is installed via mason, then apply GLIBC fix if needed.
 # Called after Lazy sync since mason installs happen asynchronously during sync.
 ensure_treesitter_glibc_fix() {
@@ -280,11 +413,31 @@ ensure_treesitter_glibc_fix() {
 
   local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
 
-  # If mason hasn't installed tree-sitter-cli yet, trigger it explicitly and wait
+  # If mason hasn't installed tree-sitter-cli yet, trigger it explicitly and
+  # wait for the install to finish. We poll for the binary rather than using
+  # a fixed sleep, since mason downloads vary with network speed.
   if [ ! -d "$mason_treesitter_dir" ]; then
     echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29: ensuring mason installs tree-sitter-cli...${NC}"
     export TAR_OPTIONS="--no-same-owner --touch"
-    nvim --headless +"lua require('lazy').load({ plugins = { 'mason.nvim' } })" +"MasonInstall tree-sitter-cli" +"sleep 15" +"qa" 2>&1 || true
+    # Launch mason install in background; poll for completion with a timeout.
+    nvim --headless +"lua require('lazy').load({ plugins = { 'mason.nvim' } })" +"MasonInstall tree-sitter-cli" +"sleep 60" +"qa" 2>&1 &
+    local nvim_pid=$!
+    local waited=0
+    local timeout=90
+    while [ $waited -lt $timeout ]; do
+      if [ -f "$mason_treesitter_dir/tree-sitter-linux-x64" ]; then
+        echo -e "${GREEN}  mason tree-sitter-cli ready after ${waited}s${NC}"
+        break
+      fi
+      sleep 2
+      waited=$((waited + 2))
+    done
+    # Clean up the background nvim (ignore errors; it may already have exited)
+    kill "$nvim_pid" 2>/dev/null || true
+    wait "$nvim_pid" 2>/dev/null || true
+    if [ ! -f "$mason_treesitter_dir/tree-sitter-linux-x64" ]; then
+      echo -e "${YELLOW}  Warning: tree-sitter-cli still not present after ${timeout}s${NC}"
+    fi
   fi
 
   # Now apply the fix
@@ -295,29 +448,47 @@ ensure_treesitter_glibc_fix() {
 # Tool installations
 ###############################################################################
 
-# -- jq (installed first, used by get_latest_version) -------------------------
+# -- jq (installed first — both get_latest_version and gah depend on it) ------
+# We use direct curl+grep here instead of get_latest_version because jq isn't
+# guaranteed to exist yet. Likewise, install/update is done via direct binary
+# download rather than gah, since gah hasn't been installed yet either — this
+# breaks the chicken-and-egg between jq, gah, and get_latest_version.
+fetch_jq_latest_version() {
+  curl -fsSL "${GITHUB_AUTH_ARGS[@]+"${GITHUB_AUTH_ARGS[@]}"}" \
+    "https://api.github.com/repos/jqlang/jq/releases/latest" \
+    | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//'
+}
+
+install_jq_binary() {
+  local version=$1
+  if ! curl -fsSL -o "$INSTALL_BIN_DIR/jq" \
+      "https://github.com/jqlang/jq/releases/download/jq-${version}/jq-linux-amd64"; then
+    echo -e "${RED}Failed to download jq${NC}"
+    return 1
+  fi
+  chmod +x "$INSTALL_BIN_DIR/jq"
+}
+
 if command -v jq >/dev/null 2>&1; then
   current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  # jq is needed before get_latest_version works, so use raw curl+grep here
-  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]+"${GITHUB_AUTH_ARGS[@]}"}" \
-    "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
+  latest_version=$(fetch_jq_latest_version)
 
   echo -e "${GREEN}jq exists (v${current_version}, latest: v${latest_version})${NC}"
 
-  if ! compare_versions "$latest_version" "$current_version"; then
+  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
     if prompt_update "jq" "$current_version" "$latest_version"; then
       if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would update jq to ${latest_version}${NC}"
       else
-        gah install jqlang/jq --unattended
-        echo -e "${GREEN}jq updated successfully!${NC}"
+        if install_jq_binary "$latest_version"; then
+          echo -e "${GREEN}jq updated successfully!${NC}"
+        fi
       fi
     fi
   fi
 else
   echo -e "${YELLOW}jq does not exist, installing it...${NC}"
-  latest_version=$(curl -fsSL "${GITHUB_AUTH_ARGS[@]+"${GITHUB_AUTH_ARGS[@]}"}" \
-    "https://api.github.com/repos/jqlang/jq/releases/latest" | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//')
+  latest_version=$(fetch_jq_latest_version)
   if [ -z "$latest_version" ]; then
     echo -e "${RED}Failed to fetch jq version from GitHub API${NC}"
     exit 1
@@ -325,15 +496,12 @@ else
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install jq ${latest_version}${NC}"
   else
-    if ! curl -o "$INSTALL_BIN_DIR/jq" -L "https://github.com/jqlang/jq/releases/download/jq-${latest_version}/jq-linux-amd64"; then
-      echo -e "${RED}Failed to download jq${NC}"
-      exit 1
-    fi
-    chmod +x "$INSTALL_BIN_DIR/jq"
+    install_jq_binary "$latest_version" || exit 1
   fi
 fi
 
 # -- gah (GitHub Asset Helper — needed for many installs below) ---------------
+# Must come after jq, since get_latest_version depends on jq.
 if command -v gah >/dev/null 2>&1; then
   current_version=$(gah version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
   latest_version=$(get_latest_version "marverix/gah") || true
@@ -405,6 +573,11 @@ else
   echo "curl is not installed"
   exit 1
 fi
+
+# -- git (compile from source if below 2.32) ---------------------------------
+# Must run BEFORE the first git clone (fzf, oh-my-zsh plugins, etc.) so that
+# systems with an HTTPS-less system git can still perform those clones.
+compile_git_if_needed
 
 # -- NeoVim -------------------------------------------------------------------
 if command -v nvim >/dev/null 2>&1; then
@@ -582,73 +755,9 @@ else
   fi
 fi
 
-# if command -v btop >/dev/null 2>&1; then
-#   current_version=$(btop --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-#   latest_version=$(get_latest_version "aristocratos/btop") || true
-#
-#   echo -e "${GREEN}btop exists (v${current_version}, latest: v${latest_version})${NC}"
-#
-#   if ! compare_versions "$latest_version" "$current_version"; then
-#     if prompt_update "btop" "$current_version" "$latest_version"; then
-#       echo "Updating btop to ${latest_version}..."
-#       curl --progress-bar -fL -o "$SCRATCH_DIR/btop-x86_64-linux-musl.tbz" "https://github.com/aristocratos/btop/releases/download/v${latest_version}/btop-x86_64-linux-musl.tbz"
-#       (
-#         cd "$SCRATCH_DIR"
-#         tar -xf btop-x86_64-linux-musl.tbz
-#         cd btop
-#         PREFIX=~/.local make install
-#       )
-#       echo -e "${GREEN}btop updated successfully!${NC}"
-#     fi
-#   fi
-# else
-#   version=$(get_latest_version "aristocratos/btop") || true
-#   echo -e "${YELLOW}Installing btop ${version}${NC}"
-#
-#   curl --progress-bar -fL -o "$SCRATCH_DIR/btop-x86_64-linux-musl.tbz" "https://github.com/aristocratos/btop/releases/download/${version}/btop-x86_64-linux-musl.tbz"
-#   (
-#     cd "$SCRATCH_DIR"
-#     tar -xf btop-x86_64-linux-musl.tbz
-#     cd btop
-#     PREFIX=~/.local make install
-#   )
-# fi
-
-# if command -v bfs >/dev/null 2>&1; then
-#   current_version=$(bfs --version | grep "bfs " | grep -oE '[0-9]+\.[0-9]+')
-#   latest_version=$(get_latest_version "tavianator/bfs" "") || true
-#
-#   echo -e "${GREEN}bfs exists (v${current_version}, latest: v${latest_version})${NC}"
-#
-#   if ! compare_versions "$latest_version" "$current_version"; then
-#     if prompt_update "bfs" "$current_version" "$latest_version"; then
-#       echo "Updating bfs to ${latest_version}..."
-#       curl --progress-bar -fL -o "$SCRATCH_DIR/${latest_version}.zip" "https://github.com/tavianator/bfs/archive/refs/tags/${latest_version}.zip"
-#       (
-#         cd "$SCRATCH_DIR"
-#         7zz x "${latest_version}.zip"
-#         cd "bfs-${latest_version}"
-#         ./configure --enable-release --mandir="$HOME/.local/man" --prefix="$HOME/.local"
-#         make -j$(nproc) >/dev/null
-#         make install
-#       )
-#       echo -e "${GREEN}bfs updated successfully!${NC}"
-#     fi
-#   fi
-# else
-#   version=$(get_latest_version "tavianator/bfs" "") || true
-#   echo -e "${YELLOW}Installing bfs ${version}${NC}"
-#
-#   curl --progress-bar -fL -o "$SCRATCH_DIR/${version}.zip" "https://github.com/tavianator/bfs/archive/refs/tags/${version}.zip"
-#   (
-#     cd "$SCRATCH_DIR"
-#     7zz x "${version}.zip"
-#     cd "bfs-${version}"
-#     ./configure --enable-release --mandir="$HOME/.local/man" --prefix="$HOME/.local"
-#     make -j$(nproc) >/dev/null
-#     make install
-#   )
-# fi
+# NOTE: btop and bfs installers were previously staged here but are disabled.
+# If re-enabling, move them into install_or_update_gah-style helpers rather
+# than duplicating the update/install branches.
 
 # -- broot (with update support) ----------------------------------------------
 if command -v broot >/dev/null 2>&1; then
@@ -772,19 +881,21 @@ if ! curl -sf "${GITHUB_AUTH_ARGS[@]+"${GITHUB_AUTH_ARGS[@]}"}" --head "$_probe_
       ln -sf "$(command -v curl)" "$INSTALL_BIN_DIR/curl-real"
     fi
   fi
-  cat > "$INSTALL_BIN_DIR/curl" << 'CURL_WRAPPER'
+  # Expand $INSTALL_BIN_DIR/curl-real at wrapper-install time so the wrapper
+  # doesn't depend on $0 resolving to an absolute path.
+  cat > "$INSTALL_BIN_DIR/curl" << CURL_WRAPPER
 #!/bin/bash
 # Rewrite github.com/{owner}/{repo}/archive/{sha}.tar.gz
 # to codeload.github.com/{owner}/{repo}/tar.gz/{sha}
 ARGS=()
-for arg in "$@"; do
-  if [[ "$arg" =~ ^https://github\.com/([^/]+)/([^/]+)/archive/([^/]+)\.tar\.gz$ ]]; then
-    ARGS+=("https://codeload.github.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/tar.gz/${BASH_REMATCH[3]}")
+for arg in "\$@"; do
+  if [[ "\$arg" =~ ^https://github\.com/([^/]+)/([^/]+)/archive/([^/]+)\.tar\.gz$ ]]; then
+    ARGS+=("https://codeload.github.com/\${BASH_REMATCH[1]}/\${BASH_REMATCH[2]}/tar.gz/\${BASH_REMATCH[3]}")
   else
-    ARGS+=("$arg")
+    ARGS+=("\$arg")
   fi
 done
-exec "$(dirname "$0")/curl-real" "${ARGS[@]}"
+exec "${INSTALL_BIN_DIR}/curl-real" "\${ARGS[@]}"
 CURL_WRAPPER
   chmod +x "$INSTALL_BIN_DIR/curl"
 fi
@@ -795,104 +906,32 @@ fi
 _utime_test=$(mktemp)
 if ! touch -t 200001010000 "$_utime_test" 2>/dev/null; then
   echo "File timestamp changes restricted on this system; installing tar wrapper..."
-  cat > "$INSTALL_BIN_DIR/tar" << 'TAR_WRAPPER'
+  # Resolve tar at wrapper-install time so we don't depend on /usr/bin/tar
+  # (homebrew / BSD systems may ship tar elsewhere). Fall back to /usr/bin/tar
+  # if resolution fails or points to our own wrapper location.
+  _real_tar=$(command -v tar 2>/dev/null || true)
+  if [ -z "$_real_tar" ] || [ "$_real_tar" = "$INSTALL_BIN_DIR/tar" ]; then
+    _real_tar="/usr/bin/tar"
+  fi
+  cat > "$INSTALL_BIN_DIR/tar" << TAR_WRAPPER
 #!/bin/bash
 ARGS=()
 is_extract=false
 has_touch=false
-for arg in "$@"; do
-  case "$arg" in
+for arg in "\$@"; do
+  case "\$arg" in
     -x*|--extract|--get) is_extract=true ;;
     --touch|-m) has_touch=true ;;
   esac
-  [[ "$arg" =~ ^-[a-zA-Z]*x[a-zA-Z]* ]] && is_extract=true
-  ARGS+=("$arg")
+  [[ "\$arg" =~ ^-[a-zA-Z]*x[a-zA-Z]* ]] && is_extract=true
+  ARGS+=("\$arg")
 done
-[[ "$is_extract" == "true" && "$has_touch" == "false" ]] && ARGS+=("--touch")
-exec /usr/bin/tar "${ARGS[@]}"
+[[ "\$is_extract" == "true" && "\$has_touch" == "false" ]] && ARGS+=("--touch")
+exec "${_real_tar}" "\${ARGS[@]}"
 TAR_WRAPPER
   chmod +x "$INSTALL_BIN_DIR/tar"
 fi
 rm -f "$_utime_test"
-
-###############################################################################
-# Git compilation (if lazygit needs git >= 2.32)
-#
-# Builds git from source with HTTPS support via a 3-step dependency chain:
-#   1. OpenSSL  (only if system headers are missing)
-#   2. libcurl  (only if curl-config / pkg-config libcurl are missing)
-#   3. git      (compiled against the above, producing git-remote-https)
-#
-# Everything is installed to $INSTALL_DIR (~/.local) — no root required.
-# See the file header for a detailed explanation.
-###############################################################################
-
-git_version=$(git --version | awk '{print $3}')
-if [ "$(printf '%s\n' "2.32" "$git_version" | sort -V | head -n1)" = "$git_version" ] && [ "$git_version" != "2.32" ]; then
-  echo "Your git version ($git_version) is below 2.32 (required by lazygit). Do you want to update git from source? [y/N]"
-  read -r update_git
-  if [ "$update_git" = "y" ] || [ "$update_git" = "Y" ]; then
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] Would compile git from source${NC}"
-    else
-      export PKG_CONFIG_PATH="$INSTALL_DIR/lib/pkgconfig:$INSTALL_DIR/lib64/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
-      LOCAL_LDFLAGS="-L$INSTALL_DIR/lib -L$INSTALL_DIR/lib64 -Wl,-rpath,$INSTALL_DIR/lib -Wl,-rpath,$INSTALL_DIR/lib64"
-      export CPPFLAGS="-I$INSTALL_DIR/include"
-
-      # Step 1: compile OpenSSL if headers are missing (required by curl for HTTPS)
-      if ! pkg-config --exists openssl 2>/dev/null && ! [ -f /usr/include/openssl/ssl.h ]; then
-        echo "OpenSSL headers not found; compiling OpenSSL from source..."
-        openssl_src_version="1.1.1w"
-        wget -P "$SCRATCH_DIR" "https://www.openssl.org/source/openssl-${openssl_src_version}.tar.gz"
-        (
-          cd "$SCRATCH_DIR"
-          tar -xzf "openssl-${openssl_src_version}.tar.gz"
-          cd "openssl-${openssl_src_version}"
-          ./config --prefix="$INSTALL_DIR" --openssldir="$INSTALL_DIR/ssl" \
-            shared no-tests
-          make -j"$(nproc)"
-          make install_sw
-        ) || echo -e "${YELLOW}Warning: OpenSSL compilation failed; git may lack HTTPS support.${NC}"
-      fi
-
-      # Step 2: compile curl if headers are missing (required by git for HTTPS)
-      if ! curl-config --libs >/dev/null 2>&1 && ! pkg-config --exists libcurl 2>/dev/null; then
-        echo "libcurl-dev not found; compiling curl from source for HTTPS support..."
-        curl_src_version="8.11.1"
-        wget -P "$SCRATCH_DIR" "https://curl.se/download/curl-${curl_src_version}.tar.gz"
-        (
-          cd "$SCRATCH_DIR"
-          tar -xzf "curl-${curl_src_version}.tar.gz"
-          cd "curl-${curl_src_version}"
-          LDFLAGS="$LOCAL_LDFLAGS" \
-          ./configure --prefix="$INSTALL_DIR" --with-openssl \
-            --without-libpsl --without-brotli --without-zstd --disable-ldap
-          make -j"$(nproc)" install
-        ) || echo -e "${YELLOW}Warning: curl compilation failed; git may lack HTTPS support.${NC}"
-        export PATH="$INSTALL_BIN_DIR:$PATH"
-      fi
-
-      # Step 3: compile git
-      git_new_version="2.51.0"
-      wget -P "$SCRATCH_DIR" "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${git_new_version}.tar.gz"
-      (
-        cd "$SCRATCH_DIR"
-        tar -xzf "git-${git_new_version}.tar.gz"
-        cd "git-${git_new_version}"
-        LDFLAGS="$LOCAL_LDFLAGS" \
-        ./configure --without-tcltk --prefix="$INSTALL_DIR"
-        make NO_GETTEXT=1 NO_TCLTK=1 install
-      )
-      echo "Git ${git_new_version} installed to $INSTALL_BIN_DIR"
-
-      # Verify HTTPS support
-      if ! ls "$INSTALL_DIR/libexec/git-core/git-remote-https" >/dev/null 2>&1; then
-        echo -e "${YELLOW}Warning: git was compiled without HTTPS support.${NC}"
-        echo -e "${YELLOW}Re-run install-minimal.sh to retry.${NC}"
-      fi
-    fi
-  fi
-fi
 
 install_or_update_gah "lazygit" "jesseduffield/lazygit" \
   "lazygit --version | grep -oP 'version=\K[0-9]+\.[0-9]+\.[0-9]+' | head -n1"
@@ -962,10 +1001,8 @@ fi
 # Symlinks and plugin installation
 ###############################################################################
 
-echo -ne "\nCreate Vim symlinks? (Y/n): "
-read answer
-answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
-if [[ "$answer" == "y" || -z "$answer" ]]; then
+echo ""
+if confirm_yn "Create Vim symlinks? (Y/n): " y; then
   if [ -f "$HOME/.vimrc" ]; then
     mv "$HOME/.vimrc" "$HOME/.vimrc_orig"
   fi
@@ -977,18 +1014,22 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   echo -e "\t${GREEN}Symlinks created!${NC}"
 
   # Install vim-plug and plugins
-  echo -e "${GREEN}Installing vim plugins (this may take a moment)...${NC}"
-  vim +'PlugInstall --sync' +qall
-  echo -e "\t${GREEN}Vim plugins installed!${NC}"
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would install vim plugins${NC}"
+  elif command -v vim >/dev/null 2>&1; then
+    echo -e "${GREEN}Installing vim plugins (this may take a moment)...${NC}"
+    vim +'PlugInstall --sync' +qall
+    echo -e "\t${GREEN}Vim plugins installed!${NC}"
+  else
+    echo -e "${YELLOW}vim not found; skipping plugin install${NC}"
+  fi
 else
   echo "You can create Vim symlinks as:"
   echo "ln -sf ${SCRIPT_DIR}/vim/.vimrc $HOME/.vimrc && ln -sf ${SCRIPT_DIR}/vim/.vimcommon $HOME/.vimcommon"
 fi
 
-echo -ne "\nCreate NeoVim symlinks? (Y/n): "
-read answer
-answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
-if [[ "$answer" == "y" || -z "$answer" ]]; then
+echo ""
+if confirm_yn "Create NeoVim symlinks? (Y/n): " y; then
   mkdir -p "$HOME/.config"
   ln -sfn "${SCRIPT_DIR}/nvim" "$HOME/.config/nvim"
   echo -e "\t${GREEN}Symlinks created!${NC}"
@@ -997,22 +1038,26 @@ if [[ "$answer" == "y" || -z "$answer" ]]; then
   # Export TAR_OPTIONS so nvim-treesitter's internal tar calls get --touch
   # (prevents "Cannot utime: Operation not permitted" on FUSE/container mounts)
   export TAR_OPTIONS="--no-same-owner --touch"
-  echo -e "${GREEN}Installing nvim plugins (this may take a moment)...${NC}"
-  nvim --headless -c "Lazy! sync" -c "qa" 2>&1 || true
-  echo -e "\t${GREEN}Nvim plugins installed!${NC}"
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would install nvim plugins via Lazy sync${NC}"
+  elif command -v nvim >/dev/null 2>&1; then
+    echo -e "${GREEN}Installing nvim plugins (this may take a moment)...${NC}"
+    nvim --headless -c "Lazy! sync" -c "qa" 2>&1 || true
+    echo -e "\t${GREEN}Nvim plugins installed!${NC}"
 
-  # On old GLIBC systems, ensure mason's tree-sitter-cli is replaced with a compatible build.
-  # Uses ensure_treesitter_glibc_fix which will trigger MasonInstall if the dir doesn't exist yet.
-  ensure_treesitter_glibc_fix
+    # On old GLIBC systems, ensure mason's tree-sitter-cli is replaced with a compatible build.
+    # Uses ensure_treesitter_glibc_fix which will trigger MasonInstall if the dir doesn't exist yet.
+    ensure_treesitter_glibc_fix
+  else
+    echo -e "${YELLOW}nvim not found; skipping Lazy sync${NC}"
+  fi
 else
   echo "You can create NeoVim symlinks as:"
   echo "ln -sfn ${SCRIPT_DIR}/nvim $HOME/.config/nvim"
 fi
 
-echo -ne "\nCreate Git config symlinks? (Y/n): "
-read answer
-answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
-if [[ "$answer" == "y" || -z "$answer" ]]; then
+echo ""
+if confirm_yn "Create Git config symlinks? (Y/n): " y; then
   if [ -f "$HOME/.gitconfig" ]; then
     mv "$HOME/.gitconfig" "$HOME/.gitconfig_orig"
   fi
@@ -1023,10 +1068,7 @@ fi
 if command -v zellij >/dev/null 2>&1; then
   echo -e "${GREEN}zellij exists${NC}"
 
-  echo -ne "Create Zellij symlinks? (Y/n): "
-  read answer
-  answer=$(tr "[A-Z]" "[a-z]" <<<"$answer")
-  if [[ "$answer" == "y" || -z "$answer" ]]; then
+  if confirm_yn "Create Zellij symlinks? (Y/n): " y; then
     mkdir -p "$HOME/.config"
     ln -sfn "${SCRIPT_DIR}/zellij" "$HOME/.config/zellij"
     echo -e "\t${GREEN}Symlinks created!${NC}"
@@ -1043,6 +1085,8 @@ fi
 # install oh my ZSH
 if [ -d "$HOME/.oh-my-zsh" ]; then
   echo -e "${YELLOW}$HOME/.oh-my-zsh does exist. Skipping installing oh-my-zsh${NC}"
+elif [ "$DRY_RUN" = true ]; then
+  echo -e "${YELLOW}[DRY RUN] Would install oh-my-zsh${NC}"
 else
   echo -e "Installing oh-my-zsh${NC}"
   #   CHSH       - 'no' means the installer will not change the default shell (default: yes)
@@ -1055,11 +1099,15 @@ install_zsh_plugin() {
   local url=$1
   local install_path=$2
   local plugin_name
-  plugin_name=$(basename "$2")
+  plugin_name=$(basename "$install_path")
 
-  if [ ! -d "$2" ]; then
-    echo -e "${GREEN}Installing $plugin_name${NC}"
-    git clone -q --depth=1 "$1" "$2"
+  if [ ! -d "$install_path" ]; then
+    if [ "$DRY_RUN" = true ]; then
+      echo -e "${YELLOW}[DRY RUN] Would install $plugin_name${NC}"
+    else
+      echo -e "${GREEN}Installing $plugin_name${NC}"
+      git clone -q --depth=1 "$url" "$install_path"
+    fi
   else
     echo -e "${YELLOW}${plugin_name} already installed${NC}"
   fi
@@ -1086,8 +1134,17 @@ ln -sf "${SCRIPT_DIR}/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 echo ""
 echo "=== Install finished at $(date) ==="
 echo -e "\n${GREEN}Installation completed!${NC}"
-read -p "Press Enter to run zsh!"
-source "$HOME/.bashrc"
-# run ZSH and configure p10k
-zsh -c "source $HOME/.zshrc &&  echo -e \"\n\e[0;33mTo configure p10k run: p10k configure \033[0m\" ; zsh"
+
+# Drop into zsh only when running interactively. In CI / piped installs this
+# would otherwise hang forever on the read prompt and then fail trying to
+# exec an interactive zsh with no TTY.
+if [ -t 0 ] && [ "$ASSUME_YES" != true ]; then
+  read -r -p "Press Enter to run zsh!" _
+  # shellcheck disable=SC1091
+  source "$HOME/.bashrc"
+  # run ZSH and configure p10k
+  zsh -c "source $HOME/.zshrc &&  echo -e \"\n\e[0;33mTo configure p10k run: p10k configure \033[0m\" ; zsh"
+else
+  echo "(non-interactive run — skipping interactive zsh launch)"
+fi
                                                                                                                                                                                                                                                                                                                     
