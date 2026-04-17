@@ -129,6 +129,9 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 # Setup GitHub authentication if GITHUB_PAT is provided
 if [ -n "${GITHUB_PAT:-}" ]; then
   GITHUB_AUTH_ARGS=(-H "Authorization: token ${GITHUB_PAT}")
+  # Export the standard env var so downstream installers (gah, etc.) that
+  # respect GITHUB_TOKEN also authenticate and avoid the 60/hour unauth limit.
+  export GITHUB_TOKEN="${GITHUB_TOKEN:-$GITHUB_PAT}"
   echo -e "${GREEN}Using GitHub Personal Access Token for API requests${NC}"
 else
   GITHUB_AUTH_ARGS=()
@@ -629,7 +632,8 @@ else
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install ZSH${NC}"
   else
-    bash <(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install) -d "$INSTALL_DIR" -e yes
+    # `-e no` skips /etc/shells and chsh — both require root.
+    bash <(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install) -d "$INSTALL_DIR" -e no || true
   fi
 fi
 
@@ -788,28 +792,9 @@ else
   fi
 fi
 
-# -- zoxide (with update support) ---------------------------------------------
-if command -v zoxide >/dev/null 2>&1; then
-  current_version=$(zoxide --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  echo -e "${GREEN}zoxide exists (v${current_version})${NC}"
-
-  if [ "$FORCE_UPDATE" = true ]; then
-    echo -e "${YELLOW}Force-updating zoxide...${NC}"
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] Would update zoxide${NC}"
-    else
-      curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash -s -- --bin-dir "$INSTALL_BIN_DIR"
-      echo -e "${GREEN}zoxide updated to $(zoxide --version)${NC}"
-    fi
-  fi
-else
-  echo "Installing zoxide"
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install zoxide${NC}"
-  else
-    curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash -s -- --bin-dir "$INSTALL_BIN_DIR"
-  fi
-fi
+# -- zoxide (upstream installer lacks auth — rate-limited without it) --------
+install_or_update_gah "zoxide" "ajeetdsouza/zoxide" \
+  "zoxide --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
 
 install_or_update_gah "bat" "sharkdp/bat" \
   "bat --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"

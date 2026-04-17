@@ -36,6 +36,8 @@ DRY_RUN=false
 
 # Help message
 show_help() {
+    # $USER may be unset in minimal environments (containers, sudo shells).
+    local USER="${USER:-$(id -un)}"
     cat << EOF
 fuzzy-kill - Fuzzy find and kill processes
 

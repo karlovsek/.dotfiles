@@ -57,13 +57,13 @@ run_test() {
     echo "========================================"
     echo " $name: ALL TESTS PASSED"
     echo "========================================"
-    ((OVERALL_PASS++))
+    OVERALL_PASS=$((OVERALL_PASS + 1))
   else
     echo ""
     echo "========================================"
     echo " $name: SOME TESTS FAILED"
     echo "========================================"
-    ((OVERALL_FAIL++))
+    OVERALL_FAIL=$((OVERALL_FAIL + 1))
   fi
 
   # Extract git artifacts if needed
