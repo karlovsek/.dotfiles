@@ -155,7 +155,7 @@ return {
       },
     },
     sources = { -- Define completion sources
-      default = { "lsp", "path", "snippets", "buffer" }, -- Default sources for completion
+      default = { "lsp", "path", "snippets", "buffer", "filemention" }, -- Default sources for completion
 
       min_keyword_length = function(ctx)
         return ctx.trigger.kind == "manual" and 0 or 2
@@ -189,6 +189,10 @@ return {
         buffer = {
           min_keyword_length = 2, -- Minimum characters for buffer suggestions
           max_items = 7, -- Limit the number of buffer suggestions
+        },
+        filemention = {
+          name = "filemention",
+          module = "filemention.sources.blink",
         },
       },
     },
