@@ -1,8 +1,6 @@
 return {
   {
-    -- "gbprod/yanky.nvim",
-    "mcdax/yanky.nvim",
-    branch = "fix_fallback_to_unnamed_register_if_osc52_is_used",
+    "gbprod/yanky.nvim",
 
     config = function()
       require("yanky").setup({})

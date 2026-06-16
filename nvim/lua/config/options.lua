@@ -2,6 +2,14 @@
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
 
+-- nvim-treesitter spawns tar to extract parser archives. On WSL2 and some
+-- container environments, tar fails to restore original file timestamps
+-- ("Cannot utime: Operation not permitted") because child processes have
+-- different capabilities than the parent shell. Setting TAR_OPTIONS here
+-- ensures every tar call spawned by nvim gets --touch (skip timestamp
+-- restoration), which suppresses the error without affecting functionality.
+vim.env.TAR_OPTIONS = "--no-same-owner --touch"
+
 if vim.g.neovide then
   -- Put anything you want to happen only in Neovide here
   vim.o.guifont = "DejaVuSansM Nerd Font:h11" -- text below applies for VimScript

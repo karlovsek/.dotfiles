@@ -915,6 +915,15 @@ done
 exec "${_real_tar}" "\${ARGS[@]}"
 TAR_WRAPPER
   chmod +x "$INSTALL_BIN_DIR/tar"
+
+  # Persist TAR_OPTIONS so future sessions (including nvim-treesitter parser
+  # installs outside this script) inherit --touch automatically.
+  for _rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+    if [ -f "$_rc" ] && ! grep -qF "TAR_OPTIONS" "$_rc" 2>/dev/null; then
+      printf '\nexport TAR_OPTIONS="--no-same-owner --touch"\n' >> "$_rc"
+      echo "  Added TAR_OPTIONS to $_rc"
+    fi
+  done
 fi
 rm -f "$_utime_test"
 
