@@ -214,6 +214,8 @@ then
   alias ls='eza --icons --color=always --group-directories-first' # my preferred listing
   alias la='eza --icons -la --color=always --group-directories-first'  # all files and dirs
   alias ll='eza --icons -l --color=always --group-directories-first'  # long format
+  alias llt='eza --icons -l --color=always --group-directories-first -snew'  # long format
+  alias lltr='eza --icons -l --color=always --group-directories-first -snew -r'  # long format
   alias lt='eza -T --color=always --group-directories-first' # tree listing
 fi
 
