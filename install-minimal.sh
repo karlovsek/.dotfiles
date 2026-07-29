@@ -473,7 +473,7 @@ install_jq_binary() {
 }
 
 if command -v jq >/dev/null 2>&1; then
-  current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')
   latest_version=$(fetch_jq_latest_version)
 
   echo -e "${GREEN}jq exists (v${current_version}, latest: v${latest_version})${NC}"
@@ -506,7 +506,7 @@ fi
 # -- gah (GitHub Asset Helper — needed for many installs below) ---------------
 # Must come after jq, since get_latest_version depends on jq.
 if command -v gah >/dev/null 2>&1; then
-  current_version=$(gah version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  current_version=$(gah version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
   latest_version=$(get_latest_version "marverix/gah") || true
 
   echo -e "${GREEN}gah exists (v${current_version}, latest: v${latest_version})${NC}"
@@ -534,7 +534,7 @@ fi
 SEVENZIP_VERSION="26.00"
 
 if command -v 7zz >/dev/null 2>&1; then
-  current_version=$(7zz | grep 7-Zip | awk '{print $3}' | grep -oE '[0-9]+\.[0-9]+')
+  current_version=$(7zz | grep 7-Zip | awk '{print $3}' | grep -oE '[0-9]+\.[0-9]+') || true
 
   echo -e "${GREEN}7zip exists (v${current_version}, latest: v${SEVENZIP_VERSION})${NC}"
 
@@ -584,7 +584,7 @@ compile_git_if_needed
 
 # -- NeoVim -------------------------------------------------------------------
 if command -v nvim >/dev/null 2>&1; then
-  current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
   latest_version=$(get_latest_version "neovim/neovim-releases") || true
 
   echo -e "${GREEN}NeoVim exists (v${current_version}, latest: v${latest_version})${NC}"
@@ -643,7 +643,7 @@ install_or_update_gah "fd" "sharkdp/fd" \
 
 # -- sshs (direct binary download, not gah) -----------------------------------
 if command -v sshs >/dev/null 2>&1; then
-  current_version=$(sshs --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  current_version=$(sshs --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
   latest_version=$(get_latest_version "quantumsheep/sshs") || true
 
   echo -e "${GREEN}sshs exists (v${current_version}, latest: v${latest_version})${NC}"
@@ -721,7 +721,7 @@ fi
 
 # -- htop (build from source) -------------------------------------------------
 if command -v htop >/dev/null 2>&1; then
-  current_version=$(htop --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  current_version=$(htop --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
   latest_version=$(get_latest_version "htop-dev/htop" "") || true
 
   echo -e "${GREEN}htop exists (v${current_version}, latest: v${latest_version})${NC}"
@@ -804,7 +804,7 @@ install_or_update_gah "eza" "eza-community/eza" \
 
 # -- gdu (direct binary download) ---------------------------------------------
 if command -v gdu >/dev/null 2>&1; then
-  current_version=$(gdu --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  current_version=$(gdu --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
   latest_version=$(get_latest_version "dundee/gdu") || true
 
   echo -e "${GREEN}gdu exists (v${current_version}, latest: v${latest_version})${NC}"
@@ -1114,16 +1114,20 @@ install_zsh_plugin https://github.com/jeffreytse/zsh-vi-mode "${ZSH_CUSTOM:-$HOM
 install_zsh_plugin https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
 
 echo -e "\n${YELLOW}Creating symlinks for zsh and p10k...${NC}"
-if [ -f "$HOME/.zshrc" ]; then
-  mv "$HOME/.zshrc" "$HOME/.zshrc_orig"
-fi
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${YELLOW}[DRY RUN] Would symlink zsh/.zshrc and zsh/.p10k.zsh into \$HOME${NC}"
+else
+  if [ -f "$HOME/.zshrc" ]; then
+    mv "$HOME/.zshrc" "$HOME/.zshrc_orig"
+  fi
 
-if [ -f "$HOME/.p10k.zsh" ]; then
-  mv "$HOME/.p10k.zsh" "$HOME/.p10k.zsh_orig"
-fi
+  if [ -f "$HOME/.p10k.zsh" ]; then
+    mv "$HOME/.p10k.zsh" "$HOME/.p10k.zsh_orig"
+  fi
 
-ln -sf "${SCRIPT_DIR}/zsh/.zshrc" "$HOME/.zshrc"
-ln -sf "${SCRIPT_DIR}/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+  ln -sf "${SCRIPT_DIR}/zsh/.zshrc" "$HOME/.zshrc"
+  ln -sf "${SCRIPT_DIR}/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+fi
 
 echo ""
 echo "=== Install finished at $(date) ==="
