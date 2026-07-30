@@ -13,7 +13,7 @@
 #
 # What it installs (all to ~/.local, no sudo required):
 #   nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide,
-#   bat, eza, gdu, lazygit, lazydocker, zellij, fnm (Node.js), jq, 7zip, gah
+#   bat, eza, delta, gdu, lazygit, lazydocker, zellij, fnm (Node.js), jq, 7zip, gah
 #
 # Git from source (with HTTPS support):
 #   If the system git is below v2.32 (required by lazygit), the script offers
@@ -802,6 +802,11 @@ install_or_update_gah "bat" "sharkdp/bat" \
 install_or_update_gah "eza" "eza-community/eza" \
   "eza --version | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//'"
 
+# -- delta (syntax-highlighting pager for git diff; used by lazygit and the
+# core.pager setting in git/.gitconfig) ---------------------------------------
+install_or_update_gah "delta" "dandavison/delta" \
+  "delta --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
+
 # -- gdu (direct binary download) ---------------------------------------------
 if command -v gdu >/dev/null 2>&1; then
   current_version=$(gdu --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
@@ -1069,6 +1074,19 @@ if command -v zellij >/dev/null 2>&1; then
   else
     echo "You can create Zellij symlinks as:"
     echo "ln -sfn ${SCRIPT_DIR}/zellij $HOME/.config/zellij"
+  fi
+fi
+
+if command -v lazygit >/dev/null 2>&1; then
+  echo -e "${GREEN}lazygit exists${NC}"
+
+  if confirm_yn "Create lazygit config symlink? (Y/n): " y; then
+    mkdir -p "$HOME/.config/lazygit"
+    ln -sf "${SCRIPT_DIR}/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
+    echo -e "\t${GREEN}Symlinks created!${NC}"
+  else
+    echo "You can create the lazygit config symlink as:"
+    echo "ln -sf ${SCRIPT_DIR}/lazygit/config.yml $HOME/.config/lazygit/config.yml"
   fi
 fi
 

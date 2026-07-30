@@ -3,6 +3,11 @@
 	name = Peter Karlovsek
 [core]
   autocrlf = false
+  pager = delta
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    navigate = true
 [column]
     ui = auto
 [branch]
