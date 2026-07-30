@@ -27,7 +27,7 @@
     pruneTags = true
     all = true
 [merge]
-    # conflictstyle = zdiff3
+    conflictstyle = zdiff3
 [diff]
     algorithm = histogram
     colorMoved = plain
