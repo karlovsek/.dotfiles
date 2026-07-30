@@ -89,7 +89,8 @@ ARG GIT_PREFIX
 COPY --from=git-builder --chown=testuser:testuser ${GIT_PREFIX}/bin/git ${GIT_PREFIX}/bin/git
 COPY --from=git-builder --chown=testuser:testuser ${GIT_PREFIX}/libexec/git-core ${GIT_PREFIX}/libexec/git-core
 
-RUN cd /home/testuser/.dotfiles && git init && git add -A && git commit -m "test snapshot" --allow-empty
+RUN git config --global user.email "testuser@example.com" && git config --global user.name "Test User" \
+    && cd /home/testuser/.dotfiles && git init && git add -A && git commit -m "test snapshot" --allow-empty
 
 ARG GITHUB_PAT
 RUN export PATH="$HOME/.local/bin:$PATH" \

@@ -103,7 +103,7 @@ fi
 
 mkdir -p "$INSTALL_BIN_DIR"
 
-export PATH="$PATH:$INSTALL_BIN_DIR"
+export PATH="$INSTALL_BIN_DIR:$PATH"
 
 if ! grep -qF "${INSTALL_BIN_DIR}" "$HOME/.bashrc" 2>/dev/null; then
   echo "Adding $INSTALL_BIN_DIR to $HOME/.bashrc"
@@ -354,9 +354,9 @@ compile_git_if_needed() {
   if ! pkg-config --exists openssl 2>/dev/null && ! [ -f /usr/include/openssl/ssl.h ]; then
     echo "OpenSSL headers not found; compiling OpenSSL from source..."
     local openssl_src_version="1.1.1w"
-    wget -P "$SCRATCH_DIR" "https://www.openssl.org/source/openssl-${openssl_src_version}.tar.gz"
     (
       cd "$SCRATCH_DIR"
+      wget "https://www.openssl.org/source/openssl-${openssl_src_version}.tar.gz"
       tar -xzf "openssl-${openssl_src_version}.tar.gz"
       cd "openssl-${openssl_src_version}"
       ./config --prefix="$INSTALL_DIR" --openssldir="$INSTALL_DIR/ssl" \
@@ -370,9 +370,9 @@ compile_git_if_needed() {
   if ! curl-config --libs >/dev/null 2>&1 && ! pkg-config --exists libcurl 2>/dev/null; then
     echo "libcurl-dev not found; compiling curl from source for HTTPS support..."
     local curl_src_version="8.11.1"
-    wget -P "$SCRATCH_DIR" "https://curl.se/download/curl-${curl_src_version}.tar.gz"
     (
       cd "$SCRATCH_DIR"
+      wget "https://curl.se/download/curl-${curl_src_version}.tar.gz"
       tar -xzf "curl-${curl_src_version}.tar.gz"
       cd "curl-${curl_src_version}"
       LDFLAGS="$LOCAL_LDFLAGS" \
@@ -385,15 +385,15 @@ compile_git_if_needed() {
 
   # Step 3: compile git
   local git_new_version="2.51.0"
-  wget -P "$SCRATCH_DIR" "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${git_new_version}.tar.gz"
   (
     cd "$SCRATCH_DIR"
+    wget "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${git_new_version}.tar.gz"
     tar -xzf "git-${git_new_version}.tar.gz"
     cd "git-${git_new_version}"
     LDFLAGS="$LOCAL_LDFLAGS" \
     ./configure --without-tcltk --prefix="$INSTALL_DIR"
     make NO_GETTEXT=1 NO_TCLTK=1 install
-  )
+  ) || { echo -e "${YELLOW}Warning: git compilation failed; keeping system git.${NC}"; return 0; }
   echo "Git ${git_new_version} installed to $INSTALL_BIN_DIR"
 
   # Verify HTTPS support

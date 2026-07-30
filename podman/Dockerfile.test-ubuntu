@@ -90,7 +90,8 @@ COPY --from=git-builder --chown=testuser:testuser ${GIT_PREFIX}/bin/git ${GIT_PR
 COPY --from=git-builder --chown=testuser:testuser ${GIT_PREFIX}/libexec/git-core ${GIT_PREFIX}/libexec/git-core
 
 # Initialize .dotfiles as a git repo so status checks work
-RUN cd /home/testuser/.dotfiles && git init && git add -A && git commit -m "test snapshot" --allow-empty
+RUN git config --global user.email "testuser@example.com" && git config --global user.name "Test User" \
+    && cd /home/testuser/.dotfiles && git init && git add -A && git commit -m "test snapshot" --allow-empty
 
 # Run install-minimal.sh non-interactively
 # The script has several read prompts; feed them all "y" + Enter
