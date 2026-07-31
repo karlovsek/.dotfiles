@@ -804,8 +804,47 @@ install_or_update_gah "eza" "eza-community/eza" \
 
 # -- delta (syntax-highlighting pager for git diff; used by lazygit and the
 # core.pager setting in git/.gitconfig) ---------------------------------------
-install_or_update_gah "delta" "dandavison/delta" \
-  "delta --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
+# Pinned to the musl build (rather than gah's default glibc binary) so it
+# also runs on systems with older GLIBC (e.g. Rocky Linux 8 / GLIBC 2.28).
+DELTA_VERSION="0.19.2"
+DELTA_ARCHIVE="delta-${DELTA_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+DELTA_DIR="delta-${DELTA_VERSION}-x86_64-unknown-linux-musl"
+
+if command -v delta >/dev/null 2>&1; then
+  current_version=$(delta --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
+
+  echo -e "${GREEN}delta exists (v${current_version}, target: v${DELTA_VERSION})${NC}"
+
+  if ! compare_versions "$DELTA_VERSION" "$current_version"; then
+    if prompt_update "delta" "$current_version" "$DELTA_VERSION"; then
+      if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY RUN] Would update delta to ${DELTA_VERSION} (musl)${NC}"
+      else
+        if ! curl -fsSL -o "$SCRATCH_DIR/${DELTA_ARCHIVE}" "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/${DELTA_ARCHIVE}"; then
+          echo -e "${YELLOW}Warning: Failed to download delta${NC}"
+        else
+          tar -xzf "$SCRATCH_DIR/${DELTA_ARCHIVE}" -C "$SCRATCH_DIR" "${DELTA_DIR}/delta"
+          mv "$SCRATCH_DIR/${DELTA_DIR}/delta" "$INSTALL_BIN_DIR/delta"
+          chmod +x "$INSTALL_BIN_DIR/delta"
+          echo -e "${GREEN}delta updated successfully!${NC}"
+        fi
+      fi
+    fi
+  fi
+else
+  echo -e "${YELLOW}delta does not exist, installing v${DELTA_VERSION} (musl)...${NC}"
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would install delta ${DELTA_VERSION} (musl)${NC}"
+  else
+    if ! curl -fsSL -o "$SCRATCH_DIR/${DELTA_ARCHIVE}" "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/${DELTA_ARCHIVE}"; then
+      echo -e "${RED}Failed to download delta${NC}"
+    else
+      tar -xzf "$SCRATCH_DIR/${DELTA_ARCHIVE}" -C "$SCRATCH_DIR" "${DELTA_DIR}/delta"
+      mv "$SCRATCH_DIR/${DELTA_DIR}/delta" "$INSTALL_BIN_DIR/delta"
+      chmod +x "$INSTALL_BIN_DIR/delta"
+    fi
+  fi
+fi
 
 # -- gdu (direct binary download) ---------------------------------------------
 if command -v gdu >/dev/null 2>&1; then
