@@ -1,6 +1,3 @@
-
-<!-- @sessions/CLAUDE.sessions.md -->
-
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -34,7 +31,7 @@ git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HO
 bash $HOME/.dotfiles/install-minimal.sh --force-update
 ```
 
-`install-minimal.sh` installs everything to `$HOME/.local`, downloads tools from GitHub releases, creates symlinks, and installs Oh My ZSH and plugins. Tools: nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide, bat, eza, lazygit, lazydocker, zellij, fnm (for Node.js), gdu.
+`install-minimal.sh` installs everything to `$HOME/.local`, downloads tools from GitHub releases, creates symlinks, and installs Oh My ZSH and plugins. Tools: nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide, bat, eza, delta, gdu, lazygit, lazydocker, zellij, fnm (for Node.js), jq, 7zip, gah.
 
 Set `GITHUB_PAT` env var to avoid GitHub API rate limits during installation.
 
@@ -42,7 +39,10 @@ Other flags:
 ```bash
 bash install-minimal.sh --dry-run        # Preview what would be installed without making changes
 bash install-minimal.sh --force-update   # Re-download all tools to their latest versions
+bash install-minimal.sh --yes            # Skip the confirmation prompt (also -y)
 ```
+
+When stdin isn't a TTY (CI, piped install, containers), `ASSUME_YES` defaults to true automatically so `read` prompts don't hang the script.
 
 ## Git from Source (with HTTPS Support)
 
