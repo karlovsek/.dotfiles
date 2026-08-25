@@ -389,3 +389,19 @@ fi
 zle_highlight+=('paste:none')
 
 alias be='mkdir -p build && cmake -S . -B build > /dev/null && cmake --build build > /dev/null && ll -f build | grep -v --ignore-case "make"'
+
+# Minimal OSC 133 Shell Integration for Zsh
+typeset -g _zsh_multiplexer_integration_active=1
+
+function _osc133_precmd() {
+  print -n "\e]133;A\e\\"
+}
+
+function _osc133_preexec() {
+  print -n "\e]133;B\e\\"
+  print -n "\e]133;C\e\\"
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _osc133_precmd
+add-zsh-hook preexec _osc133_preexec
