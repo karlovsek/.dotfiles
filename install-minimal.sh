@@ -272,11 +272,18 @@ get_glibc_version() {
 
 # Fix tree-sitter for systems with old GLIBC.
 # Pre-built tree-sitter binaries (npm and mason) require GLIBC >= 2.29.
-# On older systems (e.g. RHEL 8 / Rocky 8 with GLIBC 2.28), we replace ALL
-# copies with a compatible build stored in the repo as tree-sitter-glibc_2.28.
+# On older systems (e.g. RHEL 8 / Rocky 8 with GLIBC 2.28), we replace the
+# copies found under the known node/npm roots below with a compatible build
+# stored in the repo as tree-sitter-glibc_2.28.
 fix_treesitter_glibc() {
   local glibc_version
   glibc_version=$(get_glibc_version)
+
+  # No detectable glibc (musl/Alpine, or `ldd` missing) must NOT be treated as
+  # "older than 2.29" — the compat binary is glibc-linked and useless there.
+  if [ -z "$glibc_version" ]; then
+    return 0
+  fi
 
   # compare_versions returns 0 (true) when $1 <= $2, so this triggers when glibc < 2.29
   if ! compare_versions "2.29" "$glibc_version"; then
@@ -287,31 +294,108 @@ fix_treesitter_glibc() {
       return 0
     fi
 
+    if [ "$DRY_RUN" = true ]; then
+      echo -e "${YELLOW}[DRY RUN] Would replace tree-sitter binaries with the GLIBC ${glibc_version}-compatible build${NC}"
+      return 0
+    fi
+
     echo -e "${YELLOW}GLIBC ${glibc_version} < 2.29: replacing tree-sitter binaries with compatible build...${NC}"
 
-    # 1. Put compat binary on PATH so nvim-treesitter / tree-sitter-manager finds it
-    cp "$compat_binary" "$INSTALL_BIN_DIR/tree-sitter"
-    chmod +x "$INSTALL_BIN_DIR/tree-sitter"
-    echo -e "${GREEN}  Installed to $INSTALL_BIN_DIR/tree-sitter${NC}"
-
-    # 2. Replace the npm tree-sitter-cli binary (nvim-treesitter calls it by full path)
-    local npm_ts_bin
-    npm_ts_bin=$(find "$HOME" -path "*/node_modules/tree-sitter-cli/tree-sitter" -type f 2>/dev/null | head -1)
-    if [ -n "$npm_ts_bin" ]; then
-      cp "$compat_binary" "$npm_ts_bin"
-      chmod +x "$npm_ts_bin"
-      echo -e "${GREEN}  Replaced npm binary: $npm_ts_bin${NC}"
+    # 1. Put compat binary on PATH so nvim-treesitter / tree-sitter-manager
+    #    finds it. --remove-destination because this path may itself be a
+    #    symlink into a mason/gah package, which plain cp would write through;
+    #    non-fatal because ETXTBSY (a tree-sitter still running from here) must
+    #    not abort the whole installer under `set -e`.
+    if cp --remove-destination "$compat_binary" "$INSTALL_BIN_DIR/tree-sitter" 2>/dev/null &&
+       chmod +x "$INSTALL_BIN_DIR/tree-sitter" 2>/dev/null; then
+      echo -e "${GREEN}  Installed to $INSTALL_BIN_DIR/tree-sitter${NC}"
+    else
+      echo -e "${YELLOW}  Warning: could not install $INSTALL_BIN_DIR/tree-sitter${NC}"
     fi
+
+    # 2. Replace vendored tree-sitter-cli binaries. Step 1 above is not enough
+    #    on its own: mason prepends its own bin dir to PATH, and an npm global
+    #    install shadows $INSTALL_BIN_DIR, so those copies are replaced too.
+    #    Only known node/npm roots are scanned -- a `find` over all of $HOME can
+    #    take many minutes on machines with large source or build trees, during
+    #    which the installer prints nothing and looks like it has hung.
+    local xdg_data="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local ts_roots=(
+      "${FNM_DIR:-$xdg_data/fnm}"
+      "$xdg_data/pnpm"
+      "$xdg_data/nvim/mason/packages"
+      "$INSTALL_DIR/lib/node_modules"
+      "$HOME/.nvm"
+      "$HOME/.npm-global"
+      "$HOME/.volta"
+      "$HOME/.asdf/installs/nodejs"
+      "$HOME/node_modules"
+    )
+    # `|| npm_global_root=""` is required: a bare assignment from a failing
+    # command substitution aborts the whole installer under `set -e`.
+    local npm_global_root=""
+    if command -v npm >/dev/null 2>&1; then
+      npm_global_root=$(npm root -g 2>/dev/null) || npm_global_root=""
+      [ -n "$npm_global_root" ] && ts_roots+=("$npm_global_root")
+    fi
+
+    local npm_ts_bin
+    local replaced=0
+    while IFS= read -r npm_ts_bin; do
+      # NOTE: these paths are already resolved to physical files by the
+      # readlink -f below, so a shared pnpm/npm content store IS rewritten in
+      # place and every project linking it changes too. That is intended here:
+      # on a GLIBC < 2.29 host every copy in that store is unrunnable anyway.
+      # --remove-destination unlinks first so cp cannot fail on, or write
+      # through, a hardlink that still points at the old inode.
+      # Failures are warned about, not fatal -- a single unwritable copy (root
+      # owned global prefix, ETXTBSY on a running binary) must not abort the
+      # installer part-way through.
+      if cp --remove-destination "$compat_binary" "$npm_ts_bin" 2>/dev/null &&
+         chmod +x "$npm_ts_bin" 2>/dev/null; then
+        echo -e "${GREEN}  Replaced npm binary: $npm_ts_bin${NC}"
+        replaced=$((replaced + 1))
+      else
+        echo -e "${YELLOW}  Warning: could not replace $npm_ts_bin (skipped)${NC}"
+      fi
+    done < <(
+      # -L so a symlinked root (or a pnpm-style symlinked package dir) is
+      # descended; without it `find` silently yields nothing for such a root.
+      # Resolve to physical paths, then dedupe. A symlink forest (pnpm, nvm
+      # aliases) reaches ONE physical binary by many paths, and plain `sort -u`
+      # over the found paths would rewrite that same file once per path.
+      # Deduping on the resolved path -- rather than on device:inode -- is what
+      # makes hardlinks still work: two hardlinked copies share an inode but are
+      # distinct directory entries that each need their own replacement.
+      # Under -L a working symlink already satisfies -type f, so no -type l arm
+      # is needed; adding one would match only DANGLING links, which cp would
+      # then materialise into a stray copy of the binary.
+      find -L "${ts_roots[@]}" \
+        -path "*/node_modules/tree-sitter-cli/tree-sitter" \
+        -type f -print0 2>/dev/null \
+        | xargs -0 -r readlink -f -- 2>/dev/null | sort -u
+    )
 
     # 3. Replace mason's copy if it exists
-    local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
+    local mason_treesitter_dir="$xdg_data/nvim/mason/packages/tree-sitter-cli"
     if [ -d "$mason_treesitter_dir" ]; then
-      cp "$compat_binary" "$mason_treesitter_dir/tree-sitter-linux-x64"
-      chmod +x "$mason_treesitter_dir/tree-sitter-linux-x64"
-      echo -e "${GREEN}  Replaced mason binary${NC}"
+      if cp --remove-destination "$compat_binary" \
+           "$mason_treesitter_dir/tree-sitter-linux-x64" 2>/dev/null &&
+         chmod +x "$mason_treesitter_dir/tree-sitter-linux-x64" 2>/dev/null; then
+        echo -e "${GREEN}  Replaced mason binary${NC}"
+        replaced=$((replaced + 1))
+      else
+        echo -e "${YELLOW}  Warning: could not replace mason binary${NC}"
+      fi
     fi
 
-    echo -e "${GREEN}Tree-sitter GLIBC compatibility fix applied!${NC}"
+    if [ "$replaced" -eq 0 ]; then
+      echo -e "${YELLOW}Warning: no vendored tree-sitter binary was found to replace.${NC}"
+      echo -e "${YELLOW}  $INSTALL_BIN_DIR/tree-sitter is in place, but a copy under a node_modules${NC}"
+      echo -e "${YELLOW}  or mason path may still require GLIBC 2.29 at runtime.${NC}"
+    else
+      echo -e "${GREEN}Tree-sitter GLIBC compatibility fix applied (${replaced} replaced)!${NC}"
+    fi
   fi
 }
 
@@ -409,12 +493,18 @@ ensure_treesitter_glibc_fix() {
   local glibc_version
   glibc_version=$(get_glibc_version)
 
-  # Only needed on systems with GLIBC < 2.29
-  if compare_versions "2.29" "$glibc_version"; then
+  # Only needed on systems with GLIBC < 2.29. An empty version means musl or a
+  # missing `ldd`; the glibc-linked compat binary is useless there.
+  if [ -z "$glibc_version" ] || compare_versions "2.29" "$glibc_version"; then
     return 0
   fi
 
-  local mason_treesitter_dir="$HOME/.local/share/nvim/mason/packages/tree-sitter-cli"
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would ensure mason tree-sitter-cli is installed and apply the GLIBC ${glibc_version} tree-sitter fix${NC}"
+    return 0
+  fi
+
+  local mason_treesitter_dir="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/packages/tree-sitter-cli"
 
   # If mason hasn't installed tree-sitter-cli yet, trigger it explicitly and
   # wait for the install to finish. We poll for the binary rather than using
@@ -593,6 +683,7 @@ if command -v nvim >/dev/null 2>&1; then
     if prompt_update "NeoVim" "$current_version" "$latest_version"; then
       if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would update NeoVim to ${latest_version}${NC}"
+        fix_treesitter_glibc
       else
         nvim_archive=nvim-linux-x86_64.tar.gz
         curl -fL -o "$SCRATCH_DIR/${nvim_archive}" "https://github.com/neovim/neovim-releases/releases/download/v${latest_version}/${nvim_archive}"
@@ -613,6 +704,7 @@ else
 
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install NeoVim ${version}${NC}"
+    fix_treesitter_glibc
   else
     nvim_archive=nvim-linux-x86_64.tar.gz
     if ! curl -fL -o "$SCRATCH_DIR/${nvim_archive}" "https://github.com/neovim/neovim-releases/releases/download/v${version}/${nvim_archive}"; then
@@ -1026,6 +1118,7 @@ if command -v npm >/dev/null 2>&1; then
   echo -e "${GREEN}Installing npm packages for nvim (tree-sitter-cli, markdownlint-cli2, markdown-toc)...${NC}"
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install npm packages${NC}"
+    fix_treesitter_glibc
   else
     npm install -g tree-sitter-cli markdownlint-cli2 markdown-toc
     # On old GLIBC, replace the npm tree-sitter binary with compat build
@@ -1041,10 +1134,14 @@ fi
 
 echo ""
 if confirm_yn "Create Vim symlinks? (Y/n): " y; then
-  if [ -f "$HOME/.vimrc" ]; then
+  # [ ! -L ] so a re-run cannot overwrite the saved original with the
+  # symlink this script created on the previous run.
+  if [ -f "$HOME/.vimrc" ] && [ ! -L "$HOME/.vimrc" ]; then
     mv "$HOME/.vimrc" "$HOME/.vimrc_orig"
   fi
-  if [ -f "$HOME/.vimcommon" ]; then
+  # [ ! -L ] so a re-run cannot overwrite the saved original with the
+  # symlink this script created on the previous run.
+  if [ -f "$HOME/.vimcommon" ] && [ ! -L "$HOME/.vimcommon" ]; then
     mv "$HOME/.vimcommon" "$HOME/.vimcommon_orig"
   fi
   ln -sf "${SCRIPT_DIR}/vim/.vimrc" "$HOME/.vimrc"
@@ -1078,6 +1175,7 @@ if confirm_yn "Create NeoVim symlinks? (Y/n): " y; then
   export TAR_OPTIONS="--no-same-owner --touch"
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install nvim plugins via Lazy sync${NC}"
+    ensure_treesitter_glibc_fix
   elif command -v nvim >/dev/null 2>&1; then
     echo -e "${GREEN}Installing nvim plugins (this may take a moment)...${NC}"
     nvim --headless -c "Lazy! sync" -c "qa" 2>&1 || true
@@ -1096,11 +1194,26 @@ fi
 
 echo ""
 if confirm_yn "Create Git config symlinks? (Y/n): " y; then
-  if [ -f "$HOME/.gitconfig" ]; then
+  # [ ! -L ] so a re-run cannot overwrite the saved original with the
+  # symlink this script created on the previous run.
+  if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
     mv "$HOME/.gitconfig" "$HOME/.gitconfig_orig"
   fi
   ln -sf "${SCRIPT_DIR}/git/.gitconfig" "$HOME/.gitconfig"
   echo -e "\t${GREEN}Symlinks created!${NC}"
+
+  # The tracked .gitconfig includes ~/.gitconfig.local for machine-specific
+  # settings. Git ignores a missing include *silently*, so seed the file with
+  # a header instead of leaving the indirection undiscoverable.
+  if [ "$DRY_RUN" != true ] && [ ! -e "$HOME/.gitconfig.local" ]; then
+    cat > "$HOME/.gitconfig.local" <<'GITCONFIG_LOCAL'
+# Machine-specific git settings. Deliberately NOT tracked by the dotfiles repo.
+# Example -- trust a repo living on a mount only this machine has:
+#   [safe]
+#   \tdirectory = /mnt/somewhere
+GITCONFIG_LOCAL
+    echo -e "\t${GREEN}Created ~/.gitconfig.local for machine-specific settings${NC}"
+  fi
 fi
 
 if command -v zellij >/dev/null 2>&1; then
@@ -1174,11 +1287,15 @@ echo -e "\n${YELLOW}Creating symlinks for zsh and p10k...${NC}"
 if [ "$DRY_RUN" = true ]; then
   echo -e "${YELLOW}[DRY RUN] Would symlink zsh/.zshrc and zsh/.p10k.zsh into \$HOME${NC}"
 else
-  if [ -f "$HOME/.zshrc" ]; then
+  # [ ! -L ] so a re-run cannot overwrite the saved original with the
+  # symlink this script created on the previous run.
+  if [ -f "$HOME/.zshrc" ] && [ ! -L "$HOME/.zshrc" ]; then
     mv "$HOME/.zshrc" "$HOME/.zshrc_orig"
   fi
 
-  if [ -f "$HOME/.p10k.zsh" ]; then
+  # [ ! -L ] so a re-run cannot overwrite the saved original with the
+  # symlink this script created on the previous run.
+  if [ -f "$HOME/.p10k.zsh" ] && [ ! -L "$HOME/.p10k.zsh" ]; then
     mv "$HOME/.p10k.zsh" "$HOME/.p10k.zsh_orig"
   fi
 
