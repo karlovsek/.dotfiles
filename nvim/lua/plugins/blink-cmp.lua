@@ -1,4 +1,19 @@
 -- Return a configuration table for the 'saghen/blink.cmp' plugin.
+
+-- Build a per-provider `min_keyword_length`: 0 characters on a manual <C-space>
+-- and right after a trigger character (`.`, `->`, `::`), `default` otherwise.
+-- A provider limit overrides the global one whenever it's > 0, so the manual
+-- trigger exemption from `sources.min_keyword_length` has to be repeated here.
+local function min_keyword_length(default)
+  return function(ctx)
+    local kind = ctx.trigger.initial_kind
+    if kind == "manual" or kind == "trigger_character" then
+      return 0
+    end
+    return default
+  end
+end
+
 return {
   "saghen/blink.cmp", -- Plugin name
   dependencies = { -- List of required plugins
@@ -176,7 +191,7 @@ return {
 
       providers = { -- Configure individual source behavior
         lsp = {
-          min_keyword_length = 3, -- Minimum characters to trigger completion
+          min_keyword_length = min_keyword_length(3), -- Minimum characters to trigger completion
           score_offset = 0, -- Adjust score for LSP items
         },
         path = {
@@ -184,7 +199,7 @@ return {
           max_items = 100,
         },
         snippets = {
-          min_keyword_length = 3, -- Minimum characters to trigger snippets
+          min_keyword_length = min_keyword_length(3), -- Minimum characters to trigger snippets
         },
         buffer = {
           min_keyword_length = 2, -- Minimum characters for buffer suggestions
