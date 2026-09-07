@@ -184,6 +184,7 @@ alias fhl="find . -xdev \! -type d -links +1 -printf '%20D %20i %p\n' | sort -n 
 
 if (( $+commands[claude] )); then
   alias cl="claude"
+  alias clauded="claude --dangerously-skip-permissions"
 fi
 
 
