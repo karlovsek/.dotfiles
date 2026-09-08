@@ -5,6 +5,9 @@
 -- Disable automatic formatting on save (toggle with <leader>uf if needed)
 vim.g.autoformat = false
 
+-- Disable LSP diagnostics on startup (toggle with <leader>ud)
+vim.diagnostic.enable(false)
+
 -- nvim-treesitter spawns tar to extract parser archives. On WSL2 and some
 -- container environments, tar fails to restore original file timestamps
 -- ("Cannot utime: Operation not permitted") because child processes have
