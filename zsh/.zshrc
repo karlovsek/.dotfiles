@@ -262,6 +262,14 @@ then
   export EDITOR=nvim
   export VISUAL=nvim
   alias vi='nvim'
+
+  # Keep Neovim's vim.loader bytecode cache off the 9p/drvfs mount.
+  # In this container XDG_CACHE_HOME is /opt/ccache/builder7, a 9p mount of
+  # Windows C:\, where reading a file costs ~1-7ms instead of ~0.007ms on the
+  # local disk. Neovim reads one cached .luac per Lua `require`, which put a
+  # ~1ms floor under every require and cost ~230ms of startup.
+  # Scoped to nvim so ccache (CCACHE_DIR), clangd, p10k etc. are unaffected.
+  nvim() { XDG_CACHE_HOME="$HOME/.cache" command nvim "$@"; }
 fi
 
 if (( $+commands[fd] ))
