@@ -13,7 +13,12 @@
 #
 # What it installs (all to ~/.local, no sudo required):
 #   nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide,
-#   bat, eza, delta, gdu, lazygit, lazydocker, zellij, fnm (Node.js), jq, 7zip, gah
+#   bat, eza, delta, gdu, lazygit, lazydocker, zellij, node, jq, 7zip
+#
+#   Most of the above (everything except zsh, htop, and node's npm globals)
+#   are installed and version-managed via mise (https://mise.jdx.dev) using
+#   the tool list in mise/config.toml. Run `mise outdated` / `mise upgrade`
+#   directly at any time instead of re-running this whole script.
 #
 # Git from source (with HTTPS support):
 #   If the system git is below v2.32 (required by lazygit), the script offers
@@ -129,7 +134,7 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 # Setup GitHub authentication if GITHUB_PAT is provided
 if [ -n "${GITHUB_PAT:-}" ]; then
   GITHUB_AUTH_ARGS=(-H "Authorization: token ${GITHUB_PAT}")
-  # Export the standard env var so downstream installers (gah, etc.) that
+  # Export the standard env var so downstream installers (mise, etc.) that
   # respect GITHUB_TOKEN also authenticate and avoid the 60/hour unauth limit.
   export GITHUB_TOKEN="${GITHUB_TOKEN:-$GITHUB_PAT}"
   echo -e "${GREEN}Using GitHub Personal Access Token for API requests${NC}"
@@ -210,58 +215,6 @@ get_latest_version() {
     echo "${tag#"$strip_prefix"}"
   else
     echo "$tag"
-  fi
-}
-
-# Install or update a tool via gah (GitHub Asset Helper)
-# Usage: install_or_update_gah <name> <repo> <version_cmd>
-install_or_update_gah() {
-  local name=$1
-  local repo=$2
-  local version_cmd=$3
-
-  # Guard: gah itself must exist (or be a planned dry-run install) before we
-  # try to install/update tools through it.
-  if ! command -v gah >/dev/null 2>&1; then
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] gah not installed; would install $name via gah${NC}"
-      return 0
-    else
-      echo -e "${YELLOW}Warning: gah not found on PATH; skipping $name${NC}"
-      return 0
-    fi
-  fi
-
-  if command -v "$name" >/dev/null 2>&1; then
-    local current_version
-    current_version=$(eval "$version_cmd" 2>/dev/null || echo "unknown")
-    local latest_version
-    latest_version=$(get_latest_version "$repo") || true
-
-    echo -e "${GREEN}${name} exists (v${current_version}, latest: v${latest_version})${NC}"
-
-    if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-      if prompt_update "$name" "$current_version" "$latest_version"; then
-        if [ "$DRY_RUN" = true ]; then
-          echo -e "${YELLOW}[DRY RUN] Would update $name to $latest_version via gah${NC}"
-        else
-          if ! gah install "$repo" --unattended; then
-            echo -e "${YELLOW}Warning: Failed to update $name${NC}"
-          else
-            echo -e "${GREEN}${name} updated successfully!${NC}"
-          fi
-        fi
-      fi
-    fi
-  else
-    echo -e "${YELLOW}${name} does not exist, installing it...${NC}"
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] Would install $name via gah${NC}"
-    else
-      if ! gah install "$repo" --unattended; then
-        echo -e "${YELLOW}Warning: Failed to install $name${NC}"
-      fi
-    fi
   fi
 }
 
@@ -541,121 +494,141 @@ ensure_treesitter_glibc_fix() {
 # Tool installations
 ###############################################################################
 
-# -- jq (installed first — both get_latest_version and gah depend on it) ------
-# We use direct curl+grep here instead of get_latest_version because jq isn't
-# guaranteed to exist yet. Likewise, install/update is done via direct binary
-# download rather than gah, since gah hasn't been installed yet either — this
-# breaks the chicken-and-egg between jq, gah, and get_latest_version.
-fetch_jq_latest_version() {
-  curl -fsSL "${GITHUB_AUTH_ARGS[@]+"${GITHUB_AUTH_ARGS[@]}"}" \
-    "https://api.github.com/repos/jqlang/jq/releases/latest" \
-    | grep '"tag_name":' | cut -d '"' -f4 | sed 's/^jq-//'
-}
+# -- mise (tool version manager) ----------------------------------------------
+# Replaces gah and the hand-rolled curl/tar installers below for every tool
+# that publishes prebuilt release binaries. The tool list, pinned versions,
+# and per-tool asset overrides live in mise/config.toml (symlinked below),
+# not in this script — add new tools there.
+MISE_BIN_PATH="$INSTALL_BIN_DIR/mise"
 
-install_jq_binary() {
-  local version=$1
-  if ! curl -fsSL -o "$INSTALL_BIN_DIR/jq" \
-      "https://github.com/jqlang/jq/releases/download/jq-${version}/jq-linux-amd64"; then
-    echo -e "${RED}Failed to download jq${NC}"
-    return 1
-  fi
-  chmod +x "$INSTALL_BIN_DIR/jq"
-}
-
-if command -v jq >/dev/null 2>&1; then
-  current_version=$(jq --version | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')
-  latest_version=$(fetch_jq_latest_version)
-
-  echo -e "${GREEN}jq exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "jq" "$current_version" "$latest_version"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update jq to ${latest_version}${NC}"
-      else
-        if install_jq_binary "$latest_version"; then
-          echo -e "${GREEN}jq updated successfully!${NC}"
-        fi
-      fi
+if ! command -v mise >/dev/null 2>&1 && [ ! -x "$MISE_BIN_PATH" ]; then
+  echo -e "${YELLOW}mise does not exist, installing it...${NC}"
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would install mise via https://mise.run${NC}"
+  else
+    if ! curl -fsSL https://mise.run | MISE_INSTALL_PATH="$MISE_BIN_PATH" sh; then
+      echo -e "${RED}Failed to install mise${NC}"
     fi
   fi
-else
-  echo -e "${YELLOW}jq does not exist, installing it...${NC}"
-  latest_version=$(fetch_jq_latest_version)
-  if [ -z "$latest_version" ]; then
-    echo -e "${RED}Failed to fetch jq version from GitHub API${NC}"
-    exit 1
-  fi
+elif [ "$FORCE_UPDATE" = true ]; then
+  echo -e "${GREEN}mise exists ($(mise --version 2>/dev/null)), force-updating...${NC}"
   if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install jq ${latest_version}${NC}"
+    echo -e "${YELLOW}[DRY RUN] Would run: mise self-update -y${NC}"
   else
-    install_jq_binary "$latest_version" || exit 1
+    mise self-update -y || echo -e "${YELLOW}Warning: mise self-update failed${NC}"
   fi
+else
+  echo -e "${GREEN}mise exists ($(mise --version 2>/dev/null))${NC}"
 fi
 
-# -- gah (GitHub Asset Helper — needed for many installs below) ---------------
-# Must come after jq, since get_latest_version depends on jq.
-if command -v gah >/dev/null 2>&1; then
-  current_version=$(gah version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
-  latest_version=$(get_latest_version "marverix/gah") || true
+# Symlink the tracked mise config into place (same backup pattern as the
+# other symlinks further down this script: don't clobber a real file with
+# our symlink on a second run).
+mkdir -p "$HOME/.config/mise"
+if [ -f "$HOME/.config/mise/config.toml" ] && [ ! -L "$HOME/.config/mise/config.toml" ]; then
+  mv "$HOME/.config/mise/config.toml" "$HOME/.config/mise/config.toml.orig"
+fi
+ln -sfn "${SCRIPT_DIR}/mise/config.toml" "$HOME/.config/mise/config.toml"
 
-  echo -e "${GREEN}gah exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "gah" "$current_version" "$latest_version"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update gah${NC}"
-      else
-        bash -c "$(curl -fsSL https://raw.githubusercontent.com/marverix/gah/refs/heads/master/tools/install.sh)"
-        echo -e "${GREEN}gah updated successfully!${NC}"
-      fi
-    fi
-  fi
-else
-  echo -e "${YELLOW}gah does not exist, installing it...${NC}"
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install gah${NC}"
-  else
-    bash -c "$(curl -fsSL https://raw.githubusercontent.com/marverix/gah/refs/heads/master/tools/install.sh)"
-  fi
+if [ "$ASSUME_YES" = true ]; then
+  export MISE_YES=1
 fi
 
-# -- 7zip ---------------------------------------------------------------------
-SEVENZIP_VERSION="26.00"
+# Activate shims for the rest of THIS script (later `command -v nvim`,
+# `command -v zellij`, `command -v lazygit` checks, and the `nvim --headless`
+# Lazy-sync call all need mise-installed tools on PATH).
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash --shims)"
+fi
 
-if command -v 7zz >/dev/null 2>&1; then
-  current_version=$(7zz | grep 7-Zip | awk '{print $3}' | grep -oE '[0-9]+\.[0-9]+') || true
+if command -v mise >/dev/null 2>&1; then
+  echo -e "${GREEN}Installing/verifying mise-managed tools (see mise/config.toml)...${NC}"
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would run: mise install${NC}"
+    mise install --dry-run || true
+  else
+    mise install
+  fi
 
-  echo -e "${GREEN}7zip exists (v${current_version}, latest: v${SEVENZIP_VERSION})${NC}"
-
-  if ! compare_versions "$SEVENZIP_VERSION" "$current_version"; then
-    if prompt_update "7zip" "$current_version" "$SEVENZIP_VERSION"; then
+  mise_outdated=$(mise outdated 2>/dev/null)
+  if [ -n "$mise_outdated" ]; then
+    echo -e "${YELLOW}Outdated mise-managed tools:${NC}"
+    echo "$mise_outdated"
+    if [ "$FORCE_UPDATE" = true ]; then
       if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update 7zip to ${SEVENZIP_VERSION}${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would run: mise upgrade${NC}"
       else
-        local_version_no_dot=$(echo "$SEVENZIP_VERSION" | tr -d '.')
-        curl -fL -o "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" "https://github.com/ip7z/7zip/releases/download/${SEVENZIP_VERSION}/7z${local_version_no_dot}-linux-x64.tar.xz"
-        tar -xf "$SCRATCH_DIR/7z${local_version_no_dot}-linux-x64.tar.xz" -C "$SCRATCH_DIR" 7zz
-        chmod +x "$SCRATCH_DIR/7zz" && mv "$SCRATCH_DIR/7zz" "$INSTALL_BIN_DIR"
-        echo -e "${GREEN}7zip updated successfully!${NC}"
+        mise upgrade
       fi
+    elif [ "$DRY_RUN" = true ]; then
+      mise upgrade --dry-run || true
+    elif [ -t 0 ] && [ "$ASSUME_YES" != true ]; then
+      mise upgrade --interactive
+    else
+      echo "(non-interactive: skipping interactive upgrade prompt — re-run with --force-update to upgrade all)"
     fi
   fi
 else
-  version_no_dot=$(echo "$SEVENZIP_VERSION" | tr -d '.')
+  echo -e "${YELLOW}Warning: mise not available on PATH; skipping mise-managed tool installs${NC}"
+fi
 
-  echo "7zip does not exist, installing ${SEVENZIP_VERSION}..."
+# nvim (installed above via mise, github:neovim/neovim-releases) may need the
+# GLIBC 2.28 compat tree-sitter binary; safe to call unconditionally, it
+# no-ops on GLIBC >= 2.29.
+fix_treesitter_glibc
+
+# -- One-time cleanup: stale pre-mise binaries ---------------------------------
+# Machines that ran an earlier version of this script have copies of these
+# tools installed directly (via gah or curl+tar) in $INSTALL_BIN_DIR, which
+# would otherwise sit on PATH ahead of nothing in particular and just waste
+# disk. mise's shims already take priority on PATH regardless, so this is
+# cleanup rather than a correctness fix.
+cleanup_pre_mise_artifacts() {
+  local targets=(
+    "$INSTALL_BIN_DIR/jq" "$INSTALL_BIN_DIR/gah" "$INSTALL_BIN_DIR/7zz"
+    "$INSTALL_BIN_DIR/nvim" "$INSTALL_BIN_DIR/fd" "$INSTALL_BIN_DIR/sshs"
+    "$INSTALL_BIN_DIR/rg" "$INSTALL_BIN_DIR/lstr" "$INSTALL_BIN_DIR/broot"
+    "$INSTALL_BIN_DIR/zoxide" "$INSTALL_BIN_DIR/bat" "$INSTALL_BIN_DIR/eza"
+    "$INSTALL_BIN_DIR/delta" "$INSTALL_BIN_DIR/gdu" "$INSTALL_BIN_DIR/lazygit"
+    "$INSTALL_BIN_DIR/lazydocker" "$INSTALL_BIN_DIR/zellij"
+    "$INSTALL_DIR/fzf" "$INSTALL_DIR/share/nvim/runtime" "$INSTALL_DIR/lib/nvim"
+    "$INSTALL_DIR/share/fnm"
+  )
+  local to_remove=() t resolved
+  for t in "${targets[@]}"; do
+    [ -e "$t" ] || [ -L "$t" ] || continue
+    # Never remove something that is itself a symlink into the dotfiles repo
+    # (e.g. this script's own fuzzy-kill symlinks would never appear in the
+    # list above, but be defensive about future additions to $targets).
+    resolved=$(readlink -f "$t" 2>/dev/null || true)
+    case "$resolved" in
+      "$SCRIPT_DIR"/*) continue ;;
+    esac
+    to_remove+=("$t")
+  done
+
+  if [ "${#to_remove[@]}" -eq 0 ]; then
+    return 0
+  fi
+
+  echo -e "${YELLOW}Removing stale pre-mise artifacts:${NC}"
+  printf '  %s\n' "${to_remove[@]}"
 
   if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install 7zip ${SEVENZIP_VERSION}${NC}"
-  else
-    if ! curl -fL -o "$SCRATCH_DIR/7z${version_no_dot}-linux-x64.tar.xz" "https://github.com/ip7z/7zip/releases/download/${SEVENZIP_VERSION}/7z${version_no_dot}-linux-x64.tar.xz"; then
-      echo -e "${RED}Failed to download 7zip${NC}"
-      exit 1
-    fi
-    tar -xf "$SCRATCH_DIR/7z${version_no_dot}-linux-x64.tar.xz" -C "$SCRATCH_DIR" 7zz
-    chmod +x "$SCRATCH_DIR/7zz" && mv "$SCRATCH_DIR/7zz" "$INSTALL_BIN_DIR"
+    echo -e "${YELLOW}[DRY RUN] Would remove the paths listed above${NC}"
+    return 0
   fi
+
+  rm -rf "${to_remove[@]}"
+  echo -e "${GREEN}Cleanup complete.${NC}"
+}
+cleanup_pre_mise_artifacts
+
+if [ -d "$HOME/.local/share/fnm" ]; then
+  echo -e "${YELLOW}Note: fnm's install script may have added FNM_PATH / 'fnm env' lines to"
+  echo -e "  ~/.bashrc when this machine was first set up. Node is now managed by mise"
+  echo -e "  (mise/config.toml); you can remove any such lines by hand if you no longer"
+  echo -e "  use fnm directly.${NC}"
 fi
 
 # -- curl (check only) -------------------------------------------------------
@@ -672,50 +645,6 @@ fi
 # systems with an HTTPS-less system git can still perform those clones.
 compile_git_if_needed
 
-# -- NeoVim -------------------------------------------------------------------
-if command -v nvim >/dev/null 2>&1; then
-  current_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
-  latest_version=$(get_latest_version "neovim/neovim-releases") || true
-
-  echo -e "${GREEN}NeoVim exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "NeoVim" "$current_version" "$latest_version"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update NeoVim to ${latest_version}${NC}"
-        fix_treesitter_glibc
-      else
-        nvim_archive=nvim-linux-x86_64.tar.gz
-        curl -fL -o "$SCRATCH_DIR/${nvim_archive}" "https://github.com/neovim/neovim-releases/releases/download/v${latest_version}/${nvim_archive}"
-        tar -xf "$SCRATCH_DIR/${nvim_archive}" --strip-components=1 -C "$INSTALL_DIR"
-        echo -e "${GREEN}NeoVim updated successfully!${NC}"
-        fix_treesitter_glibc
-      fi
-    fi
-  fi
-else
-  version=$(get_latest_version "neovim/neovim-releases") || true
-  if [ -z "$version" ]; then
-    echo -e "${RED}Failed to fetch NeoVim version from GitHub API${NC}"
-    exit 1
-  fi
-
-  echo "NeoVim does not exist, installing v${version}..."
-
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install NeoVim ${version}${NC}"
-    fix_treesitter_glibc
-  else
-    nvim_archive=nvim-linux-x86_64.tar.gz
-    if ! curl -fL -o "$SCRATCH_DIR/${nvim_archive}" "https://github.com/neovim/neovim-releases/releases/download/v${version}/${nvim_archive}"; then
-      echo -e "${RED}Failed to download NeoVim${NC}"
-      exit 1
-    fi
-    tar -xf "$SCRATCH_DIR/${nvim_archive}" --strip-components=1 -C "$INSTALL_DIR"
-    fix_treesitter_glibc
-  fi
-fi
-
 # -- ZSH ----------------------------------------------------------------------
 if command -v zsh >/dev/null 2>&1; then
   echo -e "${GREEN}ZSH exists ($(zsh --version))${NC}"
@@ -726,88 +655,6 @@ else
   else
     # `-e no` skips /etc/shells and chsh — both require root.
     bash <(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh-bin/master/install) -d "$INSTALL_DIR" -e no || true
-  fi
-fi
-
-# -- gah-based tools (DRY: all follow the same pattern) -----------------------
-install_or_update_gah "fd" "sharkdp/fd" \
-  "fd --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
-
-# -- sshs (direct binary download, not gah) -----------------------------------
-if command -v sshs >/dev/null 2>&1; then
-  current_version=$(sshs --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
-  latest_version=$(get_latest_version "quantumsheep/sshs") || true
-
-  echo -e "${GREEN}sshs exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "sshs" "$current_version" "$latest_version"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update sshs to ${latest_version}${NC}"
-      else
-        if ! curl -fsSL -o "$INSTALL_BIN_DIR/sshs" "https://github.com/quantumsheep/sshs/releases/download/${latest_version}/sshs-linux-amd64-musl"; then
-          echo -e "${RED}Failed to download sshs${NC}"
-        else
-          chmod +x "$INSTALL_BIN_DIR/sshs"
-          echo -e "${GREEN}sshs updated successfully!${NC}"
-        fi
-      fi
-    fi
-  fi
-else
-  latest_version=$(get_latest_version "quantumsheep/sshs") || true
-  if [ -z "$latest_version" ]; then
-    echo -e "${YELLOW}Warning: Failed to fetch sshs version from GitHub API, skipping${NC}"
-  else
-    echo -e "${YELLOW}sshs does not exist, installing v${latest_version} (musl)...${NC}"
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] Would install sshs ${latest_version}${NC}"
-    else
-      if ! curl -fsSL -o "$INSTALL_BIN_DIR/sshs" "https://github.com/quantumsheep/sshs/releases/download/${latest_version}/sshs-linux-amd64-musl"; then
-        echo -e "${YELLOW}Warning: Failed to download sshs${NC}"
-      else
-        chmod +x "$INSTALL_BIN_DIR/sshs"
-      fi
-    fi
-  fi
-fi
-
-install_or_update_gah "rg" "BurntSushi/ripgrep" \
-  "rg --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
-
-install_or_update_gah "lstr" "bgreenwell/lstr" \
-  "lstr --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
-
-# -- fzf (git clone based) ----------------------------------------------------
-if command -v fzf >/dev/null 2>&1; then
-  current_version=$(fzf --version | awk '{print $1}')
-  latest_version=$(get_latest_version "junegunn/fzf") || true
-
-  echo -e "${GREEN}fzf exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "fzf" "$current_version" "$latest_version"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update fzf to ${latest_version}${NC}"
-      else
-        if [ -d "$INSTALL_DIR/fzf" ]; then
-          (cd "$INSTALL_DIR/fzf" && git fetch --depth 1 origin && git checkout FETCH_HEAD)
-        else
-          rm -rf "$INSTALL_DIR/fzf"
-          git clone -q --depth 1 https://github.com/junegunn/fzf.git "$INSTALL_DIR/fzf"
-        fi
-        "$INSTALL_DIR/fzf/install" --key-bindings --completion --update-rc
-        echo -e "${GREEN}fzf updated successfully!${NC}"
-      fi
-    fi
-  fi
-else
-  echo -e "${YELLOW}Installing fzf${NC}"
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install fzf${NC}"
-  else
-    git clone -q --depth 1 https://github.com/junegunn/fzf.git "$INSTALL_DIR/fzf"
-    "$INSTALL_DIR/fzf/install" --key-bindings --completion --update-rc
   fi
 fi
 
@@ -848,136 +695,6 @@ else
       cd "htop-${version}"
       ./autogen.sh >/dev/null && ./configure --prefix="$INSTALL_DIR" >/dev/null && make >/dev/null && make install >/dev/null
     )
-  fi
-fi
-
-# NOTE: btop and bfs installers were previously staged here but are disabled.
-# If re-enabling, move them into install_or_update_gah-style helpers rather
-# than duplicating the update/install branches.
-
-# -- broot (with update support) ----------------------------------------------
-if command -v broot >/dev/null 2>&1; then
-  current_version=$(broot --version | awk '{print $2}')
-  echo -e "${GREEN}broot exists (v${current_version})${NC}"
-
-  # broot updates itself from the official download URL
-  if [ "$FORCE_UPDATE" = true ]; then
-    echo -e "${YELLOW}Force-updating broot...${NC}"
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] Would update broot${NC}"
-    else
-      curl --progress-bar -fL -o "$SCRATCH_DIR/broot" https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
-      chmod +x "$SCRATCH_DIR/broot"
-      mv "$SCRATCH_DIR/broot" "$INSTALL_BIN_DIR"
-      echo -e "${GREEN}broot updated to $(broot --version | awk '{print $2}')${NC}"
-    fi
-  fi
-else
-  echo -e "${YELLOW}Installing broot latest version${NC}"
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install broot${NC}"
-  else
-    curl --progress-bar -fL -o "$SCRATCH_DIR/broot" https://dystroy.org/broot/download/x86_64-unknown-linux-musl/broot
-    chmod +x "$SCRATCH_DIR/broot"
-    mv "$SCRATCH_DIR/broot" "$INSTALL_BIN_DIR"
-    broot --version
-  fi
-fi
-
-# -- zoxide (upstream installer lacks auth — rate-limited without it) --------
-install_or_update_gah "zoxide" "ajeetdsouza/zoxide" \
-  "zoxide --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
-
-install_or_update_gah "bat" "sharkdp/bat" \
-  "bat --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
-
-install_or_update_gah "eza" "eza-community/eza" \
-  "eza --version | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//'"
-
-# -- delta (syntax-highlighting pager for git diff; used by lazygit and the
-# core.pager setting in git/.gitconfig) ---------------------------------------
-# Pinned to the musl build (rather than gah's default glibc binary) so it
-# also runs on systems with older GLIBC (e.g. Rocky Linux 8 / GLIBC 2.28).
-DELTA_VERSION="0.19.2"
-DELTA_ARCHIVE="delta-${DELTA_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-DELTA_DIR="delta-${DELTA_VERSION}-x86_64-unknown-linux-musl"
-
-if command -v delta >/dev/null 2>&1; then
-  current_version=$(delta --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
-
-  echo -e "${GREEN}delta exists (v${current_version}, target: v${DELTA_VERSION})${NC}"
-
-  if ! compare_versions "$DELTA_VERSION" "$current_version"; then
-    if prompt_update "delta" "$current_version" "$DELTA_VERSION"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update delta to ${DELTA_VERSION} (musl)${NC}"
-      else
-        if ! curl -fsSL -o "$SCRATCH_DIR/${DELTA_ARCHIVE}" "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/${DELTA_ARCHIVE}"; then
-          echo -e "${YELLOW}Warning: Failed to download delta${NC}"
-        else
-          tar -xzf "$SCRATCH_DIR/${DELTA_ARCHIVE}" -C "$SCRATCH_DIR" "${DELTA_DIR}/delta"
-          mv "$SCRATCH_DIR/${DELTA_DIR}/delta" "$INSTALL_BIN_DIR/delta"
-          chmod +x "$INSTALL_BIN_DIR/delta"
-          echo -e "${GREEN}delta updated successfully!${NC}"
-        fi
-      fi
-    fi
-  fi
-else
-  echo -e "${YELLOW}delta does not exist, installing v${DELTA_VERSION} (musl)...${NC}"
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install delta ${DELTA_VERSION} (musl)${NC}"
-  else
-    if ! curl -fsSL -o "$SCRATCH_DIR/${DELTA_ARCHIVE}" "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/${DELTA_ARCHIVE}"; then
-      echo -e "${RED}Failed to download delta${NC}"
-    else
-      tar -xzf "$SCRATCH_DIR/${DELTA_ARCHIVE}" -C "$SCRATCH_DIR" "${DELTA_DIR}/delta"
-      mv "$SCRATCH_DIR/${DELTA_DIR}/delta" "$INSTALL_BIN_DIR/delta"
-      chmod +x "$INSTALL_BIN_DIR/delta"
-    fi
-  fi
-fi
-
-# -- gdu (direct binary download) ---------------------------------------------
-if command -v gdu >/dev/null 2>&1; then
-  current_version=$(gdu --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
-  latest_version=$(get_latest_version "dundee/gdu") || true
-
-  echo -e "${GREEN}gdu exists (v${current_version}, latest: v${latest_version})${NC}"
-
-  if [ -n "$latest_version" ] && ! compare_versions "$latest_version" "$current_version"; then
-    if prompt_update "gdu" "$current_version" "$latest_version"; then
-      if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update gdu to ${latest_version}${NC}"
-      else
-        if ! curl -fsSL -o "$SCRATCH_DIR/gdu_linux_amd64_static.tgz" "https://github.com/dundee/gdu/releases/download/v${latest_version}/gdu_linux_amd64_static.tgz"; then
-          echo -e "${YELLOW}Warning: Failed to download gdu${NC}"
-        else
-          tar -xzf "$SCRATCH_DIR/gdu_linux_amd64_static.tgz" -C "$SCRATCH_DIR" gdu_linux_amd64_static
-          mv "$SCRATCH_DIR/gdu_linux_amd64_static" "$INSTALL_BIN_DIR/gdu"
-          chmod +x "$INSTALL_BIN_DIR/gdu"
-          echo -e "${GREEN}gdu updated successfully!${NC}"
-        fi
-      fi
-    fi
-  fi
-else
-  latest_version=$(get_latest_version "dundee/gdu") || true
-  if [ -z "$latest_version" ]; then
-    echo -e "${YELLOW}Warning: Failed to fetch gdu version from GitHub API, skipping${NC}"
-  else
-    echo -e "${YELLOW}gdu does not exist, installing v${latest_version} (static)...${NC}"
-    if [ "$DRY_RUN" = true ]; then
-      echo -e "${YELLOW}[DRY RUN] Would install gdu ${latest_version}${NC}"
-    else
-      if ! curl -fsSL -o "$SCRATCH_DIR/gdu_linux_amd64_static.tgz" "https://github.com/dundee/gdu/releases/download/v${latest_version}/gdu_linux_amd64_static.tgz"; then
-        echo -e "${YELLOW}Warning: Failed to download gdu${NC}"
-      else
-        tar -xzf "$SCRATCH_DIR/gdu_linux_amd64_static.tgz" -C "$SCRATCH_DIR" gdu_linux_amd64_static
-        mv "$SCRATCH_DIR/gdu_linux_amd64_static" "$INSTALL_BIN_DIR/gdu"
-        chmod +x "$INSTALL_BIN_DIR/gdu"
-      fi
-    fi
   fi
 fi
 
@@ -1063,14 +780,7 @@ TAR_WRAPPER
 fi
 rm -f "$_utime_test"
 
-install_or_update_gah "lazygit" "jesseduffield/lazygit" \
-  "lazygit --version | grep -oP 'version=\K[0-9]+\.[0-9]+\.[0-9]+' | head -n1"
-
-install_or_update_gah "lazydocker" "jesseduffield/lazydocker" \
-  "lazydocker --version | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
-
-install_or_update_gah "zellij" "zellij-org/zellij" \
-  "zellij --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'"
+# lazygit, lazydocker, zellij: installed via mise above.
 
 # Install fuzzy-kill (fuzzy process finder and killer)
 if [ -f "${SCRIPT_DIR}/bin/fuzzy-kill" ]; then
@@ -1081,37 +791,7 @@ if [ -f "${SCRIPT_DIR}/bin/fuzzy-kill" ]; then
   echo -e "${GREEN}fuzzy-kill installed (alias: fk)${NC}"
 fi
 
-###############################################################################
-# Node.js via fnm
-###############################################################################
-
-if command -v node >/dev/null 2>&1; then
-  echo -e "${GREEN}node exists ($(node -v))${NC}"
-else
-  echo -e "${YELLOW}Installing fnm${NC}"
-
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install fnm and Node.js${NC}"
-  else
-    # Download and install fnm:
-    curl -o- https://fnm.vercel.app/install | bash
-
-    FNM_PATH="$HOME/.local/share/fnm"
-    if [ -d "$FNM_PATH" ]; then
-      export PATH="$FNM_PATH:$PATH"
-      eval "$(fnm env --shell bash)"
-
-      # Download and install Node.js:
-      fnm install 23
-
-      # Verify the installation:
-      node -v
-      npm -v
-    else
-      echo -e "${RED}FNM not installed${NC}"
-    fi
-  fi
-fi
+# Node.js is installed via mise (see mise/config.toml: node = "23").
 
 # Install npm packages required by nvim mason (markdown + treesitter tooling)
 if command -v npm >/dev/null 2>&1; then
@@ -1121,6 +801,7 @@ if command -v npm >/dev/null 2>&1; then
     fix_treesitter_glibc
   else
     npm install -g tree-sitter-cli markdownlint-cli2 markdown-toc
+    command -v mise >/dev/null 2>&1 && mise reshim
     # On old GLIBC, replace the npm tree-sitter binary with compat build
     fix_treesitter_glibc
   fi
