@@ -187,6 +187,7 @@ check_symlink "vimrc"         "$HOME/.vimrc"                 "$DOTFILES/vim/.vim
 check_symlink "vimcommon"     "$HOME/.vimcommon"             "$DOTFILES/vim/.vimcommon"
 check_symlink "fuzzy-kill"    "$HOME/.local/bin/fuzzy-kill"  "$DOTFILES/bin/fuzzy-kill"
 check_symlink "fk alias"      "$HOME/.local/bin/fk"          "$DOTFILES/bin/fuzzy-kill"
+check_symlink "mise config"   "$HOME/.config/mise/config.toml" "$DOTFILES/mise/config.toml"
 
 ###############################################################################
 echo -e "\n${BOLD}${CYAN}=== 4. Install log ===${NC}"
@@ -342,7 +343,7 @@ echo -e "\n${BOLD}${CYAN}=== 12. Idempotency (second run) ===${NC}"
 ###############################################################################
 
 if command -v mise >/dev/null 2>&1; then
-  before_outdated=$(mise outdated 2>/dev/null)
+  before_versions=$(mise ls --current 2>/dev/null)
 
   if bash "$DOTFILES/install-minimal.sh" --yes < /dev/null > /tmp/second-run.log 2>&1; then
     pass "second run of install-minimal.sh exits cleanly"
@@ -357,11 +358,11 @@ if command -v mise >/dev/null 2>&1; then
     fail "mise: tools missing after second run -- $missing_after_second_run"
   fi
 
-  after_outdated=$(mise outdated 2>/dev/null)
-  if [ "$before_outdated" = "$after_outdated" ]; then
-    pass "mise outdated list unchanged across second run (no surprise re-installs)"
+  after_versions=$(mise ls --current 2>/dev/null)
+  if [ "$before_versions" = "$after_versions" ]; then
+    pass "mise-managed tool versions unchanged across second run"
   else
-    fail "mise outdated list changed across second run"
+    fail "mise-managed tool versions changed across second run -- unexpected re-install or version drift"
   fi
 else
   skip "mise not found, can't check idempotency"

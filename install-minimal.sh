@@ -12,7 +12,7 @@
 #                        rate limits when fetching latest release versions.
 #
 # What it installs (all to ~/.local, no sudo required):
-#   nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide,
+#   nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, broot, zoxide,
 #   bat, eza, delta, gdu, lazygit, lazydocker, zellij, node, jq, 7zip
 #
 #   Most of the above (everything except zsh, htop, and node's npm globals)
@@ -539,15 +539,30 @@ fi
 # Lazy-sync call all need mise-installed tools on PATH).
 if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate bash --shims)"
+
+  # Persist bash activation to ~/.bashrc for future interactive bash logins
+  # (zsh already gets `eval "$(mise activate zsh)"` via zsh/.zshrc). Without
+  # this, mise-managed tools (nvim, fd, rg, ...) would only be on PATH for the
+  # remainder of THIS script's own execution, not for future bash shells --
+  # a real regression from the pre-mise behavior of adding $INSTALL_BIN_DIR
+  # to ~/.bashrc directly.
+  if [ "$DRY_RUN" != true ] && ! grep -qF 'mise activate bash' "$HOME/.bashrc" 2>/dev/null; then
+    echo "Adding mise activation to $HOME/.bashrc"
+    printf '\nif command -v mise >/dev/null 2>&1; then\n  eval "$(mise activate bash)"\nfi\n' >> "$HOME/.bashrc"
+  fi
 fi
 
+mise_install_ok=false
 if command -v mise >/dev/null 2>&1; then
   echo -e "${GREEN}Installing/verifying mise-managed tools (see mise/config.toml)...${NC}"
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would run: mise install${NC}"
     mise install --dry-run || true
+    mise_install_ok=true
+  elif mise install; then
+    mise_install_ok=true
   else
-    mise install || echo -e "${YELLOW}Warning: mise install failed${NC}"
+    echo -e "${YELLOW}Warning: mise install failed${NC}"
   fi
 
   mise_outdated=$(mise outdated 2>/dev/null) || true
@@ -622,9 +637,20 @@ cleanup_pre_mise_artifacts() {
   rm -rf "${to_remove[@]}"
   echo -e "${GREEN}Cleanup complete.${NC}"
 }
-cleanup_pre_mise_artifacts
 
-if [ -d "$HOME/.local/share/fnm" ]; then
+# Capture whether fnm's directory existed BEFORE cleanup runs -- cleanup
+# itself deletes $INSTALL_DIR/share/fnm as one of its targets, so checking
+# after cleanup would make the advisory below unreachable on a real run.
+fnm_dir_existed=false
+[ -d "$HOME/.local/share/fnm" ] && fnm_dir_existed=true
+
+if [ "$mise_install_ok" = true ]; then
+  cleanup_pre_mise_artifacts
+else
+  echo -e "${YELLOW}Skipping pre-mise cleanup: mise-managed tools are not confirmed in place${NC}"
+fi
+
+if [ "$fnm_dir_existed" = true ]; then
   echo -e "${YELLOW}Note: fnm's install script may have added FNM_PATH / 'fnm env' lines to"
   echo -e "  ~/.bashrc when this machine was first set up. Node is now managed by mise"
   echo -e "  (mise/config.toml); you can remove any such lines by hand if you no longer"

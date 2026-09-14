@@ -73,7 +73,7 @@ Both `docker` and `podman` are auto-detected. Set `GITHUB_PAT` to avoid rate lim
 GITHUB_PAT=ghp_xxx ./podman/run-tests.sh
 ```
 
-The test suite (`podman/validate.sh`) covers 11 areas: binary existence, minimum version checks, symlinks, install log, ZSH plugins, nvim Lazy loading, git HTTPS support, GLIBC/tree-sitter compatibility, dry-run mode, fuzzy-kill, and git repo status.
+The test suite (`podman/validate.sh`) covers 12 areas: binary existence, minimum version checks, symlinks, install log, ZSH plugins, nvim Lazy loading, git HTTPS support, GLIBC/tree-sitter compatibility, dry-run mode, fuzzy-kill, git repo status, and idempotency (second run).
 
 To build and run a single container manually:
 ```bash
