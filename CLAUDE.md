@@ -31,7 +31,9 @@ git clone https://github.com/karlovsek/.dotfiles.git $HOME/.dotfiles && bash $HO
 bash $HOME/.dotfiles/install-minimal.sh --force-update
 ```
 
-`install-minimal.sh` installs everything to `$HOME/.local`, downloads tools from GitHub releases, creates symlinks, and installs Oh My ZSH and plugins. Tools: nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, btop, bfs, broot, zoxide, bat, eza, delta, gdu, lazygit, lazydocker, zellij, fnm (for Node.js), jq, 7zip, gah.
+`install-minimal.sh` installs everything to `$HOME/.local`, downloads tools from GitHub releases, creates symlinks, and installs Oh My ZSH and plugins. Most tools are installed and version-managed via [mise](https://mise.jdx.dev) (config in `mise/config.toml`, symlinked to `~/.config/mise/config.toml`): nvim, fd, sshs, ripgrep, lstr, fzf, broot, zoxide, bat, eza, delta, gdu, lazygit, lazydocker, zellij, node, jq, 7zip. A few tools are installed outside mise because no prebuilt binaries exist or mise doesn't cover them: zsh (zsh-bin), htop (built from source), git (optionally compiled from source, see below).
+
+Use `mise outdated` / `mise upgrade` directly to check for and apply tool updates without re-running the whole install script.
 
 Set `GITHUB_PAT` env var to avoid GitHub API rate limits during installation.
 
@@ -91,6 +93,7 @@ ln -sf $HOME/.dotfiles/nvim $HOME/.config/nvim
 ln -sf $HOME/.dotfiles/git/.gitconfig $HOME/.gitconfig
 ln -sf $HOME/.dotfiles/tmux/.tmux.conf $HOME/.tmux.conf
 ln -sf $HOME/.dotfiles/tmux/.tmux.conf.local $HOME/.tmux.conf.local
+ln -sfn $HOME/.dotfiles/mise/config.toml $HOME/.config/mise/config.toml
 ```
 
 Always modify files in the repository, not at their installed symlink locations.
