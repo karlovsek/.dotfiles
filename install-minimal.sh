@@ -501,12 +501,21 @@ ensure_treesitter_glibc_fix() {
 # not in this script — add new tools there.
 MISE_BIN_PATH="$INSTALL_BIN_DIR/mise"
 
-if ! command -v mise >/dev/null 2>&1 && [ ! -x "$MISE_BIN_PATH" ]; then
+if ! command -v mise >/dev/null 2>&1; then
   echo -e "${YELLOW}mise does not exist, installing it...${NC}"
   if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Would install mise via https://mise.run${NC}"
   else
-    if ! curl -fsSL https://mise.run | MISE_INSTALL_PATH="$MISE_BIN_PATH" sh; then
+    # Download to a file and run it as a separate step (rather than piping
+    # curl straight into sh) so a curl failure is actually detected: without
+    # `set -o pipefail` (not set globally in this script, and risky to add
+    # blindly -- see get_glibc_version's non-final grep), `if ! curl | sh`
+    # tests sh's exit code, not curl's, and `sh` exits 0 on empty stdin, so a
+    # failed download would silently report as a successful install.
+    mise_installer="$SCRATCH_DIR/mise-install.sh"
+    if ! curl -fsSL -o "$mise_installer" https://mise.run; then
+      echo -e "${RED}Failed to download mise installer${NC}"
+    elif ! MISE_INSTALL_PATH="$MISE_BIN_PATH" sh "$mise_installer"; then
       echo -e "${RED}Failed to install mise${NC}"
     fi
   fi
@@ -524,11 +533,15 @@ fi
 # Symlink the tracked mise config into place (same backup pattern as the
 # other symlinks further down this script: don't clobber a real file with
 # our symlink on a second run).
-mkdir -p "$HOME/.config/mise"
-if [ -f "$HOME/.config/mise/config.toml" ] && [ ! -L "$HOME/.config/mise/config.toml" ]; then
-  mv "$HOME/.config/mise/config.toml" "$HOME/.config/mise/config.toml.orig"
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${YELLOW}[DRY RUN] Would symlink mise/config.toml to \$HOME/.config/mise/config.toml${NC}"
+else
+  mkdir -p "$HOME/.config/mise"
+  if [ -f "$HOME/.config/mise/config.toml" ] && [ ! -L "$HOME/.config/mise/config.toml" ]; then
+    mv "$HOME/.config/mise/config.toml" "$HOME/.config/mise/config.toml_orig"
+  fi
+  ln -sfn "${SCRIPT_DIR}/mise/config.toml" "$HOME/.config/mise/config.toml"
 fi
-ln -sfn "${SCRIPT_DIR}/mise/config.toml" "$HOME/.config/mise/config.toml"
 
 if [ "$ASSUME_YES" = true ]; then
   export MISE_YES=1
@@ -583,6 +596,12 @@ if command -v mise >/dev/null 2>&1; then
       echo -e "${YELLOW}(non-interactive: skipping interactive upgrade prompt — re-run with --force-update to upgrade all)${NC}"
     fi
   fi
+elif [ "$DRY_RUN" = true ]; then
+  # Expected on a fresh machine: dry-run intentionally skipped the real mise
+  # install above, so mise (and therefore per-tool previews) can't run yet.
+  # Say so distinctly from the real-run case below, which is an actual
+  # problem -- otherwise both look like the same "Warning".
+  echo -e "${YELLOW}[DRY RUN] mise is not yet installed; a real run would install it, then install/update every tool listed in mise/config.toml${NC}"
 else
   echo -e "${YELLOW}Warning: mise not available on PATH; skipping mise-managed tool installs${NC}"
 fi
@@ -696,14 +715,21 @@ if command -v htop >/dev/null 2>&1; then
       if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would update htop to ${latest_version}${NC}"
       else
-        curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${latest_version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${latest_version}/htop-${latest_version}.tar.xz"
-        (
+        if ! curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${latest_version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${latest_version}/htop-${latest_version}.tar.xz"; then
+          echo -e "${YELLOW}Warning: Failed to download htop${NC}"
+        elif ! (
           cd "$SCRATCH_DIR"
           tar -xf "htop-${latest_version}.tar.xz"
           cd "htop-${latest_version}"
           ./autogen.sh >/dev/null && ./configure --prefix="$INSTALL_DIR" >/dev/null && make >/dev/null && make install >/dev/null
-        )
-        echo -e "${GREEN}htop updated successfully!${NC}"
+        ); then
+          # Checked explicitly (rather than left as a bare subshell statement)
+          # so a missing compiler/autotools on a minimal target machine warns
+          # instead of aborting the whole script via set -e.
+          echo -e "${YELLOW}Warning: htop build failed${NC}"
+        else
+          echo -e "${GREEN}htop updated successfully!${NC}"
+        fi
       fi
     fi
   fi
@@ -721,12 +747,19 @@ else
       if ! curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz"; then
         echo -e "${YELLOW}Warning: Failed to download htop${NC}"
       else
-        (
+        if ! (
           cd "$SCRATCH_DIR"
           tar -xf "htop-${version}.tar.xz"
           cd "htop-${version}"
           ./autogen.sh >/dev/null && ./configure --prefix="$INSTALL_DIR" >/dev/null && make >/dev/null && make install >/dev/null
-        )
+        ); then
+          # See the matching guard in the "update" branch above: a bare
+          # subshell statement here would abort the whole script via set -e
+          # if the build fails (e.g. no compiler on a minimal machine).
+          echo -e "${YELLOW}Warning: htop build failed${NC}"
+        else
+          echo -e "${GREEN}htop installed successfully!${NC}"
+        fi
       fi
     fi
   fi
@@ -1020,7 +1053,13 @@ fi
 
 echo ""
 echo "=== Install finished at $(date) ==="
-echo -e "\n${GREEN}Installation completed!${NC}"
+if [ "$mise_install_ok" = true ]; then
+  echo -e "\n${GREEN}Installation completed!${NC}"
+else
+  echo -e "\n${YELLOW}Installation completed with warnings: mise install reported failures above" \
+    "(commonly GitHub API rate limiting) -- some mise-managed tools may be missing." \
+    "Run 'mise install' by hand to see which, and retry once any rate limit resets.${NC}"
+fi
 
 # Drop into zsh only when running interactively. In CI / piped installs this
 # would otherwise hang forever on the read prompt and then fail trying to
@@ -1034,4 +1073,3 @@ if [ -t 0 ] && [ "$ASSUME_YES" != true ]; then
 else
   echo "(non-interactive run — skipping interactive zsh launch)"
 fi
-                                                                                                                                                                                                                                                                                                                    

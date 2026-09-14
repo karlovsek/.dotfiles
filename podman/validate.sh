@@ -136,6 +136,34 @@ check_file() {
   fi
 }
 
+# Check that every tool in mise/config.toml is actually installed. `mise ls
+# --missing` alone is not sufficient: a tool whose "latest" version failed to
+# resolve at all (e.g. a GitHub API rate-limit hit during `mise install`) can
+# be invisible to `--missing` rather than listed by it -- confirmed directly:
+# a real run under rate limiting left nvim/delta/sshs/lstr uninstalled while
+# `mise ls --missing` still reported nothing missing. Re-running `mise
+# install` (a fast no-op once everything really is in place) and trusting
+# ITS exit code is the reliable signal.
+check_mise_tools_installed() {
+  local label="$1"
+  if ! command -v mise >/dev/null 2>&1; then
+    fail "$label — mise binary not found"
+    return
+  fi
+  local missing
+  if ! mise install >/tmp/mise-install-check.log 2>&1; then
+    missing=$(mise ls --missing 2>/dev/null)
+    fail "$label — mise install reports failures (see /tmp/mise-install-check.log)${missing:+; missing: $missing}"
+    return
+  fi
+  missing=$(mise ls --missing 2>/dev/null)
+  if [ -z "$missing" ]; then
+    pass "$label"
+  else
+    fail "$label — missing: $missing"
+  fi
+}
+
 ###############################################################################
 echo -e "\n${BOLD}${CYAN}=== 1. Binary existence tests ===${NC}"
 ###############################################################################
@@ -161,16 +189,7 @@ check_binary "lazygit"
 check_binary "lazydocker"
 check_binary "zellij"
 
-if command -v mise >/dev/null 2>&1; then
-  missing_mise_tools=$(mise ls --missing 2>/dev/null)
-  if [ -z "$missing_mise_tools" ]; then
-    pass "mise: all configured tools installed"
-  else
-    fail "mise: missing tools -- $missing_mise_tools"
-  fi
-else
-  fail "mise -- binary not found, can't check installed tools"
-fi
+check_mise_tools_installed "mise: all configured tools installed"
 
 ###############################################################################
 echo -e "\n${BOLD}${CYAN}=== 2. Minimum version checks ===${NC}"
@@ -359,12 +378,7 @@ if command -v mise >/dev/null 2>&1; then
     fail "second run of install-minimal.sh failed (see /tmp/second-run.log)"
   fi
 
-  missing_after_second_run=$(mise ls --missing 2>/dev/null)
-  if [ -z "$missing_after_second_run" ]; then
-    pass "mise: all tools still installed after second run"
-  else
-    fail "mise: tools missing after second run -- $missing_after_second_run"
-  fi
+  check_mise_tools_installed "mise: all tools still installed after second run"
 
   after_versions=$(mise ls --current 2>/dev/null)
   if [ "$before_versions" = "$after_versions" ]; then
