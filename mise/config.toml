@@ -16,9 +16,14 @@ lazygit = "latest"
 lazydocker = "latest"
 zellij = "latest"
 fzf = "latest"
-broot = "latest"
+# bin_path selects the musl build baked into broot's single multi-platform
+# zip release; the registry default resolves the glibc build, which needs
+# GLIBC >= 2.29 and doesn't run on Rocky Linux 8 (GLIBC 2.28).
+broot = { version = "latest", bin_path = "x86_64-unknown-linux-musl" }
 gdu = "latest"
-"github:bgreenwell/lstr" = "latest"
+# asset_pattern pins the musl release asset; lstr's default gnu build also
+# needs GLIBC >= 2.29 and doesn't run on Rocky Linux 8 (GLIBC 2.28).
+"github:bgreenwell/lstr" = { version = "latest", asset_pattern = "lstr-x86_64-unknown-linux-musl.tar.xz" }
 "github:quantumsheep/sshs" = { version = "latest", asset_pattern = "sshs-linux-amd64-musl", bin = "sshs" }
 "github:dandavison/delta" = { version = "latest", asset_pattern = "delta-{{version}}-x86_64-unknown-linux-musl.tar.gz" }
 "github:neovim/neovim-releases" = { version = "latest", asset_pattern = "nvim-linux-x86_64.tar.gz" }
