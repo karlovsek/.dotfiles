@@ -57,12 +57,20 @@ check_binary() {
   local cmd="${2:-$1}"
   local version_flag="${3:---version}"
 
-  if command -v "$cmd" >/dev/null 2>&1; then
-    local ver
-    ver=$("$cmd" $version_flag 2>&1 | head -1)
-    pass "$name ($ver)"
-  else
+  if ! command -v "$cmd" >/dev/null 2>&1; then
     fail "$name — binary not found"
+    return
+  fi
+
+  # Check the exit code, not just that the binary exists on PATH: a binary
+  # built against a newer GLIBC than the host provides still resolves via
+  # `command -v` but fails at exec time with a dynamic-linker error, which
+  # would otherwise be captured as if it were valid version output.
+  local ver
+  if ver=$("$cmd" $version_flag 2>&1); then
+    pass "$name ($(head -1 <<<"$ver"))"
+  else
+    fail "$name — exists but failed to run: $(head -1 <<<"$ver")"
   fi
 }
 
