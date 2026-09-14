@@ -16,6 +16,16 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# Activate mise (tool version manager) — installs shims for mise-managed
+# tools onto PATH and hooks cd to pick up per-directory .mise.toml files.
+# mise prints nothing on activation, so this is safe above the p10k
+# instant-prompt boundary... but keep it AFTER instant-prompt anyway,
+# matching install-minimal.sh's ordering assumptions and avoiding any
+# stdout-before-instant-prompt lint warnings from p10k.
+if (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi
+
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -23,9 +33,6 @@ if [ -n "${commands[fzf-share]}" ]; then
 # For nix
   source "$(fzf-share)/key-bindings.zsh"
   source "$(fzf-share)/completion.zsh"
-  FZF_BASE=$(fzf-share)
-else
-  export FZF_BASE=$HOME/.local/fzf
 fi
 
 
@@ -292,9 +299,6 @@ then
   export FZF_ALT_C_OPTS="--preview 'eza --icons -l --color=always --group-directories-first --no-permissions --no-user {}| head -n 50' --preview-window=right:60%:wrap"
 fi
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-
 if (( $+commands[zoxide] ))
 then
   eval "$(zoxide init --cmd j zsh)"
@@ -377,12 +381,6 @@ fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-FNM_PATH="$HOME/.local/share/fnm"
-if [ -d "$FNM_PATH" ]; then
-  export PATH="$FNM_PATH:$PATH"
-  eval "$(fnm env --shell zsh)"
-fi
 
 # .local/bin is already prepended at the top of this file
 export PATH="$PATH:$HOME/.cargo/bin"
