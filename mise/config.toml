@@ -1,0 +1,25 @@
+# Global mise config — managed by ~/.dotfiles, symlinked by install-minimal.sh
+# to ~/.config/mise/config.toml. Add new mise-managed tools here rather than
+# hand-rolling another curl+tar block in install-minimal.sh.
+[settings]
+experimental = false
+
+[tools]
+jq = "latest"
+"7zip" = "latest"
+fd = "latest"
+ripgrep = "latest"
+zoxide = "latest"
+bat = "latest"
+eza = "latest"
+lazygit = "latest"
+lazydocker = "latest"
+zellij = "latest"
+fzf = "latest"
+broot = "latest"
+gdu = "latest"
+"github:bgreenwell/lstr" = "latest"
+"github:quantumsheep/sshs" = { version = "latest", asset_pattern = "sshs-linux-amd64-musl", bin = "sshs" }
+"github:dandavison/delta" = { version = "latest", asset_pattern = "delta-{{version}}-x86_64-unknown-linux-musl.tar.gz" }
+"github:neovim/neovim-releases" = { version = "latest", asset_pattern = "nvim-linux-x86_64.tar.gz" }
+node = "23"
