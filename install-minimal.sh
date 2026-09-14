@@ -709,18 +709,26 @@ if command -v htop >/dev/null 2>&1; then
   fi
 else
   version=$(get_latest_version "htop-dev/htop" "") || true
-  echo -e "${YELLOW}Installing htop ${version}${NC}"
 
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN] Would install htop ${version}${NC}"
+  if [ -z "$version" ]; then
+    echo -e "${YELLOW}Warning: Failed to fetch htop version from GitHub API (rate limited?), skipping htop${NC}"
   else
-    curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz"
-    (
-      cd "$SCRATCH_DIR"
-      tar -xf "htop-${version}.tar.xz"
-      cd "htop-${version}"
-      ./autogen.sh >/dev/null && ./configure --prefix="$INSTALL_DIR" >/dev/null && make >/dev/null && make install >/dev/null
-    )
+    echo -e "${YELLOW}Installing htop ${version}${NC}"
+
+    if [ "$DRY_RUN" = true ]; then
+      echo -e "${YELLOW}[DRY RUN] Would install htop ${version}${NC}"
+    else
+      if ! curl --progress-bar -fL -o "$SCRATCH_DIR/htop-${version}.tar.xz" "https://github.com/htop-dev/htop/releases/download/${version}/htop-${version}.tar.xz"; then
+        echo -e "${YELLOW}Warning: Failed to download htop${NC}"
+      else
+        (
+          cd "$SCRATCH_DIR"
+          tar -xf "htop-${version}.tar.xz"
+          cd "htop-${version}"
+          ./autogen.sh >/dev/null && ./configure --prefix="$INSTALL_DIR" >/dev/null && make >/dev/null && make install >/dev/null
+        )
+      fi
+    fi
   fi
 fi
 
