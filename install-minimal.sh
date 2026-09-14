@@ -547,10 +547,10 @@ if command -v mise >/dev/null 2>&1; then
     echo -e "${YELLOW}[DRY RUN] Would run: mise install${NC}"
     mise install --dry-run || true
   else
-    mise install
+    mise install || echo -e "${YELLOW}Warning: mise install failed${NC}"
   fi
 
-  mise_outdated=$(mise outdated 2>/dev/null)
+  mise_outdated=$(mise outdated 2>/dev/null) || true
   if [ -n "$mise_outdated" ]; then
     echo -e "${YELLOW}Outdated mise-managed tools:${NC}"
     echo "$mise_outdated"
@@ -558,14 +558,14 @@ if command -v mise >/dev/null 2>&1; then
       if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would run: mise upgrade${NC}"
       else
-        mise upgrade
+        mise upgrade || echo -e "${YELLOW}Warning: mise upgrade failed${NC}"
       fi
     elif [ "$DRY_RUN" = true ]; then
       mise upgrade --dry-run || true
     elif [ -t 0 ] && [ "$ASSUME_YES" != true ]; then
-      mise upgrade --interactive
+      mise upgrade --interactive || echo -e "${YELLOW}Warning: mise upgrade --interactive failed${NC}"
     else
-      echo "(non-interactive: skipping interactive upgrade prompt — re-run with --force-update to upgrade all)"
+      echo -e "${YELLOW}(non-interactive: skipping interactive upgrade prompt — re-run with --force-update to upgrade all)${NC}"
     fi
   fi
 else
