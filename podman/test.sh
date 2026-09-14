@@ -31,11 +31,11 @@ check_symlink() {
   fi
 }
 
-export PATH="$HOME/.local/bin:$HOME/.local/fzf/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 
 echo "=== Binary tests ==="
 check "jq"          jq --version
-check "gah"         gah version
+check "mise"        mise --version
 check "7zz"         7zz i
 check "nvim"        nvim --version
 check "nvim starts" nvim --headless -c "lua require('lazy')" -c "qa"

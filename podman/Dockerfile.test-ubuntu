@@ -96,7 +96,7 @@ RUN git config --global user.email "testuser@example.com" && git config --global
 # Run install-minimal.sh non-interactively
 # The script has several read prompts; feed them all "y" + Enter
 ARG GITHUB_PAT
-RUN export PATH="$HOME/.local/bin:$PATH" \
+RUN export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH" \
  && printf '\ny\ny\ny\ny\ny\n' | GITHUB_PAT="${GITHUB_PAT}" bash /home/testuser/.dotfiles/install-minimal.sh --force-update 2>&1 || true
 
 # Copy the test script

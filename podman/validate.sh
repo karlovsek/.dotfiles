@@ -13,6 +13,8 @@
 #   8. GLIBC < 2.29 tree-sitter fix (on Rocky/RHEL)
 #   9. Dry-run mode doesn't install anything new
 #  10. fuzzy-kill aliases are in place
+#  11. Git repo status
+#  12. Idempotency (second run)
 ###############################################################################
 
 set -u
@@ -30,7 +32,7 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-export PATH="$HOME/.local/bin:$HOME/.local/fzf/bin:$HOME/.local/share/fnm:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 
 # --- Helpers -----------------------------------------------------------------
 
@@ -131,7 +133,7 @@ echo -e "\n${BOLD}${CYAN}=== 1. Binary existence tests ===${NC}"
 ###############################################################################
 
 check_binary "jq"
-check_binary "gah"         "gah"         "version"
+check_binary "mise"        "mise"        "--version"
 check_binary "7zz"         "7zz"         "i"
 check_binary "nvim"
 check_binary "zsh"
@@ -150,6 +152,17 @@ check_binary "gdu"         "gdu"         "--version"
 check_binary "lazygit"
 check_binary "lazydocker"
 check_binary "zellij"
+
+if command -v mise >/dev/null 2>&1; then
+  missing_mise_tools=$(mise ls --missing 2>/dev/null)
+  if [ -z "$missing_mise_tools" ]; then
+    pass "mise: all configured tools installed"
+  else
+    fail "mise: missing tools -- $missing_mise_tools"
+  fi
+else
+  fail "mise -- binary not found, can't check installed tools"
+fi
 
 ###############################################################################
 echo -e "\n${BOLD}${CYAN}=== 2. Minimum version checks ===${NC}"
@@ -322,6 +335,36 @@ else
   echo -e "  ${YELLOW}NOTE: git status has changes (expected in Docker context):${NC}"
   echo "$git_status" | head -5 | sed 's/^/    /'
   skip "git status has changes (may be expected after install)"
+fi
+
+###############################################################################
+echo -e "\n${BOLD}${CYAN}=== 12. Idempotency (second run) ===${NC}"
+###############################################################################
+
+if command -v mise >/dev/null 2>&1; then
+  before_outdated=$(mise outdated 2>/dev/null)
+
+  if bash "$DOTFILES/install-minimal.sh" --yes < /dev/null > /tmp/second-run.log 2>&1; then
+    pass "second run of install-minimal.sh exits cleanly"
+  else
+    fail "second run of install-minimal.sh failed (see /tmp/second-run.log)"
+  fi
+
+  missing_after_second_run=$(mise ls --missing 2>/dev/null)
+  if [ -z "$missing_after_second_run" ]; then
+    pass "mise: all tools still installed after second run"
+  else
+    fail "mise: tools missing after second run -- $missing_after_second_run"
+  fi
+
+  after_outdated=$(mise outdated 2>/dev/null)
+  if [ "$before_outdated" = "$after_outdated" ]; then
+    pass "mise outdated list unchanged across second run (no surprise re-installs)"
+  else
+    fail "mise outdated list changed across second run"
+  fi
+else
+  skip "mise not found, can't check idempotency"
 fi
 
 ###############################################################################

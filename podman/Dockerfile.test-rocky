@@ -93,7 +93,7 @@ RUN git config --global user.email "testuser@example.com" && git config --global
     && cd /home/testuser/.dotfiles && git init && git add -A && git commit -m "test snapshot" --allow-empty
 
 ARG GITHUB_PAT
-RUN export PATH="$HOME/.local/bin:$PATH" \
+RUN export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH" \
  && printf '\ny\ny\ny\ny\ny\n' | GITHUB_PAT="${GITHUB_PAT}" bash /home/testuser/.dotfiles/install-minimal.sh --force-update 2>&1 || true
 
 COPY --chown=testuser:testuser podman/validate.sh /home/testuser/validate.sh
