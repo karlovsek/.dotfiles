@@ -188,6 +188,7 @@ check_binary "gdu"         "gdu"         "--version"
 check_binary "lazygit"
 check_binary "lazydocker"
 check_binary "zellij"
+check_binary "portop"      "portop"      "--help"
 
 check_mise_tools_installed "mise: all configured tools installed"
 

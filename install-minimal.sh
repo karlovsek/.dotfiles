@@ -13,7 +13,7 @@
 #
 # What it installs (all to ~/.local, no sudo required):
 #   nvim, zsh, fd, sshs, ripgrep, lstr, fzf, htop, broot, zoxide,
-#   bat, eza, delta, gdu, lazygit, lazydocker, zellij, node, jq, 7zip
+#   bat, eza, delta, gdu, lazygit, lazydocker, zellij, portop, node, jq, 7zip
 #
 #   Most of the above (everything except zsh, htop, and node's npm globals)
 #   are installed and version-managed via mise (https://mise.jdx.dev) using

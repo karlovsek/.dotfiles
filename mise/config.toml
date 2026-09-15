@@ -33,4 +33,5 @@ gdu = "latest"
 # warning on every install/upgrade.
 "github:dandavison/delta" = { version = "latest", asset_pattern = "delta-{{ version }}-x86_64-unknown-linux-musl.tar.gz" }
 "github:neovim/neovim-releases" = { version = "latest", asset_pattern = "nvim-linux-x86_64.tar.gz" }
+"github:padovanl/portop" = "latest"
 node = "23"
